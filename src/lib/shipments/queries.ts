@@ -15,3 +15,22 @@ export async function getShipmentsForWorkspace(workspaceId: string) {
 
   return data;
 }
+
+export async function getShipmentForWorkspace(workspaceId: string, shipmentId: string) {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("shipments")
+    .select(
+      "id,reference,shipment_date,destination_country,reason,status,notes,businesses(name,email,phone),carriers(name,email,phone,default_provides_bol),shipment_items(id,name,part_number,quantity,quantity_confirmed,weight,weight_unit,weight_confirmed,package_type,lot_number,product_snapshot_json),shipment_transport(id,payment_term,needs_bol,pro_number,bol_number)",
+    )
+    .eq("workspace_id", workspaceId)
+    .eq("id", shipmentId)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data;
+}

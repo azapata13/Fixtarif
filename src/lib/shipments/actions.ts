@@ -127,3 +127,48 @@ export async function createShipmentDraft(locale: Locale, formData: FormData) {
   revalidatePath(`/${locale}/shipments`);
   redirect(`/${locale}/shipments?message=${encodeURIComponent("Brouillon d'expédition créé.")}`);
 }
+
+export async function updateShipmentItemConfirmations(locale: Locale, formData: FormData) {
+  const { workspace, user } = await getCurrentWorkspace();
+
+  if (!workspace || !user) {
+    redirect(`/${locale}/onboarding`);
+  }
+
+  const shipmentId = readField(formData, "shipmentId");
+  const itemId = readField(formData, "itemId");
+
+  if (!shipmentId || !itemId) {
+    redirect(`/${locale}/shipments?message=${encodeURIComponent("Expédition introuvable.")}`);
+  }
+
+  const supabase = await createClient();
+  const quantityConfirmed = formData.get("quantityConfirmed") === "on";
+  const weightConfirmed = formData.get("weightConfirmed") === "on";
+
+  const { error } = await supabase
+    .from("shipment_items")
+    .update({
+      quantity_confirmed: quantityConfirmed,
+      weight_confirmed: weightConfirmed,
+    })
+    .eq("workspace_id", workspace.id)
+    .eq("shipment_id", shipmentId)
+    .eq("id", itemId);
+
+  if (error) {
+    redirect(`/${locale}/shipments/${shipmentId}?message=${encodeURIComponent(error.message)}`);
+  }
+
+  await supabase.from("shipment_audit_log").insert({
+    workspace_id: workspace.id,
+    shipment_id: shipmentId,
+    actor_user_id: user.id,
+    action: "shipment_item_confirmations_updated",
+    metadata_json: { itemId, quantityConfirmed, weightConfirmed },
+  });
+
+  revalidatePath(`/${locale}/shipments/${shipmentId}`);
+  revalidatePath(`/${locale}/shipments`);
+  redirect(`/${locale}/shipments/${shipmentId}?message=${encodeURIComponent("Confirmations mises à jour.")}`);
+}

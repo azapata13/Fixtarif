@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { AlertCircle, CheckCircle2, Plus, Scale, Truck } from "lucide-react";
+import { AlertCircle, ArrowRight, CheckCircle2, Plus, Scale, Truck } from "lucide-react";
 import { type LocaleParams } from "@/app/[locale]/layout";
 import { PageHeader } from "@/components/page-header";
 import { type Locale } from "@/i18n/config";
@@ -46,7 +46,7 @@ export default async function ShipmentsPage({ params, searchParams }: ShipmentsP
           const weightConfirmed = item?.weight_confirmed ?? false;
 
           return (
-            <article className="rounded-[24px] border border-[var(--line)] bg-white p-6 shadow-sm" key={shipment.id}>
+            <Link className="focus-ring rounded-[24px] border border-[var(--line)] bg-white p-6 shadow-sm transition hover:border-neutral-300 hover:shadow-md" href={`/${locale}/shipments/${shipment.id}`} key={shipment.id}>
               <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                 <div>
                   <p className="text-sm font-semibold uppercase tracking-wide text-[var(--muted)]">{shipment.status}</p>
@@ -55,7 +55,10 @@ export default async function ShipmentsPage({ params, searchParams }: ShipmentsP
                     {shipment.destination_country} · {shipment.reason} · {shipment.shipment_date}
                   </p>
                 </div>
-                <span className="rounded-full bg-neutral-100 px-4 py-2 text-sm font-semibold text-neutral-700">Brouillon</span>
+                <span className="inline-flex items-center gap-2 rounded-full bg-neutral-100 px-4 py-2 text-sm font-semibold text-neutral-700">
+                  Ouvrir
+                  <ArrowRight aria-hidden="true" size={16} />
+                </span>
               </div>
               {item ? (
                 <div className="mt-6 grid gap-3 text-base text-neutral-700 md:grid-cols-3">
@@ -73,7 +76,7 @@ export default async function ShipmentsPage({ params, searchParams }: ShipmentsP
                   </p>
                 </div>
               ) : null}
-            </article>
+            </Link>
           );
         })}
       </section>
