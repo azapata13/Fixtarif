@@ -2,6 +2,7 @@ export type WorkspaceRole = "owner" | "admin" | "member";
 export type MemberStatus = "active" | "invited" | "disabled";
 export type BusinessRole = "client" | "supplier" | "subcontractor" | "consignee" | "buyer" | "other";
 export type ContactType = "commercial" | "receiving" | "shipping" | "project" | "accounting" | "other";
+export type PackageType = "pallet" | "box" | "crate" | "bundle" | "drum" | "other";
 
 export type Database = {
   public: {
@@ -322,6 +323,83 @@ export type Database = {
           },
         ];
       };
+      products: {
+        Row: {
+          id: string;
+          workspace_id: string;
+          name: string;
+          part_number: string | null;
+          description_fr: string | null;
+          description_en: string | null;
+          weight: number | null;
+          weight_unit: "lb" | "kg";
+          length: number | null;
+          width: number | null;
+          height: number | null;
+          dimension_unit: "in" | "cm";
+          default_package_type: PackageType;
+          stackable: boolean | null;
+          default_value: number | null;
+          currency: "CAD" | "USD";
+          active: boolean;
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          workspace_id: string;
+          name: string;
+          part_number?: string | null;
+          description_fr?: string | null;
+          description_en?: string | null;
+          weight?: number | null;
+          weight_unit?: "lb" | "kg";
+          length?: number | null;
+          width?: number | null;
+          height?: number | null;
+          dimension_unit?: "in" | "cm";
+          default_package_type?: PackageType;
+          stackable?: boolean | null;
+          default_value?: number | null;
+          currency?: "CAD" | "USD";
+          active?: boolean;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          workspace_id?: string;
+          name?: string;
+          part_number?: string | null;
+          description_fr?: string | null;
+          description_en?: string | null;
+          weight?: number | null;
+          weight_unit?: "lb" | "kg";
+          length?: number | null;
+          width?: number | null;
+          height?: number | null;
+          dimension_unit?: "in" | "cm";
+          default_package_type?: PackageType;
+          stackable?: boolean | null;
+          default_value?: number | null;
+          currency?: "CAD" | "USD";
+          active?: boolean;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "products_workspace_id_fkey";
+            columns: ["workspace_id"];
+            isOneToOne: false;
+            referencedRelation: "workspaces";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -337,6 +415,7 @@ export type Database = {
       member_status: MemberStatus;
       business_role: BusinessRole;
       contact_type: ContactType;
+      package_type: PackageType;
     };
     CompositeTypes: Record<string, never>;
   };
