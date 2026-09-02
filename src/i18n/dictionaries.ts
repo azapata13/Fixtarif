@@ -1,0 +1,172 @@
+import type { Locale } from "@/i18n/config";
+
+export type Dictionary = {
+  auth: {
+    email: string;
+    password: string;
+    signIn: string;
+    signUp: string;
+    signOut: string;
+    subtitle: string;
+    title: string;
+  };
+  common: {
+    loading: string;
+    workspace: string;
+  };
+  nav: Record<"dashboard" | "shipments" | "products" | "companies" | "carriers" | "brokers" | "documents" | "team" | "settings", string>;
+  onboarding: {
+    create: string;
+    legalName: string;
+    name: string;
+    title: string;
+  };
+  pages: Record<string, { title: string; description: string }>;
+};
+
+const dictionaries: Record<Locale, Dictionary> = {
+  fr: {
+    auth: {
+      email: "Courriel",
+      password: "Mot de passe",
+      signIn: "Connexion",
+      signUp: "Créer un compte",
+      signOut: "Déconnexion",
+      subtitle: "Connectez-vous pour accéder à votre workspace Fixtarif.",
+      title: "Bienvenue dans Fixtarif",
+    },
+    common: {
+      loading: "Chargement",
+      workspace: "Workspace",
+    },
+    nav: {
+      dashboard: "Tableau",
+      shipments: "Expéditions",
+      products: "Produits",
+      companies: "Entreprises",
+      carriers: "Transporteurs",
+      brokers: "Courtiers",
+      documents: "Documents",
+      team: "Équipe",
+      settings: "Réglages",
+    },
+    onboarding: {
+      create: "Créer le workspace",
+      legalName: "Nom légal",
+      name: "Nom du workspace",
+      title: "Créer votre premier workspace",
+    },
+    pages: {
+      dashboard: {
+        title: "Tableau de bord",
+        description: "Vue privée du workspace avec les raccourcis de travail.",
+      },
+      shipments: {
+        title: "Expéditions",
+        description: "Liste et recherche. La création détaillée arrivera en phase 2.",
+      },
+      products: {
+        title: "Produits",
+        description: "Bibliothèque produit prévue en phase 1.",
+      },
+      companies: {
+        title: "Entreprises",
+        description: "Clients, fournisseurs, sites et contacts seront ajoutés en phase 1.",
+      },
+      carriers: {
+        title: "Transporteurs",
+        description: "Transporteurs et préférences de transport en phase 1.",
+      },
+      brokers: {
+        title: "Courtiers",
+        description: "Courtiers USA préparés pour les phases suivantes.",
+      },
+      documents: {
+        title: "Documents",
+        description: "Espace réservé aux documents générés après validation future.",
+      },
+      team: {
+        title: "Équipe",
+        description: "Gestion des rôles owner, admin et member.",
+      },
+      settings: {
+        title: "Réglages",
+        description: "Préférences workspace, langue, unités et références.",
+      },
+    },
+  },
+  en: {
+    auth: {
+      email: "Email",
+      password: "Password",
+      signIn: "Sign in",
+      signUp: "Create account",
+      signOut: "Sign out",
+      subtitle: "Sign in to access your Fixtarif workspace.",
+      title: "Welcome to Fixtarif",
+    },
+    common: {
+      loading: "Loading",
+      workspace: "Workspace",
+    },
+    nav: {
+      dashboard: "Dashboard",
+      shipments: "Shipments",
+      products: "Products",
+      companies: "Companies",
+      carriers: "Carriers",
+      brokers: "Brokers",
+      documents: "Documents",
+      team: "Team",
+      settings: "Settings",
+    },
+    onboarding: {
+      create: "Create workspace",
+      legalName: "Legal name",
+      name: "Workspace name",
+      title: "Create your first workspace",
+    },
+    pages: {
+      dashboard: {
+        title: "Dashboard",
+        description: "Private workspace view with work shortcuts.",
+      },
+      shipments: {
+        title: "Shipments",
+        description: "List and search. Detailed creation arrives in phase 2.",
+      },
+      products: {
+        title: "Products",
+        description: "Product library planned for phase 1.",
+      },
+      companies: {
+        title: "Companies",
+        description: "Customers, suppliers, sites and contacts will be added in phase 1.",
+      },
+      carriers: {
+        title: "Carriers",
+        description: "Carrier records and transport preferences in phase 1.",
+      },
+      brokers: {
+        title: "Brokers",
+        description: "US brokers prepared for later phases.",
+      },
+      documents: {
+        title: "Documents",
+        description: "Placeholder for generated documents after future validation.",
+      },
+      team: {
+        title: "Team",
+        description: "Role management for owner, admin and member.",
+      },
+      settings: {
+        title: "Settings",
+        description: "Workspace preferences, language, units and references.",
+      },
+    },
+  },
+};
+
+export function getDictionary(locale: Locale): Dictionary {
+  return dictionaries[locale];
+}

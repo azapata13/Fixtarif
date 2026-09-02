@@ -1,0 +1,26 @@
+# Décisions
+
+- Nom : Fixtarif
+- Domaine : fixtarif.ca
+- Architecture domaines :
+  - `fixtarif.ca` = site public / landing page
+  - `app.fixtarif.ca` = application authentifiée
+  - aucun accès aux données privées depuis le site public
+- Marché initial : PME canadiennes
+- Destination V1 : Canada + États-Unis
+- Bilingue FR/EN
+- Stack : Next.js + TypeScript + Tailwind + Supabase
+- Déploiement initial : Netlify
+- DNS : Cloudflare
+- Objet central : Shipment
+- UX centrale : Valider au lieu de créer
+- Création manuelle OU scan/import photo/PDF
+- Expéditions duplicables
+- Produits, entreprises, sites, contacts, transporteurs et courtiers réutilisables
+- Numéro de référence auto OU manuel
+- Préfixes configurables : ST, R, P, TT
+- Pas de tracking logistique complexe en V1
+- Documents historiques immuables via snapshots
+- CUSMA prévu dans l'architecture mais pas automatisé avant validation réglementaire
+- Sécurité : approche Zero Trust + OWASP Top 10 2025 + OWASP API Top 10 2023
+- Toute donnée métier doit rester scoppée par `workspace_id` et protégée par RLS Supabase
