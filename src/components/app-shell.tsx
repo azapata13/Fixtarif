@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { BriefcaseBusiness, Building2, FileText, Home, Package, Settings, ShieldCheck, Truck, Users } from "lucide-react";
 import { signOut } from "@/lib/auth/actions";
 import type { Dictionary } from "@/i18n/dictionaries";
@@ -34,7 +35,14 @@ export function AppShell({ children, dictionary, locale, workspaceName, role, us
       <aside className="border-b border-[var(--line)] bg-white/95 lg:min-h-screen lg:border-b-0 lg:border-r">
         <div className="flex items-center justify-between gap-4 px-5 py-5 lg:block">
           <div>
-            <p className="text-2xl font-semibold tracking-tight">Fixtarif</p>
+            <Image
+              alt="Fixtarif"
+              className="h-auto w-36"
+              height={72}
+              priority
+              src="/brand/fixtarif-logo.png"
+              width={144}
+            />
             <p className="mt-1 text-sm text-[var(--muted)]">{workspaceName}</p>
           </div>
           <form action={signOutAction}>

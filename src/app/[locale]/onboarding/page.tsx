@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import Image from "next/image";
 import { type LocaleParams } from "@/app/[locale]/layout";
 import { type Locale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
@@ -30,7 +31,7 @@ export default async function OnboardingPage({ params, searchParams }: Onboardin
   return (
     <main className="grid min-h-screen place-items-center px-5 py-10">
       <section className="w-full max-w-xl rounded-[28px] border border-[var(--line)] bg-white p-8 shadow-sm sm:p-10">
-        <p className="text-lg font-semibold tracking-tight">Fixtarif</p>
+        <Image alt="Fixtarif" className="h-auto w-40" height={80} priority src="/brand/fixtarif-logo.png" width={160} />
         <h1 className="mt-5 text-4xl font-semibold tracking-tight">{dictionary.onboarding.title}</h1>
         {message ? (
           <p className="mt-6 rounded-2xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-base text-neutral-700">{message}</p>
