@@ -49,3 +49,13 @@ Contrôles Fixtarif :
 - Tester qu'un utilisateur ne peut pas lire un autre workspace.
 - Vérifier `npm audit`.
 - Vérifier les headers HTTP en production.
+
+## Tests sécurité
+
+Test RLS rapide :
+
+```bash
+npm run test:rls
+```
+
+Ce test crée deux utilisateurs temporaires, crée un workspace avec le premier, confirme que le deuxième ne peut pas lire ce workspace ni son profil entreprise, puis supprime les données temporaires.
