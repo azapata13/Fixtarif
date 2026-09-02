@@ -66,6 +66,7 @@ export async function seedDemoBusinesses(locale: Locale) {
   }
 
   const supabase = await createClient();
+  let insertedCount = 0;
 
   for (const client of demoClients) {
     const { data: existing, error: lookupError } = await supabase
@@ -132,8 +133,11 @@ export async function seedDemoBusinesses(locale: Locale) {
     if (contactError) {
       redirect(`/${locale}/companies?message=${encodeURIComponent(contactError.message)}`);
     }
+
+    insertedCount += 1;
   }
 
   revalidatePath(`/${locale}/companies`);
-  redirect(`/${locale}/companies`);
+  const message = insertedCount > 0 ? `${insertedCount} clients de démonstration ajoutés.` : "Les clients de démonstration sont déjà présents.";
+  redirect(`/${locale}/companies?message=${encodeURIComponent(message)}`);
 }

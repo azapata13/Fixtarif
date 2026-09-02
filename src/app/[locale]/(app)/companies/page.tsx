@@ -21,6 +21,7 @@ export default async function CompaniesPage({ params, searchParams }: CompaniesP
   const { workspace, membership } = await getCurrentWorkspace();
   const businesses = workspace ? await getBusinessesForWorkspace(workspace.id) : [];
   const canManage = membership ? ["owner", "admin"].includes(membership.role) : false;
+  const hasDemoClients = businesses.some((business) => business.name === "Atelier Nordik") && businesses.some((business) => business.name === "Great Lakes Fabrication");
   const createBusinessAction = createBusiness.bind(null, locale);
   const seedDemoBusinessesAction = seedDemoBusinesses.bind(null, locale);
 
@@ -76,12 +77,17 @@ export default async function CompaniesPage({ params, searchParams }: CompaniesP
             <p className="mt-4 text-base leading-7 text-[var(--muted)]">
               Ajoute Atelier Nordik et Great Lakes Fabrication dans ce workspace pour tester les cartes et les prochains workflows.
             </p>
-            <button className="secondary-button mt-6" type="submit">
-              Ajouter les deux clients
-            </button>
+            {hasDemoClients ? (
+              <p className="mt-6 rounded-2xl bg-neutral-100 px-4 py-3 text-base font-semibold text-neutral-700">Clients de démonstration déjà ajoutés.</p>
+            ) : (
+              <button className="secondary-button mt-6" type="submit">
+                Ajouter les deux clients
+              </button>
+            )}
           </form>
         </section>
       ) : null}
+      <p className="mb-4 text-base font-semibold text-[var(--muted)]">{businesses.length} entreprise{businesses.length > 1 ? "s" : ""}</p>
       <section className="grid gap-4 xl:grid-cols-2">
         {businesses.length === 0 ? (
           <div className="rounded-[24px] border border-dashed border-[var(--line)] bg-white p-8">
