@@ -92,6 +92,14 @@ export default async function ShipmentDetailPage({ params, searchParams }: Shipm
                   </p>
                   <p className="mt-2 text-base text-[var(--muted)]">Quantité : {item.quantity}</p>
                 </div>
+                <div className="rounded-2xl bg-neutral-50 p-4">
+                  <p className="text-base font-semibold">Emballage</p>
+                  <p className="mt-2 text-base text-[var(--muted)]">{item.package_type}</p>
+                </div>
+                <div className="rounded-2xl bg-neutral-50 p-4">
+                  <p className="text-base font-semibold">Lot</p>
+                  <p className="mt-2 text-base text-[var(--muted)]">{item.lot_number ?? "À compléter si requis"}</p>
+                </div>
                 <label className="flex min-h-12 items-center gap-3 rounded-2xl border border-[var(--line)] bg-white px-4 py-3 text-base font-semibold shadow-sm">
                   <input className="h-5 w-5 accent-black" defaultChecked={item.quantity_confirmed} name="quantityConfirmed" type="checkbox" />
                   Quantité confirmée

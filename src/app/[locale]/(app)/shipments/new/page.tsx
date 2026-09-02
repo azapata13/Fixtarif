@@ -8,6 +8,7 @@ import { getBusinessesForWorkspace } from "@/lib/businesses/queries";
 import { getCarriersForWorkspace } from "@/lib/carriers/queries";
 import { getProductsForWorkspace } from "@/lib/products/queries";
 import { createShipmentDraft } from "@/lib/shipments/actions";
+import { getNextShipmentReference } from "@/lib/shipments/queries";
 import { getCurrentWorkspace } from "@/lib/workspaces/queries";
 
 type NewShipmentPageProps = {
@@ -23,6 +24,7 @@ export default async function NewShipmentPage({ params, searchParams }: NewShipm
   const businesses = workspace ? await getBusinessesForWorkspace(workspace.id) : [];
   const products = workspace ? await getProductsForWorkspace(workspace.id) : [];
   const carriers = workspace ? await getCarriersForWorkspace(workspace.id) : [];
+  const nextReference = workspace ? await getNextShipmentReference(workspace.id) : "ST-0001";
   const createShipmentDraftAction = createShipmentDraft.bind(null, locale);
 
   return (
@@ -33,7 +35,7 @@ export default async function NewShipmentPage({ params, searchParams }: NewShipm
       </Link>
       <PageHeader title="Nouvelle expédition Canada" description="Créer un brouillon manuel avec validation humaine de la quantité et du poids." />
       {message ? <p className="mb-4 rounded-2xl bg-neutral-100 px-4 py-3 text-base text-neutral-700">{message}</p> : null}
-      <NewShipmentForm action={createShipmentDraftAction} businesses={businesses} carriers={carriers} products={products} />
+      <NewShipmentForm action={createShipmentDraftAction} businesses={businesses} carriers={carriers} nextReference={nextReference} products={products} />
     </>
   );
 }

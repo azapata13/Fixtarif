@@ -34,3 +34,24 @@ export async function getShipmentForWorkspace(workspaceId: string, shipmentId: s
 
   return data;
 }
+
+export async function getNextShipmentReference(workspaceId: string) {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("shipments")
+    .select("reference")
+    .eq("workspace_id", workspaceId)
+    .like("reference", "ST-%");
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  const maxNumber = (data ?? []).reduce((max, shipment) => {
+    const match = /^ST-(\d+)$/.exec(shipment.reference);
+    return match ? Math.max(max, Number(match[1])) : max;
+  }, 0);
+
+  return `ST-${String(maxNumber + 1).padStart(4, "0")}`;
+}

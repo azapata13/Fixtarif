@@ -14,10 +14,11 @@ type NewShipmentFormProps = {
   action: (formData: FormData) => void;
   businesses: BusinessOption[];
   carriers: CarrierOption[];
+  nextReference: string;
   products: ProductOption[];
 };
 
-export function NewShipmentForm({ action, businesses, carriers, products }: NewShipmentFormProps) {
+export function NewShipmentForm({ action, businesses, carriers, nextReference, products }: NewShipmentFormProps) {
   const [selectedProductId, setSelectedProductId] = useState("");
   const [selectedCarrierId, setSelectedCarrierId] = useState("");
   const selectedProduct = useMemo(() => products.find((product) => product.id === selectedProductId), [products, selectedProductId]);
@@ -32,7 +33,7 @@ export function NewShipmentForm({ action, businesses, carriers, products }: NewS
       <div className="mt-6 grid gap-4 md:grid-cols-2">
         <label className="block text-base font-semibold">
           Référence
-          <input className="field" name="reference" placeholder="ST-0001" required />
+          <input className="field" defaultValue={nextReference} name="reference" required />
         </label>
         <label className="block text-base font-semibold">
           Motif
