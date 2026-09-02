@@ -4,6 +4,9 @@ export type BusinessRole = "client" | "supplier" | "subcontractor" | "consignee"
 export type ContactType = "commercial" | "receiving" | "shipping" | "project" | "accounting" | "other";
 export type PackageType = "pallet" | "box" | "crate" | "bundle" | "drum" | "other";
 export type CarrierType = "ltl" | "ftl" | "flatbed" | "parcel" | "other";
+export type ShipmentStatus = "draft" | "validation" | "ready" | "archived";
+export type ShipmentReason = "sale" | "subcontracting" | "repair" | "treatment" | "return_rma" | "sample_test" | "loaned_material" | "tools_return" | "other";
+export type PaymentTerm = "prepaid" | "collect" | "third_party";
 
 export type Database = {
   public: {
@@ -504,6 +507,148 @@ export type Database = {
           },
         ];
       };
+      shipments: {
+        Row: {
+          id: string;
+          workspace_id: string;
+          reference: string;
+          shipment_date: string;
+          destination_country: "CA" | "US";
+          reason: ShipmentReason;
+          language: "fr" | "en";
+          status: ShipmentStatus;
+          created_by: string;
+          destination_business_id: string | null;
+          carrier_id: string | null;
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          workspace_id: string;
+          reference: string;
+          shipment_date?: string;
+          destination_country?: "CA" | "US";
+          reason?: ShipmentReason;
+          language?: "fr" | "en";
+          status?: ShipmentStatus;
+          created_by: string;
+          destination_business_id?: string | null;
+          carrier_id?: string | null;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["shipments"]["Insert"]>;
+        Relationships: [];
+      };
+      shipment_items: {
+        Row: {
+          id: string;
+          workspace_id: string;
+          shipment_id: string;
+          product_id: string | null;
+          product_snapshot_json: Record<string, unknown>;
+          name: string;
+          part_number: string | null;
+          quantity: number;
+          quantity_confirmed: boolean;
+          weight: number;
+          weight_unit: "lb" | "kg";
+          weight_confirmed: boolean;
+          length: number | null;
+          width: number | null;
+          height: number | null;
+          dimension_unit: "in" | "cm";
+          package_type: PackageType;
+          lot_number: string | null;
+          container_reference: string | null;
+          release_note_reference: string | null;
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          workspace_id: string;
+          shipment_id: string;
+          product_id?: string | null;
+          product_snapshot_json?: Record<string, unknown>;
+          name: string;
+          part_number?: string | null;
+          quantity: number;
+          quantity_confirmed?: boolean;
+          weight: number;
+          weight_unit?: "lb" | "kg";
+          weight_confirmed?: boolean;
+          length?: number | null;
+          width?: number | null;
+          height?: number | null;
+          dimension_unit?: "in" | "cm";
+          package_type?: PackageType;
+          lot_number?: string | null;
+          container_reference?: string | null;
+          release_note_reference?: string | null;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["shipment_items"]["Insert"]>;
+        Relationships: [];
+      };
+      shipment_transport: {
+        Row: {
+          id: string;
+          workspace_id: string;
+          shipment_id: string;
+          carrier_id: string | null;
+          carrier_snapshot_json: Record<string, unknown>;
+          pro_number: string | null;
+          bol_number: string | null;
+          payment_term: PaymentTerm;
+          needs_bol: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          workspace_id: string;
+          shipment_id: string;
+          carrier_id?: string | null;
+          carrier_snapshot_json?: Record<string, unknown>;
+          pro_number?: string | null;
+          bol_number?: string | null;
+          payment_term?: PaymentTerm;
+          needs_bol?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["shipment_transport"]["Insert"]>;
+        Relationships: [];
+      };
+      shipment_audit_log: {
+        Row: {
+          id: string;
+          workspace_id: string;
+          shipment_id: string | null;
+          actor_user_id: string | null;
+          action: string;
+          metadata_json: Record<string, unknown>;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          workspace_id: string;
+          shipment_id?: string | null;
+          actor_user_id?: string | null;
+          action: string;
+          metadata_json?: Record<string, unknown>;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["shipment_audit_log"]["Insert"]>;
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -521,6 +666,9 @@ export type Database = {
       contact_type: ContactType;
       package_type: PackageType;
       carrier_type: CarrierType;
+      shipment_status: ShipmentStatus;
+      shipment_reason: ShipmentReason;
+      payment_term: PaymentTerm;
     };
     CompositeTypes: Record<string, never>;
   };
