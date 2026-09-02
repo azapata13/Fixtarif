@@ -1,34 +1,35 @@
 import Link from "next/link";
 import Image from "next/image";
-import { BriefcaseBusiness, Building2, FileText, Home, Package, Settings, ShieldCheck, Truck, Users } from "lucide-react";
+import { BriefcaseBusiness, Building2, FileText, Home, LockKeyhole, Package, Settings, ShieldCheck, Truck, Users } from "lucide-react";
 import { signOut } from "@/lib/auth/actions";
 import type { Dictionary } from "@/i18n/dictionaries";
 import type { Locale } from "@/i18n/config";
 import type { WorkspaceRole } from "@/lib/supabase/types";
 
 const navItems = [
-  { key: "dashboard", href: "dashboard", icon: Home },
-  { key: "shipments", href: "shipments", icon: Truck },
-  { key: "products", href: "products", icon: Package },
-  { key: "companies", href: "companies", icon: Building2 },
-  { key: "carriers", href: "carriers", icon: BriefcaseBusiness },
-  { key: "brokers", href: "brokers", icon: ShieldCheck },
-  { key: "documents", href: "documents", icon: FileText },
-  { key: "team", href: "team", icon: Users },
-  { key: "settings", href: "settings", icon: Settings },
+  { key: "dashboard", href: "dashboard", icon: Home, managerOnly: false },
+  { key: "shipments", href: "shipments", icon: Truck, managerOnly: false },
+  { key: "products", href: "products", icon: Package, managerOnly: false },
+  { key: "companies", href: "companies", icon: Building2, managerOnly: false },
+  { key: "carriers", href: "carriers", icon: BriefcaseBusiness, managerOnly: false },
+  { key: "brokers", href: "brokers", icon: ShieldCheck, managerOnly: false },
+  { key: "documents", href: "documents", icon: FileText, managerOnly: false },
+  { key: "team", href: "team", icon: Users, managerOnly: false },
+  { key: "settings", href: "settings", icon: Settings, managerOnly: false },
+  { key: "admin", href: "admin", icon: LockKeyhole, managerOnly: true },
 ] as const;
 
 type AppShellProps = {
   children: React.ReactNode;
   dictionary: Dictionary;
   locale: Locale;
-  workspaceName: string;
   role: WorkspaceRole;
   userEmail: string;
 };
 
 export function AppShell({ children, dictionary, locale, role, userEmail }: AppShellProps) {
   const signOutAction = signOut.bind(null, locale);
+  const isManager = role === "owner" || role === "admin";
 
   return (
     <div className="min-h-screen lg:grid lg:grid-cols-[280px_1fr]">
@@ -51,7 +52,7 @@ export function AppShell({ children, dictionary, locale, role, userEmail }: AppS
           </form>
         </div>
         <nav className="flex gap-2 overflow-x-auto px-4 pb-4 lg:block lg:space-y-2 lg:overflow-visible">
-          {navItems.map((item) => {
+          {navItems.filter((item) => !item.managerOnly || isManager).map((item) => {
             const Icon = item.icon;
             return (
               <Link

@@ -14,7 +14,7 @@ export type Dictionary = {
     loading: string;
     workspace: string;
   };
-  nav: Record<"dashboard" | "shipments" | "products" | "companies" | "carriers" | "brokers" | "documents" | "team" | "settings", string>;
+  nav: Record<"dashboard" | "shipments" | "products" | "companies" | "carriers" | "brokers" | "documents" | "team" | "settings" | "admin", string>;
   onboarding: {
     create: string;
     legalName: string;
@@ -49,6 +49,7 @@ const dictionaries: Record<Locale, Dictionary> = {
       documents: "Documents",
       team: "Équipe",
       settings: "Réglages",
+      admin: "Admin",
     },
     onboarding: {
       create: "Créer le workspace",
@@ -93,6 +94,10 @@ const dictionaries: Record<Locale, Dictionary> = {
         title: "Réglages",
         description: "Préférences workspace, langue, unités et références.",
       },
+      admin: {
+        title: "Administration",
+        description: "Vue propriétaire du workspace, des rôles et des contrôles de sécurité.",
+      },
     },
   },
   en: {
@@ -119,6 +124,7 @@ const dictionaries: Record<Locale, Dictionary> = {
       documents: "Documents",
       team: "Team",
       settings: "Settings",
+      admin: "Admin",
     },
     onboarding: {
       create: "Create workspace",
@@ -162,6 +168,10 @@ const dictionaries: Record<Locale, Dictionary> = {
       settings: {
         title: "Settings",
         description: "Workspace preferences, language, units and references.",
+      },
+      admin: {
+        title: "Administration",
+        description: "Owner view for workspace, roles and security controls.",
       },
     },
   },

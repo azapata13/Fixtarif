@@ -1,0 +1,50 @@
+import { createClient } from "@/lib/supabase/server";
+
+export async function getAdminOverviewForWorkspace(workspaceId: string) {
+  const supabase = await createClient();
+
+  const [
+    membersResult,
+    businessesResult,
+    productsResult,
+    carriersResult,
+    brokersResult,
+    shipmentsResult,
+    activeShipmentsResult,
+    auditLogResult,
+    memberRowsResult,
+  ] = await Promise.all([
+    supabase.from("workspace_members").select("*", { count: "exact", head: true }).eq("workspace_id", workspaceId),
+    supabase.from("businesses").select("*", { count: "exact", head: true }).eq("workspace_id", workspaceId),
+    supabase.from("products").select("*", { count: "exact", head: true }).eq("workspace_id", workspaceId),
+    supabase.from("carriers").select("*", { count: "exact", head: true }).eq("workspace_id", workspaceId),
+    supabase.from("brokers").select("*", { count: "exact", head: true }).eq("workspace_id", workspaceId),
+    supabase.from("shipments").select("*", { count: "exact", head: true }).eq("workspace_id", workspaceId),
+    supabase.from("shipments").select("*", { count: "exact", head: true }).eq("workspace_id", workspaceId).neq("status", "archived"),
+    supabase
+      .from("shipment_audit_log")
+      .select("id, action, actor_user_id, created_at, metadata_json")
+      .eq("workspace_id", workspaceId)
+      .order("created_at", { ascending: false })
+      .limit(5),
+    supabase
+      .from("workspace_members")
+      .select("user_id, role, status, created_at")
+      .eq("workspace_id", workspaceId)
+      .order("created_at", { ascending: true }),
+  ]);
+
+  return {
+    counts: {
+      members: membersResult.count ?? 0,
+      businesses: businessesResult.count ?? 0,
+      products: productsResult.count ?? 0,
+      carriers: carriersResult.count ?? 0,
+      brokers: brokersResult.count ?? 0,
+      shipments: shipmentsResult.count ?? 0,
+      activeShipments: activeShipmentsResult.count ?? 0,
+    },
+    auditLog: auditLogResult.data ?? [],
+    members: memberRowsResult.data ?? [],
+  };
+}

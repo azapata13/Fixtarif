@@ -32,7 +32,6 @@ export default async function PrivateLayout({
       locale={locale}
       role={membership.role}
       userEmail={user.email ?? ""}
-      workspaceName={workspace.name}
     >
       {children}
     </AppShell>
