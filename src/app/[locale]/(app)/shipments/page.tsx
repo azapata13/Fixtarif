@@ -42,6 +42,8 @@ export default async function ShipmentsPage({ params, searchParams }: ShipmentsP
         ) : null}
         {shipments.map((shipment) => {
           const item = Array.isArray(shipment.shipment_items) ? shipment.shipment_items[0] : shipment.shipment_items;
+          const destination = Array.isArray(shipment.businesses) ? shipment.businesses[0] : shipment.businesses;
+          const carrier = Array.isArray(shipment.carriers) ? shipment.carriers[0] : shipment.carriers;
           const quantityConfirmed = item?.quantity_confirmed ?? false;
           const weightConfirmed = item?.weight_confirmed ?? false;
 
@@ -52,7 +54,7 @@ export default async function ShipmentsPage({ params, searchParams }: ShipmentsP
                   <p className="text-sm font-semibold uppercase tracking-wide text-[var(--muted)]">{shipment.status}</p>
                   <h2 className="mt-2 text-2xl font-semibold tracking-tight text-neutral-950">{shipment.reference}</h2>
                   <p className="mt-2 text-base text-[var(--muted)]">
-                    {shipment.destination_country} · {shipment.reason} · {shipment.shipment_date}
+                    {destination?.name ?? shipment.destination_country} · {carrier?.name ?? "Transporteur à compléter"} · {shipment.shipment_date}
                   </p>
                 </div>
                 <span className="inline-flex items-center gap-2 rounded-full bg-neutral-100 px-4 py-2 text-sm font-semibold text-neutral-700">

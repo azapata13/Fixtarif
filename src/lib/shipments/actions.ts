@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { Locale } from "@/i18n/config";
-import type { PaymentTerm, ShipmentReason } from "@/lib/supabase/types";
+import type { PackageType, PaymentTerm, ShipmentReason } from "@/lib/supabase/types";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentWorkspace } from "@/lib/workspaces/queries";
 
@@ -34,6 +34,12 @@ function readPaymentTerm(formData: FormData): PaymentTerm {
   return allowed.includes(value as PaymentTerm) ? (value as PaymentTerm) : "prepaid";
 }
 
+function readPackageType(formData: FormData): PackageType {
+  const value = readField(formData, "packageType");
+  const allowed: PackageType[] = ["pallet", "box", "crate", "bundle", "drum", "other"];
+  return allowed.includes(value as PackageType) ? (value as PackageType) : "pallet";
+}
+
 export async function createShipmentDraft(locale: Locale, formData: FormData) {
   const { workspace, membership, user } = await getCurrentWorkspace();
 
@@ -42,11 +48,11 @@ export async function createShipmentDraft(locale: Locale, formData: FormData) {
   }
 
   const reference = readField(formData, "reference");
-  const productName = readField(formData, "productName");
+  const productNameFromForm = readField(formData, "productName");
   const quantity = readPositiveNumber(formData, "quantity");
   const weight = readPositiveNumber(formData, "weight");
 
-  if (!reference || !productName || !quantity || !weight) {
+  if (!reference || !quantity || !weight) {
     redirect(`/${locale}/shipments/new?message=${encodeURIComponent("Référence, produit, quantité et poids sont requis.")}`);
   }
 
@@ -61,6 +67,12 @@ export async function createShipmentDraft(locale: Locale, formData: FormData) {
   const { data: carrier } = carrierId
     ? await supabase.from("carriers").select("*").eq("workspace_id", workspace.id).eq("id", carrierId).maybeSingle()
     : { data: null };
+
+  const productName = productNameFromForm || product?.name;
+
+  if (!productName) {
+    redirect(`/${locale}/shipments/new?message=${encodeURIComponent("Le nom du produit est requis.")}`);
+  }
 
   const { data: shipment, error: shipmentError } = await supabase
     .from("shipments")
@@ -89,13 +101,17 @@ export async function createShipmentDraft(locale: Locale, formData: FormData) {
     product_id: productId,
     product_snapshot_json: product ?? {},
     name: productName,
-    part_number: readField(formData, "partNumber") || null,
+    part_number: readField(formData, "partNumber") || product?.part_number || null,
     quantity,
     quantity_confirmed: formData.get("quantityConfirmed") === "on",
     weight,
-    weight_unit: "lb",
+    weight_unit: readField(formData, "weightUnit") === "kg" ? "kg" : "lb",
     weight_confirmed: formData.get("weightConfirmed") === "on",
-    package_type: "pallet",
+    length: readPositiveNumber(formData, "length"),
+    width: readPositiveNumber(formData, "width"),
+    height: readPositiveNumber(formData, "height"),
+    dimension_unit: readField(formData, "dimensionUnit") === "cm" ? "cm" : "in",
+    package_type: readPackageType(formData),
     lot_number: readField(formData, "lotNumber") || null,
   });
 
