@@ -21,8 +21,12 @@ type NewShipmentFormProps = {
 export function NewShipmentForm({ action, businesses, carriers, nextReference, products }: NewShipmentFormProps) {
   const [selectedProductId, setSelectedProductId] = useState("");
   const [selectedCarrierId, setSelectedCarrierId] = useState("");
+  const [selectedBusinessId, setSelectedBusinessId] = useState("");
   const selectedProduct = useMemo(() => products.find((product) => product.id === selectedProductId), [products, selectedProductId]);
   const selectedCarrier = useMemo(() => carriers.find((carrier) => carrier.id === selectedCarrierId), [carriers, selectedCarrierId]);
+  const selectedBusiness = useMemo(() => businesses.find((business) => business.id === selectedBusinessId), [businesses, selectedBusinessId]);
+  const businessSites = Array.isArray(selectedBusiness?.business_sites) ? selectedBusiness.business_sites : [];
+  const businessContacts = Array.isArray(selectedBusiness?.contacts) ? selectedBusiness.contacts : [];
 
   return (
     <form action={action} className="rounded-[24px] border border-[var(--line)] bg-white p-6 shadow-sm">
@@ -51,11 +55,33 @@ export function NewShipmentForm({ action, businesses, carriers, nextReference, p
         </label>
         <label className="block text-base font-semibold">
           Destination
-          <select className="field" name="destinationBusinessId" defaultValue="">
+          <select className="field" name="destinationBusinessId" value={selectedBusinessId} onChange={(event) => setSelectedBusinessId(event.target.value)}>
             <option value="">À compléter</option>
             {businesses.map((business) => (
               <option key={business.id} value={business.id}>
                 {business.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="block text-base font-semibold">
+          Site de livraison
+          <select className="field" name="destinationSiteId" defaultValue="" key={`site-${selectedBusinessId}`}>
+            <option value="">Site à compléter</option>
+            {businessSites.map((site) => (
+              <option key={site.id} value={site.id}>
+                {site.name} {site.city ? `- ${site.city}` : ""}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="block text-base font-semibold">
+          Contact réception
+          <select className="field" name="destinationContactId" defaultValue="" key={`contact-${selectedBusinessId}`}>
+            <option value="">Contact à compléter</option>
+            {businessContacts.map((contact) => (
+              <option key={contact.id} value={contact.id}>
+                {contact.name}
               </option>
             ))}
           </select>
@@ -115,6 +141,18 @@ export function NewShipmentForm({ action, businesses, carriers, nextReference, p
         <label className="flex min-h-12 items-center gap-3 rounded-2xl border border-[var(--line)] bg-white px-4 py-3 text-base font-semibold shadow-sm">
           <input className="h-5 w-5 accent-black" name="weightConfirmed" type="checkbox" />
           Poids confirmé
+        </label>
+        <label className="block text-base font-semibold">
+          Nombre de colis/palettes
+          <input className="field" defaultValue="1" min="1" name="packageCount" step="1" type="number" required />
+        </label>
+        <label className="block text-base font-semibold">
+          Étiquette destination
+          <input className="field" name="destinationLabel" placeholder={selectedBusiness?.name ?? "Destination"} />
+        </label>
+        <label className="flex min-h-12 items-center gap-3 rounded-2xl border border-[var(--line)] bg-white px-4 py-3 text-base font-semibold shadow-sm">
+          <input className="h-5 w-5 accent-black" defaultChecked={selectedProduct?.stackable ?? false} key={`stackable-${selectedProduct?.id ?? "manual"}`} name="stackable" type="checkbox" />
+          Colis empilable
         </label>
         <label className="block text-base font-semibold">
           Paiement transport

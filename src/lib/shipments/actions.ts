@@ -59,6 +59,7 @@ export async function createShipmentDraft(locale: Locale, formData: FormData) {
   const supabase = await createClient();
   const productId = readOptionalId(formData, "productId");
   const carrierId = readOptionalId(formData, "carrierId");
+  const packageCount = Math.max(1, Math.trunc(readPositiveNumber(formData, "packageCount") ?? 1));
 
   const { data: product } = productId
     ? await supabase.from("products").select("*").eq("workspace_id", workspace.id).eq("id", productId).maybeSingle()
@@ -85,6 +86,8 @@ export async function createShipmentDraft(locale: Locale, formData: FormData) {
       status: "draft",
       created_by: user.id,
       destination_business_id: readOptionalId(formData, "destinationBusinessId"),
+      destination_site_id: readOptionalId(formData, "destinationSiteId"),
+      destination_contact_id: readOptionalId(formData, "destinationContactId"),
       carrier_id: carrierId,
       notes: readField(formData, "notes") || null,
     })
@@ -117,6 +120,26 @@ export async function createShipmentDraft(locale: Locale, formData: FormData) {
 
   if (itemError) {
     redirect(`/${locale}/shipments/new?message=${encodeURIComponent(itemError.message)}`);
+  }
+
+  const { error: packageError } = await supabase.from("shipment_packages").insert({
+    workspace_id: workspace.id,
+    shipment_id: shipment.id,
+    package_number: 1,
+    package_count: packageCount,
+    package_type: readPackageType(formData),
+    weight,
+    weight_unit: readField(formData, "weightUnit") === "kg" ? "kg" : "lb",
+    length: readPositiveNumber(formData, "length"),
+    width: readPositiveNumber(formData, "width"),
+    height: readPositiveNumber(formData, "height"),
+    dimension_unit: readField(formData, "dimensionUnit") === "cm" ? "cm" : "in",
+    stackable: formData.get("stackable") === "on",
+    destination_label: readField(formData, "destinationLabel") || null,
+  });
+
+  if (packageError) {
+    redirect(`/${locale}/shipments/new?message=${encodeURIComponent(packageError.message)}`);
   }
 
   const { error: transportError } = await supabase.from("shipment_transport").insert({

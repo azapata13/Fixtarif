@@ -39,7 +39,10 @@ export default async function ShipmentDetailPage({ params, searchParams }: Shipm
 
   const item = Array.isArray(shipment.shipment_items) ? shipment.shipment_items[0] : shipment.shipment_items;
   const transport = Array.isArray(shipment.shipment_transport) ? shipment.shipment_transport[0] : shipment.shipment_transport;
+  const packageRow = Array.isArray(shipment.shipment_packages) ? shipment.shipment_packages[0] : shipment.shipment_packages;
   const destination = Array.isArray(shipment.businesses) ? shipment.businesses[0] : shipment.businesses;
+  const site = Array.isArray(shipment.business_sites) ? shipment.business_sites[0] : shipment.business_sites;
+  const contact = Array.isArray(shipment.contacts) ? shipment.contacts[0] : shipment.contacts;
   const carrier = Array.isArray(shipment.carriers) ? shipment.carriers[0] : shipment.carriers;
   const updateConfirmationsAction = updateShipmentItemConfirmations.bind(null, locale);
 
@@ -56,6 +59,8 @@ export default async function ShipmentDetailPage({ params, searchParams }: Shipm
           <h2 className="text-2xl font-semibold tracking-tight">Validation</h2>
           <ul className="mt-5 grid gap-3">
             <StatusRow checked={Boolean(destination)} label={destination ? `Destination : ${destination.name}` : "Destination manquante"} />
+            <StatusRow checked={Boolean(site)} label={site ? `Site : ${site.name}` : "Site à compléter"} />
+            <StatusRow checked={Boolean(contact)} label={contact ? `Contact : ${contact.name}` : "Contact à compléter"} />
             <StatusRow checked={Boolean(item)} label={item ? `Produit : ${item.name}` : "Produit manquant"} />
             <StatusRow checked={Boolean(item?.quantity_confirmed)} label="Quantité confirmée" />
             <StatusRow checked={Boolean(item?.weight_confirmed)} label="Poids confirmé" />
@@ -95,6 +100,12 @@ export default async function ShipmentDetailPage({ params, searchParams }: Shipm
                 <div className="rounded-2xl bg-neutral-50 p-4">
                   <p className="text-base font-semibold">Emballage</p>
                   <p className="mt-2 text-base text-[var(--muted)]">{item.package_type}</p>
+                </div>
+                <div className="rounded-2xl bg-neutral-50 p-4">
+                  <p className="text-base font-semibold">Colis / palettes</p>
+                  <p className="mt-2 text-base text-[var(--muted)]">
+                    {packageRow ? `${packageRow.package_count} ${packageRow.package_type}` : "À compléter"}
+                  </p>
                 </div>
                 <div className="rounded-2xl bg-neutral-50 p-4">
                   <p className="text-base font-semibold">Lot</p>

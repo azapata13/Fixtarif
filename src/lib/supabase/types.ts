@@ -519,6 +519,8 @@ export type Database = {
           status: ShipmentStatus;
           created_by: string;
           destination_business_id: string | null;
+          destination_site_id: string | null;
+          destination_contact_id: string | null;
           carrier_id: string | null;
           notes: string | null;
           created_at: string;
@@ -535,6 +537,8 @@ export type Database = {
           status?: ShipmentStatus;
           created_by: string;
           destination_business_id?: string | null;
+          destination_site_id?: string | null;
+          destination_contact_id?: string | null;
           carrier_id?: string | null;
           notes?: string | null;
           created_at?: string;
@@ -625,6 +629,48 @@ export type Database = {
           updated_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["shipment_transport"]["Insert"]>;
+        Relationships: [];
+      };
+      shipment_packages: {
+        Row: {
+          id: string;
+          workspace_id: string;
+          shipment_id: string;
+          package_number: number;
+          package_count: number;
+          package_type: PackageType;
+          weight: number | null;
+          weight_unit: "lb" | "kg";
+          length: number | null;
+          width: number | null;
+          height: number | null;
+          dimension_unit: "in" | "cm";
+          stackable: boolean | null;
+          destination_label: string | null;
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          workspace_id: string;
+          shipment_id: string;
+          package_number?: number;
+          package_count?: number;
+          package_type?: PackageType;
+          weight?: number | null;
+          weight_unit?: "lb" | "kg";
+          length?: number | null;
+          width?: number | null;
+          height?: number | null;
+          dimension_unit?: "in" | "cm";
+          stackable?: boolean | null;
+          destination_label?: string | null;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["shipment_packages"]["Insert"]>;
         Relationships: [];
       };
       shipment_audit_log: {

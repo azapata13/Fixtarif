@@ -13,7 +13,7 @@ export async function getBusinessesForWorkspace(workspaceId: string) {
         phone,
         roles,
         notes,
-        business_sites(id, name, city, region, country),
+        business_sites(id, name, city, region, country, dock_info, appointment_required, call_before_minutes),
         contacts(id, name, email, phone, contact_type)
       `,
     )

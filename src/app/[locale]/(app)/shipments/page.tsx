@@ -43,7 +43,9 @@ export default async function ShipmentsPage({ params, searchParams }: ShipmentsP
         {shipments.map((shipment) => {
           const item = Array.isArray(shipment.shipment_items) ? shipment.shipment_items[0] : shipment.shipment_items;
           const destination = Array.isArray(shipment.businesses) ? shipment.businesses[0] : shipment.businesses;
+          const site = Array.isArray(shipment.business_sites) ? shipment.business_sites[0] : shipment.business_sites;
           const carrier = Array.isArray(shipment.carriers) ? shipment.carriers[0] : shipment.carriers;
+          const packageRow = Array.isArray(shipment.shipment_packages) ? shipment.shipment_packages[0] : shipment.shipment_packages;
           const quantityConfirmed = item?.quantity_confirmed ?? false;
           const weightConfirmed = item?.weight_confirmed ?? false;
 
@@ -54,7 +56,8 @@ export default async function ShipmentsPage({ params, searchParams }: ShipmentsP
                   <p className="text-sm font-semibold uppercase tracking-wide text-[var(--muted)]">{shipment.status}</p>
                   <h2 className="mt-2 text-2xl font-semibold tracking-tight text-neutral-950">{shipment.reference}</h2>
                   <p className="mt-2 text-base text-[var(--muted)]">
-                    {destination?.name ?? shipment.destination_country} · {carrier?.name ?? "Transporteur à compléter"} · {shipment.shipment_date}
+                    {destination?.name ?? shipment.destination_country}
+                    {site?.city ? ` · ${site.city}` : ""} · {carrier?.name ?? "Transporteur à compléter"} · {shipment.shipment_date}
                   </p>
                 </div>
                 <span className="inline-flex items-center gap-2 rounded-full bg-neutral-100 px-4 py-2 text-sm font-semibold text-neutral-700">
@@ -75,6 +78,10 @@ export default async function ShipmentsPage({ params, searchParams }: ShipmentsP
                   <p className="flex items-center gap-3">
                     <Scale aria-hidden="true" size={20} />
                     {item.weight} {item.weight_unit} {weightConfirmed ? "confirmé" : "à confirmer"}
+                  </p>
+                  <p className="flex items-center gap-3">
+                    <Truck aria-hidden="true" size={20} />
+                    {packageRow ? `${packageRow.package_count} ${packageRow.package_type}` : "Colis à compléter"}
                   </p>
                 </div>
               ) : null}
