@@ -3,6 +3,7 @@ export type MemberStatus = "active" | "invited" | "disabled";
 export type BusinessRole = "client" | "supplier" | "subcontractor" | "consignee" | "buyer" | "other";
 export type ContactType = "commercial" | "receiving" | "shipping" | "project" | "accounting" | "other";
 export type PackageType = "pallet" | "box" | "crate" | "bundle" | "drum" | "other";
+export type CarrierType = "ltl" | "ftl" | "flatbed" | "parcel" | "other";
 
 export type Database = {
   public: {
@@ -400,6 +401,109 @@ export type Database = {
           },
         ];
       };
+      carriers: {
+        Row: {
+          id: string;
+          workspace_id: string;
+          name: string;
+          carrier_type: CarrierType;
+          email: string | null;
+          phone: string | null;
+          default_provides_bol: boolean;
+          notes: string | null;
+          active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          workspace_id: string;
+          name: string;
+          carrier_type?: CarrierType;
+          email?: string | null;
+          phone?: string | null;
+          default_provides_bol?: boolean;
+          notes?: string | null;
+          active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          workspace_id?: string;
+          name?: string;
+          carrier_type?: CarrierType;
+          email?: string | null;
+          phone?: string | null;
+          default_provides_bol?: boolean;
+          notes?: string | null;
+          active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "carriers_workspace_id_fkey";
+            columns: ["workspace_id"];
+            isOneToOne: false;
+            referencedRelation: "workspaces";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      brokers: {
+        Row: {
+          id: string;
+          workspace_id: string;
+          name: string;
+          contact_name: string | null;
+          email: string | null;
+          phone: string | null;
+          address: string | null;
+          is_default_usa: boolean;
+          notes: string | null;
+          active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          workspace_id: string;
+          name: string;
+          contact_name?: string | null;
+          email?: string | null;
+          phone?: string | null;
+          address?: string | null;
+          is_default_usa?: boolean;
+          notes?: string | null;
+          active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          workspace_id?: string;
+          name?: string;
+          contact_name?: string | null;
+          email?: string | null;
+          phone?: string | null;
+          address?: string | null;
+          is_default_usa?: boolean;
+          notes?: string | null;
+          active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "brokers_workspace_id_fkey";
+            columns: ["workspace_id"];
+            isOneToOne: false;
+            referencedRelation: "workspaces";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -416,6 +520,7 @@ export type Database = {
       business_role: BusinessRole;
       contact_type: ContactType;
       package_type: PackageType;
+      carrier_type: CarrierType;
     };
     CompositeTypes: Record<string, never>;
   };
