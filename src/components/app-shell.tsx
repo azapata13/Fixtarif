@@ -27,7 +27,7 @@ type AppShellProps = {
   userEmail: string;
 };
 
-export function AppShell({ children, dictionary, locale, workspaceName, role, userEmail }: AppShellProps) {
+export function AppShell({ children, dictionary, locale, role, userEmail }: AppShellProps) {
   const signOutAction = signOut.bind(null, locale);
 
   return (
@@ -43,7 +43,6 @@ export function AppShell({ children, dictionary, locale, workspaceName, role, us
               src="/brand/fixtarif-logo.png"
               width={144}
             />
-            <p className="mt-1 text-sm text-[var(--muted)]">{workspaceName}</p>
           </div>
           <form action={signOutAction}>
             <button className="secondary-button !min-h-11 !px-5 !py-2 !text-sm" type="submit">
