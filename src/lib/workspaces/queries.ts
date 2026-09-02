@@ -32,3 +32,18 @@ export async function getCurrentWorkspace() {
     workspace: workspace ?? null,
   };
 }
+
+export async function getCompanyProfileForWorkspace(workspaceId: string) {
+  if (!isSupabaseConfigured()) {
+    return null;
+  }
+
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("company_profiles")
+    .select("id, workspace_id, legal_name, language, weight_unit, dimension_unit, currency, reference_format")
+    .eq("workspace_id", workspaceId)
+    .maybeSingle();
+
+  return data ?? null;
+}

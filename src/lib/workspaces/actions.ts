@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { isSupabaseConfigured } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
 import type { Locale } from "@/i18n/config";
+import { getCurrentWorkspace } from "@/lib/workspaces/queries";
 
 function field(formData: FormData, key: string) {
   const value = formData.get(key);
@@ -52,4 +53,42 @@ export async function createWorkspace(locale: Locale, formData: FormData) {
 
   revalidatePath(`/${locale}`, "layout");
   redirect(`/${locale}/dashboard`);
+}
+
+export async function updateWorkspaceSettings(locale: Locale, formData: FormData) {
+  const { workspace, membership } = await getCurrentWorkspace();
+
+  if (!workspace || !membership) {
+    redirect(`/${locale}/onboarding`);
+  }
+
+  if (!["owner", "admin"].includes(membership.role)) {
+    redirect(`/${locale}/settings?message=${encodeURIComponent("Permission requise.")}`);
+  }
+
+  const language = field(formData, "language");
+  const nextLocale: Locale = language === "en" ? "en" : "fr";
+  const weightUnit = field(formData, "weightUnit") === "kg" ? "kg" : "lb";
+  const dimensionUnit = field(formData, "dimensionUnit") === "cm" ? "cm" : "in";
+  const currency = field(formData, "currency") === "USD" ? "USD" : "CAD";
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("company_profiles")
+    .update({
+      language: nextLocale,
+      weight_unit: weightUnit,
+      dimension_unit: dimensionUnit,
+      currency,
+      reference_format: field(formData, "referenceFormat") || null,
+    })
+    .eq("workspace_id", workspace.id);
+
+  if (error) {
+    redirect(`/${locale}/settings?message=${encodeURIComponent(error.message)}`);
+  }
+
+  revalidatePath(`/${locale}`, "layout");
+  revalidatePath(`/${nextLocale}`, "layout");
+  redirect(`/${nextLocale}/settings?message=${encodeURIComponent(nextLocale === "fr" ? "Réglages enregistrés." : "Settings saved.")}`);
 }
