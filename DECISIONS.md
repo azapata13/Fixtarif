@@ -11,7 +11,7 @@
 - Bilingue FR/EN
 - Stack : Next.js + TypeScript + Tailwind + Supabase
 - Déploiement initial : Netlify
-- DNS : Cloudflare
+- DNS actuel : GoDaddy
 - Objet central : Shipment
 - UX centrale : Valider au lieu de créer
 - Création manuelle OU scan/import photo/PDF
@@ -24,3 +24,5 @@
 - CUSMA prévu dans l'architecture mais pas automatisé avant validation réglementaire
 - Sécurité : approche Zero Trust + OWASP Top 10 2025 + OWASP API Top 10 2023
 - Toute donnée métier doit rester scoppée par `workspace_id` et protégée par RLS Supabase
+- Prévoir un dashboard admin séparé pour supervision, support et gestion interne.
+- Prévoir Google OAuth après la validation de l'auth email/password.

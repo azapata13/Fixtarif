@@ -5,8 +5,17 @@ Next.js, TS strict, Tailwind, Supabase, Auth, workspace, roles, RLS, FR/EN, navi
 
 Sortie : login fonctionnel + dashboard privé isolé par workspace.
 
+À compléter après mise en ligne :
+- tester création compte + confirmation courriel
+- configurer Google OAuth
+- préparer dashboard admin interne sécurisé
+
 ## Phase 1 — Bibliothèques
 Profil entreprise, businesses/sites/contacts, products, carriers, brokers.
+
+Inclure :
+- structure de permissions UI par rôle
+- base du dashboard admin interne, sans accès direct aux données tenant hors contrôle explicite
 
 ## Phase 2 — Shipment manuel Canada
 Wizard, items, packages, references, transport, validation, autosave, duplication.

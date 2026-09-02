@@ -44,6 +44,11 @@ Préférences :
 - Transporteurs
 - Courtiers
 
+### /admin
+Dashboard interne réservé aux administrateurs Fixtarif.
+À construire avec contrôle d'accès strict, audit et principe du moindre privilège.
+Ne doit pas contourner la logique workspace/RLS sans justification serveur explicite.
+
 ### /shipments
 Liste + recherche par référence, PO, produit, numéro pièce, client, RMA.
 Actions : ouvrir, dupliquer, documents, archiver.
@@ -117,6 +122,11 @@ Membres owner/admin/member + invitations.
 
 ### /settings
 Entreprise, unités, langue, référence auto, préfixes, documents.
+
+### Auth
+- email/password en Phase 0
+- Google OAuth à ajouter après validation du flux de base
+- chaque provider doit respecter les Redirect URLs Supabase configurées pour `app.fixtarif.ca`
 
 ## Scan/import
 
