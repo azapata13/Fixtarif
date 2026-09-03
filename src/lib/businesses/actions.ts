@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { Locale } from "@/i18n/config";
-import type { BusinessRole } from "@/lib/supabase/types";
+import type { BusinessRole, ContactType } from "@/lib/supabase/types";
 import { createClient } from "@/lib/supabase/server";
 import { demoClients } from "@/lib/demo/clients";
 import { getCurrentWorkspace } from "@/lib/workspaces/queries";
@@ -17,6 +17,21 @@ function readRole(formData: FormData): BusinessRole {
   const role = readField(formData, "role");
   const allowed: BusinessRole[] = ["client", "supplier", "subcontractor", "consignee", "buyer", "other"];
   return allowed.includes(role as BusinessRole) ? (role as BusinessRole) : "client";
+}
+
+function readContactType(formData: FormData): ContactType {
+  const contactType = readField(formData, "contactType");
+  const allowed: ContactType[] = ["commercial", "receiving", "shipping", "project", "accounting", "other"];
+  return allowed.includes(contactType as ContactType) ? (contactType as ContactType) : "receiving";
+}
+
+function readPositiveInteger(formData: FormData, key: string) {
+  const value = Number(readField(formData, key));
+  return Number.isInteger(value) && value >= 0 ? value : null;
+}
+
+function readCheckbox(formData: FormData, key: string) {
+  return formData.get(key) === "on";
 }
 
 export async function createBusiness(locale: Locale, formData: FormData) {
@@ -52,6 +67,90 @@ export async function createBusiness(locale: Locale, formData: FormData) {
 
   revalidatePath(`/${locale}/companies`);
   redirect(`/${locale}/companies`);
+}
+
+export async function createBusinessSite(locale: Locale, formData: FormData) {
+  const { workspace, membership } = await getCurrentWorkspace();
+
+  if (!workspace || !membership) {
+    redirect(`/${locale}/onboarding`);
+  }
+
+  if (!["owner", "admin"].includes(membership.role)) {
+    redirect(`/${locale}/companies?message=${encodeURIComponent("Permission refusée.")}`);
+  }
+
+  const businessId = readField(formData, "businessId");
+  const name = readField(formData, "siteName") || "Principal";
+
+  if (!businessId) {
+    redirect(`/${locale}/companies?message=${encodeURIComponent("Choisis une entreprise pour le site.")}`);
+  }
+
+  const country = readField(formData, "country") === "US" ? "US" : "CA";
+  const supabase = await createClient();
+  const { error } = await supabase.from("business_sites").insert({
+    workspace_id: workspace.id,
+    business_id: businessId,
+    name,
+    address: readField(formData, "address") || null,
+    city: readField(formData, "city") || null,
+    region: readField(formData, "region") || null,
+    postal_code: readField(formData, "postalCode") || null,
+    country,
+    dock_info: readField(formData, "dockInfo") || null,
+    appointment_required: readCheckbox(formData, "appointmentRequired"),
+    flatbed_required: readCheckbox(formData, "flatbedRequired"),
+    call_before_minutes: readPositiveInteger(formData, "callBeforeMinutes"),
+    notes: readField(formData, "notes") || null,
+  });
+
+  if (error) {
+    redirect(`/${locale}/companies?message=${encodeURIComponent(error.message)}`);
+  }
+
+  revalidatePath(`/${locale}/companies`);
+  redirect(`/${locale}/companies?message=${encodeURIComponent("Site ajouté.")}`);
+}
+
+export async function createBusinessContact(locale: Locale, formData: FormData) {
+  const { workspace, membership } = await getCurrentWorkspace();
+
+  if (!workspace || !membership) {
+    redirect(`/${locale}/onboarding`);
+  }
+
+  if (!["owner", "admin"].includes(membership.role)) {
+    redirect(`/${locale}/companies?message=${encodeURIComponent("Permission refusée.")}`);
+  }
+
+  const businessId = readField(formData, "businessId");
+  const name = readField(formData, "contactName");
+  const siteId = readField(formData, "siteId");
+
+  if (!businessId || !name) {
+    redirect(`/${locale}/companies?message=${encodeURIComponent("Entreprise et nom du contact requis.")}`);
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("contacts").insert({
+    workspace_id: workspace.id,
+    business_id: businessId,
+    site_id: siteId || null,
+    name,
+    role: readField(formData, "contactRole") || null,
+    email: readField(formData, "email") || null,
+    phone: readField(formData, "phone") || null,
+    extension: readField(formData, "extension") || null,
+    contact_type: readContactType(formData),
+  });
+
+  if (error) {
+    redirect(`/${locale}/companies?message=${encodeURIComponent(error.message)}`);
+  }
+
+  revalidatePath(`/${locale}/companies`);
+  redirect(`/${locale}/companies?message=${encodeURIComponent("Contact ajouté.")}`);
 }
 
 export async function seedDemoBusinesses(locale: Locale) {
