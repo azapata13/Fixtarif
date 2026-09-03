@@ -1,9 +1,9 @@
-import { MailPlus, ShieldCheck, UserRound, Users } from "lucide-react";
+import { MailPlus, RotateCw, ShieldCheck, UserRound, Users, X } from "lucide-react";
 import { type LocaleParams } from "@/app/[locale]/layout";
 import { PageHeader } from "@/components/page-header";
 import { type Locale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
-import { inviteTeamMember } from "@/lib/team/actions";
+import { cancelTeamInvite, extendTeamInvite, inviteTeamMember } from "@/lib/team/actions";
 import { getTeamForWorkspace } from "@/lib/team/queries";
 import { getCurrentWorkspace } from "@/lib/workspaces/queries";
 
@@ -32,6 +32,8 @@ export default async function TeamPage({ params, searchParams }: TeamPageProps) 
   const team = workspace ? await getTeamForWorkspace(workspace.id) : { members: [], invites: [] };
   const canManage = membership ? ["owner", "admin"].includes(membership.role) : false;
   const inviteTeamMemberAction = inviteTeamMember.bind(null, locale);
+  const extendTeamInviteAction = extendTeamInvite.bind(null, locale);
+  const cancelTeamInviteAction = cancelTeamInvite.bind(null, locale);
 
   return (
     <>
@@ -105,7 +107,29 @@ export default async function TeamPage({ params, searchParams }: TeamPageProps) 
                   <span className="rounded-full bg-white px-3 py-1 text-sm font-semibold uppercase text-neutral-700">{invite.status}</span>
                 </div>
               </div>
-              <p className="mt-2 text-sm text-[var(--muted)]">Expire le {formatDate(invite.expires_at, locale)}</p>
+              <div className="mt-3 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                <p className="text-sm text-[var(--muted)]">Expire le {formatDate(invite.expires_at, locale)}</p>
+                {canManage ? (
+                  <div className="flex flex-wrap gap-2">
+                    <form action={extendTeamInviteAction}>
+                      <input name="inviteId" type="hidden" value={invite.id} />
+                      <button className="secondary-button !min-h-11 !px-4 !py-2 !text-sm inline-flex items-center justify-center gap-2" type="submit">
+                        <RotateCw aria-hidden="true" size={16} />
+                        Prolonger
+                      </button>
+                    </form>
+                    {invite.status === "invited" ? (
+                      <form action={cancelTeamInviteAction}>
+                        <input name="inviteId" type="hidden" value={invite.id} />
+                        <button className="secondary-button !min-h-11 !px-4 !py-2 !text-sm inline-flex items-center justify-center gap-2" type="submit">
+                          <X aria-hidden="true" size={16} />
+                          Annuler
+                        </button>
+                      </form>
+                    ) : null}
+                  </div>
+                ) : null}
+              </div>
             </div>
           ))}
         </div>

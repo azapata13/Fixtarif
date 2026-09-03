@@ -21,6 +21,10 @@ function readEmail(formData: FormData) {
   return field(formData, "email").toLowerCase();
 }
 
+function inviteExpiry() {
+  return new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
+}
+
 export async function inviteTeamMember(locale: Locale, formData: FormData) {
   const { workspace, membership, user } = await getCurrentWorkspace();
 
@@ -49,6 +53,7 @@ export async function inviteTeamMember(locale: Locale, formData: FormData) {
       invited_by: user.id,
       accepted_by: null,
       accepted_at: null,
+      expires_at: inviteExpiry(),
     },
     { onConflict: "workspace_id,email" },
   );
@@ -59,4 +64,74 @@ export async function inviteTeamMember(locale: Locale, formData: FormData) {
 
   revalidatePath(`/${locale}/team`);
   redirect(`/${locale}/team?message=${encodeURIComponent("Invitation préparée. L'envoi courriel sera branché avec Google OAuth ou un service email.")}`);
+}
+
+export async function extendTeamInvite(locale: Locale, formData: FormData) {
+  const { workspace, membership, user } = await getCurrentWorkspace();
+
+  if (!workspace || !membership || !user) {
+    redirect(`/${locale}/onboarding`);
+  }
+
+  if (!["owner", "admin"].includes(membership.role)) {
+    redirect(`/${locale}/team?message=${encodeURIComponent("Permission requise.")}`);
+  }
+
+  const inviteId = field(formData, "inviteId");
+
+  if (!inviteId) {
+    redirect(`/${locale}/team?message=${encodeURIComponent("Invitation introuvable.")}`);
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("workspace_invites")
+    .update({
+      status: "invited",
+      invited_by: user.id,
+      accepted_by: null,
+      accepted_at: null,
+      expires_at: inviteExpiry(),
+    })
+    .eq("workspace_id", workspace.id)
+    .eq("id", inviteId);
+
+  if (error) {
+    redirect(`/${locale}/team?message=${encodeURIComponent(error.message)}`);
+  }
+
+  revalidatePath(`/${locale}/team`);
+  redirect(`/${locale}/team?message=${encodeURIComponent("Invitation prolongée pour 14 jours.")}`);
+}
+
+export async function cancelTeamInvite(locale: Locale, formData: FormData) {
+  const { workspace, membership } = await getCurrentWorkspace();
+
+  if (!workspace || !membership) {
+    redirect(`/${locale}/onboarding`);
+  }
+
+  if (!["owner", "admin"].includes(membership.role)) {
+    redirect(`/${locale}/team?message=${encodeURIComponent("Permission requise.")}`);
+  }
+
+  const inviteId = field(formData, "inviteId");
+
+  if (!inviteId) {
+    redirect(`/${locale}/team?message=${encodeURIComponent("Invitation introuvable.")}`);
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("workspace_invites")
+    .update({ status: "disabled" })
+    .eq("workspace_id", workspace.id)
+    .eq("id", inviteId);
+
+  if (error) {
+    redirect(`/${locale}/team?message=${encodeURIComponent(error.message)}`);
+  }
+
+  revalidatePath(`/${locale}/team`);
+  redirect(`/${locale}/team?message=${encodeURIComponent("Invitation annulée.")}`);
 }

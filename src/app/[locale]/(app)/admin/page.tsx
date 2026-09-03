@@ -12,6 +12,7 @@ const countCards = [
   { key: "businesses", label: "Entreprises", icon: Building2 },
   { key: "products", label: "Produits", icon: Boxes },
   { key: "members", label: "Membres", icon: Users },
+  { key: "pendingInvites", label: "Invitations", icon: ShieldCheck },
 ] as const;
 
 function formatShortId(value: string) {
@@ -41,7 +42,7 @@ export default async function AdminPage({ params }: { params: LocaleParams }) {
   return (
     <>
       <PageHeader title={page.title} description={page.description} />
-      <section className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
         {countCards.map((card) => {
           const Icon = card.icon;
           return (
@@ -88,6 +89,27 @@ export default async function AdminPage({ params }: { params: LocaleParams }) {
             <p className="rounded-2xl bg-neutral-50 p-4">Google OAuth et invitations: prochaine étape, avec validation stricte des redirections.</p>
           </div>
         </article>
+      </section>
+      <section className="mt-6 rounded-[24px] border border-[var(--line)] bg-white p-6 shadow-sm">
+        <div className="flex items-center gap-3">
+          <Users aria-hidden="true" size={24} />
+          <h2 className="text-2xl font-semibold tracking-tight">Invitations récentes</h2>
+        </div>
+        <div className="mt-5 grid gap-3">
+          {overview.invites.length === 0 ? <p className="text-base text-[var(--muted)]">Aucune invitation préparée.</p> : null}
+          {overview.invites.map((invite) => (
+            <div className="rounded-2xl bg-neutral-50 px-4 py-4" key={invite.id}>
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-base font-semibold text-neutral-950">{invite.email}</p>
+                <div className="flex flex-wrap gap-2">
+                  <span className="rounded-full bg-white px-3 py-1 text-sm font-semibold uppercase text-neutral-700">{invite.role}</span>
+                  <span className="rounded-full bg-white px-3 py-1 text-sm font-semibold uppercase text-neutral-700">{invite.status}</span>
+                </div>
+              </div>
+              <p className="mt-2 text-sm text-[var(--muted)]">Expire le {formatDate(invite.expires_at, locale)}</p>
+            </div>
+          ))}
+        </div>
       </section>
       <section className="mt-6 rounded-[24px] border border-[var(--line)] bg-white p-6 shadow-sm">
         <div className="flex items-center gap-3">
