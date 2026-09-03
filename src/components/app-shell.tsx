@@ -42,6 +42,7 @@ export function AppShell({ children, dictionary, locale, role, userEmail }: AppS
               height={72}
               priority
               src="/brand/fixtarif-logo.png"
+              style={{ width: "144px", height: "auto" }}
               width={144}
             />
           </div>

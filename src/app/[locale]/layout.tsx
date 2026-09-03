@@ -1,5 +1,5 @@
-import { notFound } from "next/navigation";
-import { isLocale } from "@/i18n/config";
+import { redirect } from "next/navigation";
+import { defaultLocale, isLocale } from "@/i18n/config";
 
 export default async function LocaleLayout({
   children,
@@ -11,7 +11,7 @@ export default async function LocaleLayout({
   const { locale } = await params;
 
   if (!isLocale(locale)) {
-    notFound();
+    redirect(`/${defaultLocale}/${locale}`);
   }
 
   return (

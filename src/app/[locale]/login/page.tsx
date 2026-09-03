@@ -43,7 +43,7 @@ export default async function LoginPage({ params, searchParams }: LoginPageProps
   return (
     <main className="grid min-h-screen place-items-center px-5 py-10">
       <section className="w-full max-w-lg rounded-[28px] border border-[var(--line)] bg-white p-8 shadow-sm sm:p-10">
-        <Image alt="Fixtarif" className="h-auto w-40" height={80} priority src="/brand/fixtarif-logo.png" width={160} />
+        <Image alt="Fixtarif" className="h-auto w-40" height={80} priority src="/brand/fixtarif-logo.png" style={{ width: "160px", height: "auto" }} width={160} />
         <h1 className="mt-5 text-4xl font-semibold tracking-tight">{dictionary.auth.title}</h1>
         <p className="mt-3 text-lg leading-7 text-[var(--muted)]">{dictionary.auth.subtitle}</p>
         {message || !isSupabaseConfigured() ? (
