@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { Locale } from "@/i18n/config";
-import type { PackageType, PaymentTerm, ShipmentReason } from "@/lib/supabase/types";
+import type { PackageType, PaymentTerm, ShipmentReason, ShipmentStatus } from "@/lib/supabase/types";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentWorkspace } from "@/lib/workspaces/queries";
 
@@ -38,6 +38,55 @@ function readPackageType(formData: FormData): PackageType {
   const value = readField(formData, "packageType");
   const allowed: PackageType[] = ["pallet", "box", "crate", "bundle", "drum", "other"];
   return allowed.includes(value as PackageType) ? (value as PackageType) : "pallet";
+}
+
+function readShipmentStatus(formData: FormData): ShipmentStatus {
+  const value = readField(formData, "status");
+  const allowed: ShipmentStatus[] = ["draft", "validation", "ready", "archived"];
+  return allowed.includes(value as ShipmentStatus) ? (value as ShipmentStatus) : "draft";
+}
+
+async function getShipmentValidationState(workspaceId: string, shipmentId: string) {
+  const supabase = await createClient();
+  const [{ data: shipment }, { data: items }, { data: packages }, { data: transport }] = await Promise.all([
+    supabase
+      .from("shipments")
+      .select("id,destination_business_id,destination_site_id,destination_contact_id,carrier_id")
+      .eq("workspace_id", workspaceId)
+      .eq("id", shipmentId)
+      .maybeSingle(),
+    supabase
+      .from("shipment_items")
+      .select("id,quantity_confirmed,weight_confirmed")
+      .eq("workspace_id", workspaceId)
+      .eq("shipment_id", shipmentId),
+    supabase
+      .from("shipment_packages")
+      .select("id")
+      .eq("workspace_id", workspaceId)
+      .eq("shipment_id", shipmentId),
+    supabase
+      .from("shipment_transport")
+      .select("id")
+      .eq("workspace_id", workspaceId)
+      .eq("shipment_id", shipmentId),
+  ]);
+
+  const firstItem = items?.[0];
+
+  return {
+    exists: Boolean(shipment),
+    complete: Boolean(
+      shipment?.destination_business_id &&
+        shipment.destination_site_id &&
+        shipment.destination_contact_id &&
+        shipment.carrier_id &&
+        firstItem?.quantity_confirmed &&
+        firstItem.weight_confirmed &&
+        packages?.length &&
+        transport?.length,
+    ),
+  };
 }
 
 export async function createShipmentDraft(locale: Locale, formData: FormData) {
@@ -210,4 +259,98 @@ export async function updateShipmentItemConfirmations(locale: Locale, formData: 
   revalidatePath(`/${locale}/shipments/${shipmentId}`);
   revalidatePath(`/${locale}/shipments`);
   redirect(`/${locale}/shipments/${shipmentId}?message=${encodeURIComponent("Confirmations mises à jour.")}`);
+}
+
+export async function updateShipmentTransportReferences(locale: Locale, formData: FormData) {
+  const { workspace, user } = await getCurrentWorkspace();
+
+  if (!workspace || !user) {
+    redirect(`/${locale}/onboarding`);
+  }
+
+  const shipmentId = readField(formData, "shipmentId");
+  const transportId = readField(formData, "transportId");
+
+  if (!shipmentId || !transportId) {
+    redirect(`/${locale}/shipments?message=${encodeURIComponent("Transport introuvable.")}`);
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("shipment_transport")
+    .update({
+      pro_number: readField(formData, "proNumber") || null,
+      bol_number: readField(formData, "bolNumber") || null,
+      needs_bol: formData.get("needsBol") === "on",
+    })
+    .eq("workspace_id", workspace.id)
+    .eq("shipment_id", shipmentId)
+    .eq("id", transportId);
+
+  if (error) {
+    redirect(`/${locale}/shipments/${shipmentId}?message=${encodeURIComponent(error.message)}`);
+  }
+
+  await supabase.from("shipment_audit_log").insert({
+    workspace_id: workspace.id,
+    shipment_id: shipmentId,
+    actor_user_id: user.id,
+    action: "shipment_transport_references_updated",
+    metadata_json: {
+      hasProNumber: Boolean(readField(formData, "proNumber")),
+      hasBolNumber: Boolean(readField(formData, "bolNumber")),
+    },
+  });
+
+  revalidatePath(`/${locale}/shipments/${shipmentId}`);
+  revalidatePath(`/${locale}/shipments`);
+  redirect(`/${locale}/shipments/${shipmentId}?message=${encodeURIComponent("Références transport mises à jour.")}`);
+}
+
+export async function updateShipmentStatus(locale: Locale, formData: FormData) {
+  const { workspace, user } = await getCurrentWorkspace();
+
+  if (!workspace || !user) {
+    redirect(`/${locale}/onboarding`);
+  }
+
+  const shipmentId = readField(formData, "shipmentId");
+  const status = readShipmentStatus(formData);
+
+  if (!shipmentId) {
+    redirect(`/${locale}/shipments?message=${encodeURIComponent("Expédition introuvable.")}`);
+  }
+
+  const validation = await getShipmentValidationState(workspace.id, shipmentId);
+
+  if (!validation.exists) {
+    redirect(`/${locale}/shipments?message=${encodeURIComponent("Expédition introuvable.")}`);
+  }
+
+  if (status === "ready" && !validation.complete) {
+    redirect(`/${locale}/shipments/${shipmentId}?message=${encodeURIComponent("Validation incomplète. Confirmez destination, produit, poids, quantité, transporteur et colis.")}`);
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("shipments")
+    .update({ status })
+    .eq("workspace_id", workspace.id)
+    .eq("id", shipmentId);
+
+  if (error) {
+    redirect(`/${locale}/shipments/${shipmentId}?message=${encodeURIComponent(error.message)}`);
+  }
+
+  await supabase.from("shipment_audit_log").insert({
+    workspace_id: workspace.id,
+    shipment_id: shipmentId,
+    actor_user_id: user.id,
+    action: "shipment_status_updated",
+    metadata_json: { status },
+  });
+
+  revalidatePath(`/${locale}/shipments/${shipmentId}`);
+  revalidatePath(`/${locale}/shipments`);
+  redirect(`/${locale}/shipments/${shipmentId}?message=${encodeURIComponent("Statut mis à jour.")}`);
 }

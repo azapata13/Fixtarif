@@ -63,3 +63,9 @@ a {
 .secondary-button:visited {
   color: #000000;
 }
+
+.primary-button:disabled,
+.secondary-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}

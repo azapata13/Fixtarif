@@ -1,9 +1,9 @@
 import Link from "next/link";
-import { AlertCircle, ArrowLeft, CheckCircle2, Circle, Scale, Truck } from "lucide-react";
+import { AlertCircle, ArrowLeft, CheckCircle2, Circle, FileCheck2, MapPin, Scale, Truck } from "lucide-react";
 import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/page-header";
 import { type Locale } from "@/i18n/config";
-import { updateShipmentItemConfirmations } from "@/lib/shipments/actions";
+import { updateShipmentItemConfirmations, updateShipmentStatus, updateShipmentTransportReferences } from "@/lib/shipments/actions";
 import { getShipmentForWorkspace } from "@/lib/shipments/queries";
 import { getCurrentWorkspace } from "@/lib/workspaces/queries";
 
@@ -45,6 +45,9 @@ export default async function ShipmentDetailPage({ params, searchParams }: Shipm
   const contact = Array.isArray(shipment.contacts) ? shipment.contacts[0] : shipment.contacts;
   const carrier = Array.isArray(shipment.carriers) ? shipment.carriers[0] : shipment.carriers;
   const updateConfirmationsAction = updateShipmentItemConfirmations.bind(null, locale);
+  const updateTransportReferencesAction = updateShipmentTransportReferences.bind(null, locale);
+  const updateStatusAction = updateShipmentStatus.bind(null, locale);
+  const canMarkReady = Boolean(destination && site && contact && item?.quantity_confirmed && item.weight_confirmed && carrier && packageRow);
 
   return (
     <>
@@ -66,6 +69,18 @@ export default async function ShipmentDetailPage({ params, searchParams }: Shipm
             <StatusRow checked={Boolean(item?.weight_confirmed)} label="Poids confirmé" />
             <StatusRow checked={Boolean(carrier)} label={carrier ? `Transporteur : ${carrier.name}` : "Transporteur à compléter"} />
           </ul>
+          <form action={updateStatusAction} className="mt-6 grid gap-3">
+            <input name="shipmentId" type="hidden" value={shipment.id} />
+            <button className="secondary-button w-full" name="status" type="submit" value="validation">
+              Passer en validation
+            </button>
+            <button className="primary-button w-full" disabled={!canMarkReady} name="status" type="submit" value="ready">
+              Marquer prêt
+            </button>
+            <button className="secondary-button w-full" name="status" type="submit" value="archived">
+              Archiver
+            </button>
+          </form>
         </aside>
         <article className="rounded-[24px] border border-[var(--line)] bg-white p-6 shadow-sm">
           <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
@@ -127,17 +142,67 @@ export default async function ShipmentDetailPage({ params, searchParams }: Shipm
           ) : (
             <p className="mt-6 rounded-2xl bg-neutral-50 p-4 text-base text-[var(--muted)]">Aucune ligne produit.</p>
           )}
-          <div className="mt-6 grid gap-3 text-base text-neutral-700 md:grid-cols-2">
-            <p className="flex items-center gap-3">
-              <Circle aria-hidden="true" size={18} />
-              Paiement : {transport?.payment_term ?? "à compléter"}
+        </article>
+      </section>
+      <section className="mt-6 grid gap-4 xl:grid-cols-2">
+        <article className="rounded-[24px] border border-[var(--line)] bg-white p-6 shadow-sm">
+          <div className="flex items-center gap-3">
+            <MapPin aria-hidden="true" size={24} />
+            <h2 className="text-2xl font-semibold tracking-tight">Destination</h2>
+          </div>
+          <div className="mt-5 grid gap-3 text-base text-neutral-700">
+            <p className="rounded-2xl bg-neutral-50 p-4">{destination?.name ?? "Client à compléter"}</p>
+            <p className="rounded-2xl bg-neutral-50 p-4">
+              {site ? [site.name, site.city, site.region, site.country].filter(Boolean).join(" · ") : "Site à compléter"}
             </p>
-            <p className="flex items-center gap-3">
-              <Circle aria-hidden="true" size={18} />
-              BOL : {transport?.needs_bol ? "demandé plus tard" : "non demandé"}
+            <p className="rounded-2xl bg-neutral-50 p-4">
+              {contact ? [contact.name, contact.email, contact.phone].filter(Boolean).join(" · ") : "Contact à compléter"}
             </p>
+            {site?.dock_info ? <p className="rounded-2xl bg-neutral-50 p-4">Quai : {site.dock_info}</p> : null}
           </div>
         </article>
+        <article className="rounded-[24px] border border-[var(--line)] bg-white p-6 shadow-sm">
+          <div className="flex items-center gap-3">
+            <FileCheck2 aria-hidden="true" size={24} />
+            <h2 className="text-2xl font-semibold tracking-tight">Transport</h2>
+          </div>
+          {transport ? (
+            <form action={updateTransportReferencesAction} className="mt-5 grid gap-4 md:grid-cols-2">
+              <input name="shipmentId" type="hidden" value={shipment.id} />
+              <input name="transportId" type="hidden" value={transport.id} />
+              <label className="block text-base font-semibold">
+                Numéro PRO
+                <input className="field" defaultValue={transport.pro_number ?? ""} name="proNumber" />
+              </label>
+              <label className="block text-base font-semibold">
+                Numéro BOL
+                <input className="field" defaultValue={transport.bol_number ?? ""} name="bolNumber" />
+              </label>
+              <label className="flex min-h-12 items-center gap-3 rounded-2xl border border-[var(--line)] bg-white px-4 py-3 text-base font-semibold shadow-sm md:col-span-2">
+                <input className="h-5 w-5 accent-black" defaultChecked={transport.needs_bol} name="needsBol" type="checkbox" />
+                Connaissement requis
+              </label>
+              <p className="flex items-center gap-3 rounded-2xl bg-neutral-50 p-4 text-base text-neutral-700">
+                <Circle aria-hidden="true" size={18} />
+                Paiement : {transport.payment_term}
+              </p>
+              <button className="primary-button md:col-span-2" type="submit">
+                Sauvegarder transport
+              </button>
+            </form>
+          ) : (
+            <p className="mt-5 rounded-2xl bg-neutral-50 p-4 text-base text-[var(--muted)]">Transport à compléter.</p>
+          )}
+        </article>
+      </section>
+      <section className="mt-6 rounded-[24px] border border-[var(--line)] bg-white p-6 shadow-sm">
+        <div className="flex items-center gap-3">
+          <FileCheck2 aria-hidden="true" size={24} />
+          <h2 className="text-2xl font-semibold tracking-tight">Documents</h2>
+        </div>
+        <p className="mt-4 text-base leading-7 text-[var(--muted)]">
+          Génération bloquée volontairement pour l&apos;instant. Quand le statut est prêt, on branchera les documents sans activer PDF/HTS/CUSMA avant validation.
+        </p>
       </section>
     </>
   );
