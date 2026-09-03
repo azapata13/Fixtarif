@@ -1,11 +1,15 @@
 import { createClient } from "@/lib/supabase/server";
 
+function uniqueIds(values: Array<string | null | undefined>) {
+  return [...new Set(values.filter((value): value is string => Boolean(value)))];
+}
+
 export async function getShipmentsForWorkspace(workspaceId: string) {
   const supabase = await createClient();
 
   const { data, error } = await supabase
     .from("shipments")
-    .select("id,reference,shipment_date,destination_country,reason,status,notes,businesses(name),business_sites(name,city,region),contacts(name),carriers(name),shipment_items(id,quantity,weight,weight_unit,quantity_confirmed,weight_confirmed,name),shipment_packages(id,package_count,package_type)")
+    .select("id,reference,shipment_date,destination_country,reason,status,notes,destination_business_id,destination_site_id,destination_contact_id,carrier_id")
     .eq("workspace_id", workspaceId)
     .order("created_at", { ascending: false });
 
@@ -13,7 +17,40 @@ export async function getShipmentsForWorkspace(workspaceId: string) {
     throw new Error(error.message);
   }
 
-  return data;
+  const shipments = data ?? [];
+  const shipmentIds = shipments.map((shipment) => shipment.id);
+  const businessIds = uniqueIds(shipments.map((shipment) => shipment.destination_business_id));
+  const siteIds = uniqueIds(shipments.map((shipment) => shipment.destination_site_id));
+  const contactIds = uniqueIds(shipments.map((shipment) => shipment.destination_contact_id));
+  const carrierIds = uniqueIds(shipments.map((shipment) => shipment.carrier_id));
+
+  const [businessesResult, sitesResult, contactsResult, carriersResult, itemsResult, packagesResult] = await Promise.all([
+    businessIds.length > 0 ? supabase.from("businesses").select("id,name").eq("workspace_id", workspaceId).in("id", businessIds) : Promise.resolve({ data: [] }),
+    siteIds.length > 0 ? supabase.from("business_sites").select("id,name,city,region").eq("workspace_id", workspaceId).in("id", siteIds) : Promise.resolve({ data: [] }),
+    contactIds.length > 0 ? supabase.from("contacts").select("id,name").eq("workspace_id", workspaceId).in("id", contactIds) : Promise.resolve({ data: [] }),
+    carrierIds.length > 0 ? supabase.from("carriers").select("id,name").eq("workspace_id", workspaceId).in("id", carrierIds) : Promise.resolve({ data: [] }),
+    shipmentIds.length > 0
+      ? supabase.from("shipment_items").select("id,shipment_id,quantity,weight,weight_unit,quantity_confirmed,weight_confirmed,name").eq("workspace_id", workspaceId).in("shipment_id", shipmentIds)
+      : Promise.resolve({ data: [] }),
+    shipmentIds.length > 0
+      ? supabase.from("shipment_packages").select("id,shipment_id,package_count,package_type").eq("workspace_id", workspaceId).in("shipment_id", shipmentIds)
+      : Promise.resolve({ data: [] }),
+  ]);
+
+  const businessesById = new Map((businessesResult.data ?? []).map((business) => [business.id, business]));
+  const sitesById = new Map((sitesResult.data ?? []).map((site) => [site.id, site]));
+  const contactsById = new Map((contactsResult.data ?? []).map((contact) => [contact.id, contact]));
+  const carriersById = new Map((carriersResult.data ?? []).map((carrier) => [carrier.id, carrier]));
+
+  return shipments.map((shipment) => ({
+    ...shipment,
+    businesses: shipment.destination_business_id ? businessesById.get(shipment.destination_business_id) ?? null : null,
+    business_sites: shipment.destination_site_id ? sitesById.get(shipment.destination_site_id) ?? null : null,
+    contacts: shipment.destination_contact_id ? contactsById.get(shipment.destination_contact_id) ?? null : null,
+    carriers: shipment.carrier_id ? carriersById.get(shipment.carrier_id) ?? null : null,
+    shipment_items: (itemsResult.data ?? []).filter((item) => item.shipment_id === shipment.id),
+    shipment_packages: (packagesResult.data ?? []).filter((packageRow) => packageRow.shipment_id === shipment.id),
+  }));
 }
 
 export async function getShipmentForWorkspace(workspaceId: string, shipmentId: string) {
@@ -21,9 +58,7 @@ export async function getShipmentForWorkspace(workspaceId: string, shipmentId: s
 
   const { data, error } = await supabase
     .from("shipments")
-    .select(
-      "id,reference,shipment_date,destination_country,reason,status,notes,businesses(name,email,phone),business_sites(name,city,region,country,dock_info,appointment_required,call_before_minutes),contacts(name,email,phone,contact_type),carriers(name,email,phone,default_provides_bol),shipment_items(id,name,part_number,quantity,quantity_confirmed,weight,weight_unit,weight_confirmed,package_type,lot_number,product_snapshot_json),shipment_packages(id,package_number,package_count,package_type,weight,weight_unit,length,width,height,dimension_unit,stackable,destination_label),shipment_transport(id,payment_term,needs_bol,pro_number,bol_number)",
-    )
+    .select("id,reference,shipment_date,destination_country,reason,status,notes,destination_business_id,destination_site_id,destination_contact_id,carrier_id")
     .eq("workspace_id", workspaceId)
     .eq("id", shipmentId)
     .maybeSingle();
@@ -32,7 +67,50 @@ export async function getShipmentForWorkspace(workspaceId: string, shipmentId: s
     throw new Error(error.message);
   }
 
-  return data;
+  if (!data) {
+    return null;
+  }
+
+  const [businessResult, siteResult, contactResult, carrierResult, itemResult, packageResult, transportResult] = await Promise.all([
+    data.destination_business_id
+      ? supabase.from("businesses").select("name,email,phone").eq("workspace_id", workspaceId).eq("id", data.destination_business_id).maybeSingle()
+      : Promise.resolve({ data: null }),
+    data.destination_site_id
+      ? supabase.from("business_sites").select("name,city,region,country,dock_info,appointment_required,call_before_minutes").eq("workspace_id", workspaceId).eq("id", data.destination_site_id).maybeSingle()
+      : Promise.resolve({ data: null }),
+    data.destination_contact_id
+      ? supabase.from("contacts").select("name,email,phone,contact_type").eq("workspace_id", workspaceId).eq("id", data.destination_contact_id).maybeSingle()
+      : Promise.resolve({ data: null }),
+    data.carrier_id
+      ? supabase.from("carriers").select("name,email,phone,default_provides_bol").eq("workspace_id", workspaceId).eq("id", data.carrier_id).maybeSingle()
+      : Promise.resolve({ data: null }),
+    supabase
+      .from("shipment_items")
+      .select("id,name,part_number,quantity,quantity_confirmed,weight,weight_unit,weight_confirmed,package_type,lot_number,product_snapshot_json")
+      .eq("workspace_id", workspaceId)
+      .eq("shipment_id", shipmentId),
+    supabase
+      .from("shipment_packages")
+      .select("id,package_number,package_count,package_type,weight,weight_unit,length,width,height,dimension_unit,stackable,destination_label")
+      .eq("workspace_id", workspaceId)
+      .eq("shipment_id", shipmentId),
+    supabase
+      .from("shipment_transport")
+      .select("id,payment_term,needs_bol,pro_number,bol_number")
+      .eq("workspace_id", workspaceId)
+      .eq("shipment_id", shipmentId),
+  ]);
+
+  return {
+    ...data,
+    businesses: businessResult.data,
+    business_sites: siteResult.data,
+    contacts: contactResult.data,
+    carriers: carrierResult.data,
+    shipment_items: itemResult.data ?? [],
+    shipment_packages: packageResult.data ?? [],
+    shipment_transport: transportResult.data ?? [],
+  };
 }
 
 export async function getNextShipmentReference(workspaceId: string) {

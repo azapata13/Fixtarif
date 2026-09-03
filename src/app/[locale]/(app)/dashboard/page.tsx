@@ -33,7 +33,7 @@ export default async function DashboardPage({ params }: { params: LocaleParams }
               Crée un brouillon Canada, choisis un client, un produit et confirme les valeurs importantes avant les documents.
             </p>
           </div>
-          <Link className="primary-button inline-flex items-center justify-center gap-2" href={`/${locale}/shipments/new`}>
+          <Link className="primary-button inline-flex min-w-64 items-center justify-center gap-2" href={`/${locale}/shipments/new`}>
             <Plus aria-hidden="true" size={22} />
             Nouvelle expédition
           </Link>

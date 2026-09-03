@@ -42,14 +42,24 @@ a {
   }
 
   .primary-button {
-    @apply min-h-12 rounded-full bg-black px-6 py-3 text-base font-semibold text-white transition hover:bg-neutral-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black;
+    @apply min-h-12 rounded-full bg-black px-6 py-3 text-base font-semibold transition hover:bg-neutral-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black;
   }
 
   .secondary-button {
-    @apply min-h-12 rounded-full border border-neutral-300 bg-white px-6 py-3 text-base font-semibold text-black transition hover:bg-neutral-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black;
+    @apply min-h-12 rounded-full border border-neutral-300 bg-white px-6 py-3 text-base font-semibold transition hover:bg-neutral-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black;
   }
 
   .field {
     @apply mt-2 min-h-12 w-full rounded-2xl border border-[var(--line)] bg-white px-4 py-3 text-base shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black;
   }
+}
+
+.primary-button,
+.primary-button:visited {
+  color: #ffffff;
+}
+
+.secondary-button,
+.secondary-button:visited {
+  color: #000000;
 }

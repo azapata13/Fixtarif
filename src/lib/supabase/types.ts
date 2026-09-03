@@ -61,6 +61,44 @@ export type Database = {
           },
         ];
       };
+      workspace_invites: {
+        Row: {
+          id: string;
+          workspace_id: string;
+          email: string;
+          role: WorkspaceRole;
+          status: MemberStatus;
+          invited_by: string | null;
+          accepted_by: string | null;
+          accepted_at: string | null;
+          expires_at: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          workspace_id: string;
+          email: string;
+          role?: WorkspaceRole;
+          status?: MemberStatus;
+          invited_by?: string | null;
+          accepted_by?: string | null;
+          accepted_at?: string | null;
+          expires_at?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["workspace_invites"]["Insert"]>;
+        Relationships: [
+          {
+            foreignKeyName: "workspace_invites_workspace_id_fkey";
+            columns: ["workspace_id"];
+            isOneToOne: false;
+            referencedRelation: "workspaces";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       company_profiles: {
         Row: {
           id: string;
