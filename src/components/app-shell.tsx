@@ -38,7 +38,6 @@ export function AppShell({ children, dictionary, locale, role, userEmail }: AppS
           <div>
             <Image
               alt="Fixtarif"
-              className="h-auto w-36"
               height={72}
               priority
               src="/brand/fixtarif-logo.png"
