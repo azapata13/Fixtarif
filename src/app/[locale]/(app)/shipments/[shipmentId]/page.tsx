@@ -1,9 +1,9 @@
 import Link from "next/link";
-import { AlertCircle, ArrowLeft, CheckCircle2, Circle, FileCheck2, MapPin, Scale, Truck } from "lucide-react";
+import { AlertCircle, ArrowLeft, CheckCircle2, Circle, Copy, FileCheck2, MapPin, Scale, Truck } from "lucide-react";
 import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/page-header";
 import { type Locale } from "@/i18n/config";
-import { updateShipmentItemConfirmations, updateShipmentStatus, updateShipmentTransportReferences } from "@/lib/shipments/actions";
+import { duplicateShipmentDraft, updateShipmentItemConfirmations, updateShipmentStatus, updateShipmentTransportReferences } from "@/lib/shipments/actions";
 import { getShipmentForWorkspace } from "@/lib/shipments/queries";
 import { getCurrentWorkspace } from "@/lib/workspaces/queries";
 
@@ -47,6 +47,7 @@ export default async function ShipmentDetailPage({ params, searchParams }: Shipm
   const updateConfirmationsAction = updateShipmentItemConfirmations.bind(null, locale);
   const updateTransportReferencesAction = updateShipmentTransportReferences.bind(null, locale);
   const updateStatusAction = updateShipmentStatus.bind(null, locale);
+  const duplicateShipmentAction = duplicateShipmentDraft.bind(null, locale);
   const canMarkReady = Boolean(destination && site && contact && item?.quantity_confirmed && item.weight_confirmed && carrier && packageRow);
 
   return (
@@ -57,6 +58,19 @@ export default async function ShipmentDetailPage({ params, searchParams }: Shipm
       </Link>
       <PageHeader title={shipment.reference} description="Vérifier le brouillon avant toute génération de document." />
       {message ? <p className="mb-4 rounded-2xl bg-neutral-100 px-4 py-3 text-base text-neutral-700">{message}</p> : null}
+      <form action={duplicateShipmentAction} className="mb-6 rounded-[24px] border border-[var(--line)] bg-white p-5 shadow-sm">
+        <input name="shipmentId" type="hidden" value={shipment.id} />
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h2 className="text-xl font-semibold tracking-tight">Expédition récurrente</h2>
+            <p className="mt-1 text-base leading-7 text-[var(--muted)]">Duplique ce brouillon, puis confirme seulement le lot, la quantité et le poids.</p>
+          </div>
+          <button className="secondary-button inline-flex items-center justify-center gap-2" type="submit">
+            <Copy aria-hidden="true" size={20} />
+            Dupliquer
+          </button>
+        </div>
+      </form>
       <section className="grid gap-4 xl:grid-cols-[0.8fr_1.2fr]">
         <aside className="rounded-[24px] border border-[var(--line)] bg-white p-6 shadow-sm">
           <h2 className="text-2xl font-semibold tracking-tight">Validation</h2>
