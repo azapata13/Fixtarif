@@ -91,6 +91,66 @@ async function getShipmentValidationState(workspaceId: string, shipmentId: strin
   };
 }
 
+async function validateShipmentDraftRelations({
+  carrierId,
+  contactId,
+  destinationBusinessId,
+  productId,
+  siteId,
+  workspaceId,
+}: {
+  carrierId: string | null;
+  contactId: string | null;
+  destinationBusinessId: string | null;
+  productId: string | null;
+  siteId: string | null;
+  workspaceId: string;
+}) {
+  const supabase = await createClient();
+
+  const [businessResult, siteResult, contactResult, productResult, carrierResult] = await Promise.all([
+    destinationBusinessId ? supabase.from("businesses").select("id").eq("workspace_id", workspaceId).eq("id", destinationBusinessId).maybeSingle() : Promise.resolve({ data: null, error: null }),
+    siteId ? supabase.from("business_sites").select("id,business_id").eq("workspace_id", workspaceId).eq("id", siteId).maybeSingle() : Promise.resolve({ data: null, error: null }),
+    contactId ? supabase.from("contacts").select("id,business_id,site_id").eq("workspace_id", workspaceId).eq("id", contactId).maybeSingle() : Promise.resolve({ data: null, error: null }),
+    productId ? supabase.from("products").select("id").eq("workspace_id", workspaceId).eq("id", productId).maybeSingle() : Promise.resolve({ data: null, error: null }),
+    carrierId ? supabase.from("carriers").select("id").eq("workspace_id", workspaceId).eq("id", carrierId).maybeSingle() : Promise.resolve({ data: null, error: null }),
+  ]);
+
+  const queryError = businessResult.error ?? siteResult.error ?? contactResult.error ?? productResult.error ?? carrierResult.error;
+
+  if (queryError) {
+    logServerError({ action: "validate_shipment_relations", error: queryError });
+    return { valid: false, message: "Validation impossible pour le moment." };
+  }
+
+  if (destinationBusinessId && !businessResult.data) {
+    return { valid: false, message: "Destination invalide." };
+  }
+
+  if (siteId && (!siteResult.data || siteResult.data.business_id !== destinationBusinessId)) {
+    return { valid: false, message: "Le site choisi ne correspond pas à cette destination." };
+  }
+
+  if (
+    contactId &&
+    (!contactResult.data ||
+      contactResult.data.business_id !== destinationBusinessId ||
+      (siteId && contactResult.data.site_id && contactResult.data.site_id !== siteId))
+  ) {
+    return { valid: false, message: "Le contact choisi ne correspond pas à cette destination." };
+  }
+
+  if (productId && !productResult.data) {
+    return { valid: false, message: "Produit invalide." };
+  }
+
+  if (carrierId && !carrierResult.data) {
+    return { valid: false, message: "Transporteur invalide." };
+  }
+
+  return { valid: true, message: "" };
+}
+
 export async function createShipmentDraft(locale: Locale, formData: FormData) {
   const { workspace, membership, user } = await getCurrentWorkspace();
 
@@ -110,7 +170,22 @@ export async function createShipmentDraft(locale: Locale, formData: FormData) {
   const supabase = await createClient();
   const productId = readOptionalId(formData, "productId");
   const carrierId = readOptionalId(formData, "carrierId");
+  const destinationBusinessId = readOptionalId(formData, "destinationBusinessId");
+  const destinationSiteId = readOptionalId(formData, "destinationSiteId");
+  const destinationContactId = readOptionalId(formData, "destinationContactId");
   const packageCount = Math.max(1, Math.trunc(readPositiveNumber(formData, "packageCount") ?? 1));
+  const relationValidation = await validateShipmentDraftRelations({
+    carrierId,
+    contactId: destinationContactId,
+    destinationBusinessId,
+    productId,
+    siteId: destinationSiteId,
+    workspaceId: workspace.id,
+  });
+
+  if (!relationValidation.valid) {
+    redirect(`/${locale}/shipments/new?message=${encodeURIComponent(relationValidation.message)}`);
+  }
 
   const { data: product } = productId
     ? await supabase.from("products").select("*").eq("workspace_id", workspace.id).eq("id", productId).maybeSingle()
@@ -136,9 +211,9 @@ export async function createShipmentDraft(locale: Locale, formData: FormData) {
       language: locale,
       status: "draft",
       created_by: user.id,
-      destination_business_id: readOptionalId(formData, "destinationBusinessId"),
-      destination_site_id: readOptionalId(formData, "destinationSiteId"),
-      destination_contact_id: readOptionalId(formData, "destinationContactId"),
+      destination_business_id: destinationBusinessId,
+      destination_site_id: destinationSiteId,
+      destination_contact_id: destinationContactId,
       carrier_id: carrierId,
       notes: readField(formData, "notes") || null,
     })
@@ -249,7 +324,10 @@ export async function duplicateShipmentDraft(locale: Locale, formData: FormData)
   ]);
 
   if (sourceError || !source) {
-    redirect(`/${locale}/shipments?message=${encodeURIComponent(sourceError?.message ?? "Expédition introuvable.")}`);
+    if (sourceError) {
+      logServerError({ action: "duplicate_shipment_source", error: sourceError });
+    }
+    redirect(`/${locale}/shipments?message=${encodeURIComponent(sourceError ? genericActionError(locale) : "Expédition introuvable.")}`);
   }
 
   const reference = await getNextShipmentReference(workspace.id);
