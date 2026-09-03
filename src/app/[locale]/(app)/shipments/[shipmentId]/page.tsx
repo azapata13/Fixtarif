@@ -3,6 +3,8 @@ import { AlertCircle, ArrowLeft, CheckCircle2, Circle, Copy, FileCheck2, LockKey
 import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/page-header";
 import { type Locale } from "@/i18n/config";
+import { generatePackingSlipDraft } from "@/lib/documents/actions";
+import { getGeneratedDocumentsForShipment } from "@/lib/documents/queries";
 import { duplicateShipmentDraft, updateShipmentItemConfirmations, updateShipmentStatus, updateShipmentTransportReferences } from "@/lib/shipments/actions";
 import { getShipmentForWorkspace } from "@/lib/shipments/queries";
 import { getCurrentWorkspace } from "@/lib/workspaces/queries";
@@ -31,7 +33,10 @@ export default async function ShipmentDetailPage({ params, searchParams }: Shipm
     notFound();
   }
 
-  const shipment = await getShipmentForWorkspace(workspace.id, shipmentId);
+  const [shipment, generatedDocuments] = await Promise.all([
+    getShipmentForWorkspace(workspace.id, shipmentId),
+    getGeneratedDocumentsForShipment(workspace.id, shipmentId),
+  ]);
 
   if (!shipment) {
     notFound();
@@ -48,7 +53,9 @@ export default async function ShipmentDetailPage({ params, searchParams }: Shipm
   const updateTransportReferencesAction = updateShipmentTransportReferences.bind(null, locale);
   const updateStatusAction = updateShipmentStatus.bind(null, locale);
   const duplicateShipmentAction = duplicateShipmentDraft.bind(null, locale);
+  const generatePackingSlipAction = generatePackingSlipDraft.bind(null, locale);
   const canMarkReady = Boolean(destination && site && contact && item?.quantity_confirmed && item.weight_confirmed && carrier && packageRow);
+  const canGenerateDocuments = shipment.status === "ready";
   const destinationCountryName = shipment.destination_country === "US" ? "États-Unis" : "Canada";
 
   return (
@@ -211,13 +218,38 @@ export default async function ShipmentDetailPage({ params, searchParams }: Shipm
         </article>
       </section>
       <section className="mt-6 rounded-[24px] border border-[var(--line)] bg-white p-6 shadow-sm">
-        <div className="flex items-center gap-3">
-          <FileCheck2 aria-hidden="true" size={24} />
-          <h2 className="text-2xl font-semibold tracking-tight">Documents</h2>
+        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+          <div>
+            <div className="flex items-center gap-3">
+              <FileCheck2 aria-hidden="true" size={24} />
+              <h2 className="text-2xl font-semibold tracking-tight">Documents</h2>
+            </div>
+            <p className="mt-4 text-base leading-7 text-[var(--muted)]">
+              Génération PDF brouillon disponible seulement lorsque l&apos;expédition est prête. HTS/CUSMA restent verrouillés.
+            </p>
+          </div>
+          <form action={generatePackingSlipAction}>
+            <input name="shipmentId" type="hidden" value={shipment.id} />
+            <button className="primary-button min-w-56" disabled={!canGenerateDocuments} type="submit">
+              Générer packing slip
+            </button>
+          </form>
         </div>
-        <p className="mt-4 text-base leading-7 text-[var(--muted)]">
-          Génération bloquée volontairement pour l&apos;instant. Quand le statut est prêt, on branchera les documents sans activer PDF/HTS/CUSMA avant validation.
-        </p>
+        {generatedDocuments.length ? (
+          <div className="mt-5 grid gap-3 md:grid-cols-2">
+            {generatedDocuments.map((document) => (
+              <div key={document.id} className="rounded-2xl bg-neutral-50 p-4">
+                <p className="text-base font-semibold">{document.document_type}</p>
+                <p className="mt-2 text-sm font-semibold uppercase tracking-wide text-[var(--muted)]">{document.validation_status}</p>
+                <Link className="secondary-button mt-4 !min-h-11 !px-4 !py-2 !text-sm" href={`/${locale}/documents/${document.id}/download`} target="_blank">
+                  Ouvrir PDF
+                </Link>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="mt-5 rounded-2xl bg-neutral-50 p-4 text-base text-[var(--muted)]">Aucun document généré pour cette expédition.</p>
+        )}
       </section>
       {shipment.destination_country === "US" ? (
         <section className="mt-6 rounded-[24px] border border-[var(--line)] bg-white p-6 shadow-sm">

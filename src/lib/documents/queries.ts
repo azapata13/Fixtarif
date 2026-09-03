@@ -38,3 +38,21 @@ export async function getDocumentOverviewForWorkspace(workspaceId: string) {
     sourceDocuments: sourceResult.data ?? [],
   };
 }
+
+export async function getGeneratedDocumentsForShipment(workspaceId: string, shipmentId: string) {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("generated_documents")
+    .select("id,document_type,template_version,validation_status,generated_at")
+    .eq("workspace_id", workspaceId)
+    .eq("shipment_id", shipmentId)
+    .order("generated_at", { ascending: false });
+
+  if (error) {
+    logServerError({ action: "get_generated_documents_for_shipment", error });
+    return [];
+  }
+
+  return data ?? [];
+}

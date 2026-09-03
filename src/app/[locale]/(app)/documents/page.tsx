@@ -1,4 +1,5 @@
 import { Bot, FileText, LockKeyhole, ScanLine, ShieldCheck, Upload } from "lucide-react";
+import Link from "next/link";
 import { PageHeader } from "@/components/page-header";
 import { type Locale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
@@ -116,6 +117,9 @@ export default async function DocumentsPage({ params, searchParams }: DocumentsP
               <div key={document.id} className="rounded-2xl bg-neutral-50 p-4">
                 <p className="text-base font-semibold">{document.document_type}</p>
                 <p className="mt-2 text-sm font-semibold uppercase tracking-wide text-[var(--muted)]">{document.validation_status}</p>
+                <Link className="secondary-button mt-4 !min-h-11 !px-4 !py-2 !text-sm" href={`/${locale}/documents/${document.id}/download`} target="_blank">
+                  Ouvrir PDF
+                </Link>
               </div>
             ))}
           </div>
