@@ -71,11 +71,32 @@ export async function updateWorkspaceSettings(locale: Locale, formData: FormData
   const weightUnit = field(formData, "weightUnit") === "kg" ? "kg" : "lb";
   const dimensionUnit = field(formData, "dimensionUnit") === "cm" ? "cm" : "in";
   const currency = field(formData, "currency") === "USD" ? "USD" : "CAD";
+  const legalName = field(formData, "legalName");
+  const country = field(formData, "country") === "US" ? "US" : "CA";
+  const email = field(formData, "email");
+
+  if (!legalName) {
+    redirect(`/${locale}/settings?message=${encodeURIComponent("Le nom légal est requis.")}`);
+  }
+
+  if (email && !email.includes("@")) {
+    redirect(`/${locale}/settings?message=${encodeURIComponent("Le courriel de l'entreprise est invalide.")}`);
+  }
 
   const supabase = await createClient();
   const { error } = await supabase
     .from("company_profiles")
     .update({
+      legal_name: legalName,
+      trade_name: field(formData, "tradeName") || null,
+      address: field(formData, "address") || null,
+      city: field(formData, "city") || null,
+      region: field(formData, "region") || null,
+      postal_code: field(formData, "postalCode") || null,
+      country,
+      phone: field(formData, "phone") || null,
+      email: email || null,
+      tax_number: field(formData, "taxNumber") || null,
       language: nextLocale,
       weight_unit: weightUnit,
       dimension_unit: dimensionUnit,

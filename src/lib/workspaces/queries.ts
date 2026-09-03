@@ -82,7 +82,9 @@ export async function getCompanyProfileForWorkspace(workspaceId: string) {
   const supabase = await createClient();
   const { data } = await supabase
     .from("company_profiles")
-    .select("id, workspace_id, legal_name, language, weight_unit, dimension_unit, currency, reference_format")
+    .select(
+      "id, workspace_id, legal_name, trade_name, address, city, region, postal_code, country, phone, email, tax_number, language, weight_unit, dimension_unit, currency, reference_format",
+    )
     .eq("workspace_id", workspaceId)
     .maybeSingle();
 
