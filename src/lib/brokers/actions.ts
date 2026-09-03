@@ -14,9 +14,9 @@ function readField(formData: FormData, key: string) {
 }
 
 async function requireManager(locale: Locale) {
-  const { workspace, membership } = await getCurrentWorkspace();
+  const { workspace, membership, user } = await getCurrentWorkspace();
 
-  if (!workspace || !membership) {
+  if (!workspace || !membership || !user) {
     redirect(`/${locale}/onboarding`);
   }
 
@@ -24,11 +24,11 @@ async function requireManager(locale: Locale) {
     redirect(`/${locale}/brokers?message=${encodeURIComponent("Permission refusée.")}`);
   }
 
-  return workspace;
+  return { workspace, user };
 }
 
 export async function createBroker(locale: Locale, formData: FormData) {
-  const workspace = await requireManager(locale);
+  const { workspace, user } = await requireManager(locale);
   const name = readField(formData, "name");
 
   if (!name) {
@@ -36,28 +36,40 @@ export async function createBroker(locale: Locale, formData: FormData) {
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.from("brokers").insert({
-    workspace_id: workspace.id,
-    name,
-    contact_name: readField(formData, "contactName") || null,
-    email: readField(formData, "email") || null,
-    phone: readField(formData, "phone") || null,
-    address: readField(formData, "address") || null,
-    is_default_usa: formData.get("isDefaultUsa") === "on",
-    notes: readField(formData, "notes") || null,
-  });
+  const isDefaultUsa = formData.get("isDefaultUsa") === "on";
+  const { data: broker, error } = await supabase
+    .from("brokers")
+    .insert({
+      workspace_id: workspace.id,
+      name,
+      contact_name: readField(formData, "contactName") || null,
+      email: readField(formData, "email") || null,
+      phone: readField(formData, "phone") || null,
+      address: readField(formData, "address") || null,
+      is_default_usa: isDefaultUsa,
+      notes: readField(formData, "notes") || null,
+    })
+    .select("id")
+    .single();
 
   if (error) {
     logServerError({ action: "create_broker", error });
     redirect(`/${locale}/brokers?message=${encodeURIComponent(genericActionError(locale))}`);
   }
 
+  await supabase.from("shipment_audit_log").insert({
+    workspace_id: workspace.id,
+    actor_user_id: user.id,
+    action: "broker_created",
+    metadata_json: { brokerId: broker.id, isDefaultUsa },
+  });
+
   revalidatePath(`/${locale}/brokers`);
   redirect(`/${locale}/brokers?message=${encodeURIComponent("Courtier ajouté.")}`);
 }
 
 export async function seedDemoBrokers(locale: Locale) {
-  const workspace = await requireManager(locale);
+  const { workspace, user } = await requireManager(locale);
   const supabase = await createClient();
   let insertedCount = 0;
 
@@ -98,6 +110,14 @@ export async function seedDemoBrokers(locale: Locale) {
   }
 
   revalidatePath(`/${locale}/brokers`);
+  if (insertedCount > 0) {
+    await supabase.from("shipment_audit_log").insert({
+      workspace_id: workspace.id,
+      actor_user_id: user.id,
+      action: "demo_brokers_seeded",
+      metadata_json: { insertedCount },
+    });
+  }
   const message = insertedCount > 0 ? `${insertedCount} courtiers de démonstration ajoutés.` : "Les courtiers de démonstration sont déjà présents.";
   redirect(`/${locale}/brokers?message=${encodeURIComponent(message)}`);
 }

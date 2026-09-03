@@ -59,9 +59,9 @@ export async function createWorkspace(locale: Locale, formData: FormData) {
 }
 
 export async function updateWorkspaceSettings(locale: Locale, formData: FormData) {
-  const { workspace, membership } = await getCurrentWorkspace();
+  const { workspace, membership, user } = await getCurrentWorkspace();
 
-  if (!workspace || !membership) {
+  if (!workspace || !membership || !user) {
     redirect(`/${locale}/onboarding`);
   }
 
@@ -112,6 +112,13 @@ export async function updateWorkspaceSettings(locale: Locale, formData: FormData
     logServerError({ action: "update_workspace_settings", error });
     redirect(`/${locale}/settings?message=${encodeURIComponent(genericActionError(locale))}`);
   }
+
+  await supabase.from("shipment_audit_log").insert({
+    workspace_id: workspace.id,
+    actor_user_id: user.id,
+    action: "workspace_settings_updated",
+    metadata_json: { language: nextLocale, country, currency, weightUnit, dimensionUnit },
+  });
 
   revalidatePath(`/${locale}`, "layout");
   revalidatePath(`/${nextLocale}`, "layout");

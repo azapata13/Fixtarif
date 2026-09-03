@@ -64,6 +64,13 @@ export async function inviteTeamMember(locale: Locale, formData: FormData) {
     redirect(`/${locale}/team?message=${encodeURIComponent(genericActionError(locale))}`);
   }
 
+  await supabase.from("shipment_audit_log").insert({
+    workspace_id: workspace.id,
+    actor_user_id: user.id,
+    action: "workspace_invite_prepared",
+    metadata_json: { email, role },
+  });
+
   revalidatePath(`/${locale}/team`);
   redirect(`/${locale}/team?message=${encodeURIComponent("Invitation préparée. L'envoi courriel sera branché avec Google OAuth ou un service email.")}`);
 }
@@ -103,14 +110,21 @@ export async function extendTeamInvite(locale: Locale, formData: FormData) {
     redirect(`/${locale}/team?message=${encodeURIComponent(genericActionError(locale))}`);
   }
 
+  await supabase.from("shipment_audit_log").insert({
+    workspace_id: workspace.id,
+    actor_user_id: user.id,
+    action: "workspace_invite_extended",
+    metadata_json: { inviteId },
+  });
+
   revalidatePath(`/${locale}/team`);
   redirect(`/${locale}/team?message=${encodeURIComponent("Invitation prolongée pour 14 jours.")}`);
 }
 
 export async function cancelTeamInvite(locale: Locale, formData: FormData) {
-  const { workspace, membership } = await getCurrentWorkspace();
+  const { workspace, membership, user } = await getCurrentWorkspace();
 
-  if (!workspace || !membership) {
+  if (!workspace || !membership || !user) {
     redirect(`/${locale}/onboarding`);
   }
 
@@ -135,6 +149,13 @@ export async function cancelTeamInvite(locale: Locale, formData: FormData) {
     logServerError({ action: "cancel_team_invite", error });
     redirect(`/${locale}/team?message=${encodeURIComponent(genericActionError(locale))}`);
   }
+
+  await supabase.from("shipment_audit_log").insert({
+    workspace_id: workspace.id,
+    actor_user_id: user.id,
+    action: "workspace_invite_cancelled",
+    metadata_json: { inviteId },
+  });
 
   revalidatePath(`/${locale}/team`);
   redirect(`/${locale}/team?message=${encodeURIComponent("Invitation annulée.")}`);
@@ -178,13 +199,13 @@ async function getManageableMember(locale: Locale, targetUserId: string) {
     redirect(`/${locale}/team?message=${encodeURIComponent("Seul un owner peut modifier un autre admin.")}`);
   }
 
-  return { supabase, workspace, targetMember };
+  return { supabase, workspace, user, targetMember };
 }
 
 export async function updateTeamMemberRole(locale: Locale, formData: FormData) {
   const targetUserId = field(formData, "userId");
   const role = readRole(formData);
-  const { supabase, workspace } = await getManageableMember(locale, targetUserId);
+  const { supabase, workspace, user, targetMember } = await getManageableMember(locale, targetUserId);
 
   const { error } = await supabase
     .from("workspace_members")
@@ -197,13 +218,20 @@ export async function updateTeamMemberRole(locale: Locale, formData: FormData) {
     redirect(`/${locale}/team?message=${encodeURIComponent(genericActionError(locale))}`);
   }
 
+  await supabase.from("shipment_audit_log").insert({
+    workspace_id: workspace.id,
+    actor_user_id: user.id,
+    action: "workspace_member_role_updated",
+    metadata_json: { targetUserId, previousRole: targetMember.role, role },
+  });
+
   revalidatePath(`/${locale}/team`);
   redirect(`/${locale}/team?message=${encodeURIComponent("Rôle mis à jour.")}`);
 }
 
 export async function disableTeamMember(locale: Locale, formData: FormData) {
   const targetUserId = field(formData, "userId");
-  const { supabase, workspace } = await getManageableMember(locale, targetUserId);
+  const { supabase, workspace, user } = await getManageableMember(locale, targetUserId);
 
   const { error } = await supabase
     .from("workspace_members")
@@ -215,6 +243,13 @@ export async function disableTeamMember(locale: Locale, formData: FormData) {
     logServerError({ action: "disable_team_member", error });
     redirect(`/${locale}/team?message=${encodeURIComponent(genericActionError(locale))}`);
   }
+
+  await supabase.from("shipment_audit_log").insert({
+    workspace_id: workspace.id,
+    actor_user_id: user.id,
+    action: "workspace_member_disabled",
+    metadata_json: { targetUserId },
+  });
 
   revalidatePath(`/${locale}/team`);
   redirect(`/${locale}/team?message=${encodeURIComponent("Membre désactivé.")}`);

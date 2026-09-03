@@ -36,9 +36,9 @@ function readCheckbox(formData: FormData, key: string) {
 }
 
 export async function createBusiness(locale: Locale, formData: FormData) {
-  const { workspace, membership } = await getCurrentWorkspace();
+  const { workspace, membership, user } = await getCurrentWorkspace();
 
-  if (!workspace || !membership) {
+  if (!workspace || !membership || !user) {
     redirect(`/${locale}/onboarding`);
   }
 
@@ -53,28 +53,40 @@ export async function createBusiness(locale: Locale, formData: FormData) {
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.from("businesses").insert({
-    workspace_id: workspace.id,
-    name,
-    email: readField(formData, "email") || null,
-    phone: readField(formData, "phone") || null,
-    roles: [readRole(formData)],
-    notes: readField(formData, "notes") || null,
-  });
+  const role = readRole(formData);
+  const { data: business, error } = await supabase
+    .from("businesses")
+    .insert({
+      workspace_id: workspace.id,
+      name,
+      email: readField(formData, "email") || null,
+      phone: readField(formData, "phone") || null,
+      roles: [role],
+      notes: readField(formData, "notes") || null,
+    })
+    .select("id")
+    .single();
 
   if (error) {
     logServerError({ action: "create_business", error });
     redirect(`/${locale}/companies?message=${encodeURIComponent(genericActionError(locale))}`);
   }
 
+  await supabase.from("shipment_audit_log").insert({
+    workspace_id: workspace.id,
+    actor_user_id: user.id,
+    action: "business_created",
+    metadata_json: { businessId: business.id, role },
+  });
+
   revalidatePath(`/${locale}/companies`);
   redirect(`/${locale}/companies`);
 }
 
 export async function createBusinessSite(locale: Locale, formData: FormData) {
-  const { workspace, membership } = await getCurrentWorkspace();
+  const { workspace, membership, user } = await getCurrentWorkspace();
 
-  if (!workspace || !membership) {
+  if (!workspace || !membership || !user) {
     redirect(`/${locale}/onboarding`);
   }
 
@@ -91,35 +103,46 @@ export async function createBusinessSite(locale: Locale, formData: FormData) {
 
   const country = readField(formData, "country") === "US" ? "US" : "CA";
   const supabase = await createClient();
-  const { error } = await supabase.from("business_sites").insert({
-    workspace_id: workspace.id,
-    business_id: businessId,
-    name,
-    address: readField(formData, "address") || null,
-    city: readField(formData, "city") || null,
-    region: readField(formData, "region") || null,
-    postal_code: readField(formData, "postalCode") || null,
-    country,
-    dock_info: readField(formData, "dockInfo") || null,
-    appointment_required: readCheckbox(formData, "appointmentRequired"),
-    flatbed_required: readCheckbox(formData, "flatbedRequired"),
-    call_before_minutes: readPositiveInteger(formData, "callBeforeMinutes"),
-    notes: readField(formData, "notes") || null,
-  });
+  const { data: site, error } = await supabase
+    .from("business_sites")
+    .insert({
+      workspace_id: workspace.id,
+      business_id: businessId,
+      name,
+      address: readField(formData, "address") || null,
+      city: readField(formData, "city") || null,
+      region: readField(formData, "region") || null,
+      postal_code: readField(formData, "postalCode") || null,
+      country,
+      dock_info: readField(formData, "dockInfo") || null,
+      appointment_required: readCheckbox(formData, "appointmentRequired"),
+      flatbed_required: readCheckbox(formData, "flatbedRequired"),
+      call_before_minutes: readPositiveInteger(formData, "callBeforeMinutes"),
+      notes: readField(formData, "notes") || null,
+    })
+    .select("id")
+    .single();
 
   if (error) {
     logServerError({ action: "create_business_site", error });
     redirect(`/${locale}/companies?message=${encodeURIComponent(genericActionError(locale))}`);
   }
 
+  await supabase.from("shipment_audit_log").insert({
+    workspace_id: workspace.id,
+    actor_user_id: user.id,
+    action: "business_site_created",
+    metadata_json: { businessId, siteId: site.id, country },
+  });
+
   revalidatePath(`/${locale}/companies`);
   redirect(`/${locale}/companies?message=${encodeURIComponent("Site ajouté.")}`);
 }
 
 export async function createBusinessContact(locale: Locale, formData: FormData) {
-  const { workspace, membership } = await getCurrentWorkspace();
+  const { workspace, membership, user } = await getCurrentWorkspace();
 
-  if (!workspace || !membership) {
+  if (!workspace || !membership || !user) {
     redirect(`/${locale}/onboarding`);
   }
 
@@ -136,31 +159,43 @@ export async function createBusinessContact(locale: Locale, formData: FormData) 
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.from("contacts").insert({
-    workspace_id: workspace.id,
-    business_id: businessId,
-    site_id: siteId || null,
-    name,
-    role: readField(formData, "contactRole") || null,
-    email: readField(formData, "email") || null,
-    phone: readField(formData, "phone") || null,
-    extension: readField(formData, "extension") || null,
-    contact_type: readContactType(formData),
-  });
+  const contactType = readContactType(formData);
+  const { data: contact, error } = await supabase
+    .from("contacts")
+    .insert({
+      workspace_id: workspace.id,
+      business_id: businessId,
+      site_id: siteId || null,
+      name,
+      role: readField(formData, "contactRole") || null,
+      email: readField(formData, "email") || null,
+      phone: readField(formData, "phone") || null,
+      extension: readField(formData, "extension") || null,
+      contact_type: contactType,
+    })
+    .select("id")
+    .single();
 
   if (error) {
     logServerError({ action: "create_business_contact", error });
     redirect(`/${locale}/companies?message=${encodeURIComponent(genericActionError(locale))}`);
   }
 
+  await supabase.from("shipment_audit_log").insert({
+    workspace_id: workspace.id,
+    actor_user_id: user.id,
+    action: "business_contact_created",
+    metadata_json: { businessId, contactId: contact.id, siteId: siteId || null, contactType },
+  });
+
   revalidatePath(`/${locale}/companies`);
   redirect(`/${locale}/companies?message=${encodeURIComponent("Contact ajouté.")}`);
 }
 
 export async function seedDemoBusinesses(locale: Locale) {
-  const { workspace, membership } = await getCurrentWorkspace();
+  const { workspace, membership, user } = await getCurrentWorkspace();
 
-  if (!workspace || !membership) {
+  if (!workspace || !membership || !user) {
     redirect(`/${locale}/onboarding`);
   }
 
@@ -245,6 +280,14 @@ export async function seedDemoBusinesses(locale: Locale) {
   }
 
   revalidatePath(`/${locale}/companies`);
+  if (insertedCount > 0) {
+    await supabase.from("shipment_audit_log").insert({
+      workspace_id: workspace.id,
+      actor_user_id: user.id,
+      action: "demo_businesses_seeded",
+      metadata_json: { insertedCount },
+    });
+  }
   const message = insertedCount > 0 ? `${insertedCount} clients de démonstration ajoutés.` : "Les clients de démonstration sont déjà présents.";
   redirect(`/${locale}/companies?message=${encodeURIComponent(message)}`);
 }

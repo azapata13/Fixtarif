@@ -21,9 +21,9 @@ function readCarrierType(formData: FormData): CarrierType {
 }
 
 async function requireManager(locale: Locale) {
-  const { workspace, membership } = await getCurrentWorkspace();
+  const { workspace, membership, user } = await getCurrentWorkspace();
 
-  if (!workspace || !membership) {
+  if (!workspace || !membership || !user) {
     redirect(`/${locale}/onboarding`);
   }
 
@@ -31,11 +31,11 @@ async function requireManager(locale: Locale) {
     redirect(`/${locale}/carriers?message=${encodeURIComponent("Permission refusée.")}`);
   }
 
-  return workspace;
+  return { workspace, user };
 }
 
 export async function createCarrier(locale: Locale, formData: FormData) {
-  const workspace = await requireManager(locale);
+  const { workspace, user } = await requireManager(locale);
   const name = readField(formData, "name");
 
   if (!name) {
@@ -43,27 +43,39 @@ export async function createCarrier(locale: Locale, formData: FormData) {
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.from("carriers").insert({
-    workspace_id: workspace.id,
-    name,
-    carrier_type: readCarrierType(formData),
-    email: readField(formData, "email") || null,
-    phone: readField(formData, "phone") || null,
-    default_provides_bol: formData.get("defaultProvidesBol") === "on",
-    notes: readField(formData, "notes") || null,
-  });
+  const carrierType = readCarrierType(formData);
+  const { data: carrier, error } = await supabase
+    .from("carriers")
+    .insert({
+      workspace_id: workspace.id,
+      name,
+      carrier_type: carrierType,
+      email: readField(formData, "email") || null,
+      phone: readField(formData, "phone") || null,
+      default_provides_bol: formData.get("defaultProvidesBol") === "on",
+      notes: readField(formData, "notes") || null,
+    })
+    .select("id")
+    .single();
 
   if (error) {
     logServerError({ action: "create_carrier", error });
     redirect(`/${locale}/carriers?message=${encodeURIComponent(genericActionError(locale))}`);
   }
 
+  await supabase.from("shipment_audit_log").insert({
+    workspace_id: workspace.id,
+    actor_user_id: user.id,
+    action: "carrier_created",
+    metadata_json: { carrierId: carrier.id, carrierType },
+  });
+
   revalidatePath(`/${locale}/carriers`);
   redirect(`/${locale}/carriers?message=${encodeURIComponent("Transporteur ajouté.")}`);
 }
 
 export async function seedDemoCarriers(locale: Locale) {
-  const workspace = await requireManager(locale);
+  const { workspace, user } = await requireManager(locale);
   const supabase = await createClient();
   let insertedCount = 0;
 
@@ -103,6 +115,14 @@ export async function seedDemoCarriers(locale: Locale) {
   }
 
   revalidatePath(`/${locale}/carriers`);
+  if (insertedCount > 0) {
+    await supabase.from("shipment_audit_log").insert({
+      workspace_id: workspace.id,
+      actor_user_id: user.id,
+      action: "demo_carriers_seeded",
+      metadata_json: { insertedCount },
+    });
+  }
   const message = insertedCount > 0 ? `${insertedCount} transporteurs de démonstration ajoutés.` : "Les transporteurs de démonstration sont déjà présents.";
   redirect(`/${locale}/carriers?message=${encodeURIComponent(message)}`);
 }

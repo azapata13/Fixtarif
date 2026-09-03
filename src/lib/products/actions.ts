@@ -31,9 +31,9 @@ function readPackageType(formData: FormData): PackageType {
 }
 
 export async function createProduct(locale: Locale, formData: FormData) {
-  const { workspace, membership } = await getCurrentWorkspace();
+  const { workspace, membership, user } = await getCurrentWorkspace();
 
-  if (!workspace || !membership) {
+  if (!workspace || !membership || !user) {
     redirect(`/${locale}/onboarding`);
   }
 
@@ -48,33 +48,44 @@ export async function createProduct(locale: Locale, formData: FormData) {
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.from("products").insert({
-    workspace_id: workspace.id,
-    name,
-    part_number: readField(formData, "partNumber") || null,
-    description_fr: readField(formData, "descriptionFr") || null,
-    weight: readNumber(formData, "weight"),
-    length: readNumber(formData, "length"),
-    width: readNumber(formData, "width"),
-    height: readNumber(formData, "height"),
-    default_package_type: readPackageType(formData),
-    stackable: formData.get("stackable") === "on",
-    notes: readField(formData, "notes") || null,
-  });
+  const { data: product, error } = await supabase
+    .from("products")
+    .insert({
+      workspace_id: workspace.id,
+      name,
+      part_number: readField(formData, "partNumber") || null,
+      description_fr: readField(formData, "descriptionFr") || null,
+      weight: readNumber(formData, "weight"),
+      length: readNumber(formData, "length"),
+      width: readNumber(formData, "width"),
+      height: readNumber(formData, "height"),
+      default_package_type: readPackageType(formData),
+      stackable: formData.get("stackable") === "on",
+      notes: readField(formData, "notes") || null,
+    })
+    .select("id")
+    .single();
 
   if (error) {
     logServerError({ action: "create_product", error });
     redirect(`/${locale}/products?message=${encodeURIComponent(genericActionError(locale))}`);
   }
 
+  await supabase.from("shipment_audit_log").insert({
+    workspace_id: workspace.id,
+    actor_user_id: user.id,
+    action: "product_created",
+    metadata_json: { productId: product.id },
+  });
+
   revalidatePath(`/${locale}/products`);
   redirect(`/${locale}/products?message=${encodeURIComponent("Produit ajouté.")}`);
 }
 
 export async function seedDemoProducts(locale: Locale) {
-  const { workspace, membership } = await getCurrentWorkspace();
+  const { workspace, membership, user } = await getCurrentWorkspace();
 
-  if (!workspace || !membership) {
+  if (!workspace || !membership || !user) {
     redirect(`/${locale}/onboarding`);
   }
 
@@ -130,6 +141,14 @@ export async function seedDemoProducts(locale: Locale) {
   }
 
   revalidatePath(`/${locale}/products`);
+  if (insertedCount > 0) {
+    await supabase.from("shipment_audit_log").insert({
+      workspace_id: workspace.id,
+      actor_user_id: user.id,
+      action: "demo_products_seeded",
+      metadata_json: { insertedCount },
+    });
+  }
   const message = insertedCount > 0 ? `${insertedCount} produits de démonstration ajoutés.` : "Les produits de démonstration sont déjà présents.";
   redirect(`/${locale}/products?message=${encodeURIComponent(message)}`);
 }
