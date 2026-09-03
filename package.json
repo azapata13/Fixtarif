@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint .",
     "test:rls": "node scripts/security/rls-smoke-test.mjs",
+    "test:security": "node scripts/security/static-security-check.mjs && npm audit --audit-level=moderate && npm run test:rls",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
