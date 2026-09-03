@@ -7,9 +7,9 @@
 - Workspace, roles `owner/admin/member`, RLS et dashboard admin actifs.
 - Bibliotheques: entreprises, sites, contacts, produits, transporteurs, courtiers.
 - Expedition Canada/USA manuelle: creation de brouillon, validation, transport, statut, duplication.
-- Page Documents preparee: scan/import, PDF, HTS, CUSMA et automatisation douaniere visibles mais verrouilles.
+- Page Documents preparee: import prive de documents sources actif; PDF, HTS, CUSMA et automatisation douaniere visibles mais verrouilles.
 - Nouvelle migration Supabase preparee pour documents, extractions, PDF generes et tables douanieres USA.
-- Scan/import, PDF avance, HTS et CUSMA restent volontairement non automatises dans la demo actuelle.
+- Extraction scan, PDF avance, HTS et CUSMA restent volontairement non automatises dans la demo actuelle.
 - Les prochains modules garderont une validation humaine obligatoire avant toute generation ou classification.
 
 ## A lancer avant chaque push
@@ -33,13 +33,14 @@ npm run build
 - Passer en validation, puis en pret seulement lorsque la checklist est complete.
 - Dupliquer une expedition et confirmer que quantite/poids/lot doivent etre revalides.
 - Verifier `/fr/admin` pour confirmer que les evenements sensibles apparaissent.
-- Verifier `/fr/documents` pour confirmer que les modules verrouilles s'affichent sans erreur.
+- Verifier `/fr/documents` pour confirmer que l'import prive fonctionne avec PDF/PNG/JPG/WebP.
 
 ## A faire par Felipe avant production reelle
 
 - Tourner une seule fois en local avec le compte demo et valider le parcours complet.
 - Quand on decide de redeployer, pousser tous les commits en une seule batch pour economiser Netlify.
 - Appliquer la migration `supabase/migrations/20260903160000_documents_customs_foundation.sql` dans Supabase avant de tester upload/PDF/douane.
+- Tester l'import avec un petit fichier non sensible; les vrais documents clients attendront la validation de securite finale.
 - Dans Supabase, garder seulement les URLs de redirection necessaires pour production et local.
 - Avant un lancement public, regenerer les secrets partages pendant la configuration initiale.
 - Activer MFA sur les comptes Google, Supabase, Netlify, GoDaddy et GitHub.
@@ -65,7 +66,7 @@ Objectif: montrer une fondation fiable, simple et claire.
 - Tester le parcours complet local.
 - Corriger les irritants visuels mobiles, surtout les boutons noirs.
 - Corriger toute erreur restante lors de creation d'expedition.
-- Montrer la page Documents comme roadmap produit integree, sans generation active.
+- Montrer la page Documents comme roadmap produit integree, avec import source actif mais sans generation active.
 - Faire un seul deploy Netlify groupe quand la demo locale est approuvee.
 - Rotater les cles sensibles partagees pendant la configuration initiale avant une exposition plus large.
 
@@ -73,7 +74,7 @@ Objectif: montrer une fondation fiable, simple et claire.
 
 Objectif: passer de "fondation de preparation" a assistant de documents.
 
-- Scan/import: televersement prive, extraction brouillon, matching avec clients/sites/produits, aucune valeur inventee.
+- Scan/import: televersement prive actif; prochaine etape extraction brouillon, matching avec clients/sites/produits, aucune valeur inventee.
 - PDF Canada: bordereau, etiquettes, connaissement simple si requis.
 - Documents: stockage prive Supabase, URLs signees courtes, historique de generations.
 - Verification intelligente: statut `confirme`, `a verifier`, `manquant` par champ.
