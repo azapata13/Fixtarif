@@ -7,6 +7,9 @@ export type CarrierType = "ltl" | "ftl" | "flatbed" | "parcel" | "other";
 export type ShipmentStatus = "draft" | "validation" | "ready" | "archived";
 export type ShipmentReason = "sale" | "subcontracting" | "repair" | "treatment" | "return_rma" | "sample_test" | "loaned_material" | "tools_return" | "other";
 export type PaymentTerm = "prepaid" | "collect" | "third_party";
+export type DocumentType = "packing_slip" | "label" | "bol" | "commercial_invoice" | "cusma_certificate" | "source_upload";
+export type ValidationStatus = "draft" | "needs_review" | "validated" | "rejected";
+export type ExtractionStatus = "pending" | "extracted" | "needs_review" | "confirmed" | "rejected";
 
 export type Database = {
   public: {
@@ -731,6 +734,178 @@ export type Database = {
         Update: Partial<Database["public"]["Tables"]["shipment_packages"]["Insert"]>;
         Relationships: [];
       };
+      product_customs: {
+        Row: {
+          id: string;
+          workspace_id: string;
+          product_id: string;
+          destination_country: "CA" | "US";
+          hs_code: string | null;
+          hts_code: string | null;
+          official_description: string | null;
+          country_of_origin: string | null;
+          source_name: string | null;
+          revision: string | null;
+          effective_date: string | null;
+          validation_status: ValidationStatus;
+          validated_by: string | null;
+          validated_at: string | null;
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          workspace_id: string;
+          product_id: string;
+          destination_country?: "CA" | "US";
+          hs_code?: string | null;
+          hts_code?: string | null;
+          official_description?: string | null;
+          country_of_origin?: string | null;
+          source_name?: string | null;
+          revision?: string | null;
+          effective_date?: string | null;
+          validation_status?: ValidationStatus;
+          validated_by?: string | null;
+          validated_at?: string | null;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["product_customs"]["Insert"]>;
+        Relationships: [];
+      };
+      shipment_customs: {
+        Row: {
+          id: string;
+          workspace_id: string;
+          shipment_id: string;
+          buyer_business_id: string | null;
+          buyer_same_as_consignee: boolean;
+          broker_id: string | null;
+          incoterm: string | null;
+          customs_value: number | null;
+          currency: "CAD" | "USD";
+          origin_country: string | null;
+          hts_validation_status: ValidationStatus;
+          cusma_validation_status: ValidationStatus;
+          commercial_invoice_required: boolean;
+          cusma_required: boolean;
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          workspace_id: string;
+          shipment_id: string;
+          buyer_business_id?: string | null;
+          buyer_same_as_consignee?: boolean;
+          broker_id?: string | null;
+          incoterm?: string | null;
+          customs_value?: number | null;
+          currency?: "CAD" | "USD";
+          origin_country?: string | null;
+          hts_validation_status?: ValidationStatus;
+          cusma_validation_status?: ValidationStatus;
+          commercial_invoice_required?: boolean;
+          cusma_required?: boolean;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["shipment_customs"]["Insert"]>;
+        Relationships: [];
+      };
+      source_documents: {
+        Row: {
+          id: string;
+          workspace_id: string;
+          shipment_id: string | null;
+          storage_bucket: string;
+          storage_path: string;
+          mime_type: string;
+          original_filename: string;
+          uploaded_by: string;
+          validation_status: ValidationStatus;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          workspace_id: string;
+          shipment_id?: string | null;
+          storage_bucket?: string;
+          storage_path: string;
+          mime_type: string;
+          original_filename: string;
+          uploaded_by: string;
+          validation_status?: ValidationStatus;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["source_documents"]["Insert"]>;
+        Relationships: [];
+      };
+      document_extractions: {
+        Row: {
+          id: string;
+          workspace_id: string;
+          source_document_id: string;
+          raw_result_json: Record<string, unknown>;
+          normalized_result_json: Record<string, unknown>;
+          validation_status: ExtractionStatus;
+          confirmed_by: string | null;
+          confirmed_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          workspace_id: string;
+          source_document_id: string;
+          raw_result_json?: Record<string, unknown>;
+          normalized_result_json?: Record<string, unknown>;
+          validation_status?: ExtractionStatus;
+          confirmed_by?: string | null;
+          confirmed_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["document_extractions"]["Insert"]>;
+        Relationships: [];
+      };
+      generated_documents: {
+        Row: {
+          id: string;
+          workspace_id: string;
+          shipment_id: string;
+          source_document_id: string | null;
+          document_type: DocumentType;
+          template_version: string;
+          storage_bucket: string;
+          storage_path: string;
+          generated_by: string;
+          generated_at: string;
+          validation_status: ValidationStatus;
+          metadata_json: Record<string, unknown>;
+        };
+        Insert: {
+          id?: string;
+          workspace_id: string;
+          shipment_id: string;
+          source_document_id?: string | null;
+          document_type: DocumentType;
+          template_version?: string;
+          storage_bucket?: string;
+          storage_path: string;
+          generated_by: string;
+          generated_at?: string;
+          validation_status?: ValidationStatus;
+          metadata_json?: Record<string, unknown>;
+        };
+        Update: Partial<Database["public"]["Tables"]["generated_documents"]["Insert"]>;
+        Relationships: [];
+      };
       shipment_audit_log: {
         Row: {
           id: string;
@@ -777,6 +952,9 @@ export type Database = {
       shipment_status: ShipmentStatus;
       shipment_reason: ShipmentReason;
       payment_term: PaymentTerm;
+      document_type: DocumentType;
+      validation_status: ValidationStatus;
+      extraction_status: ExtractionStatus;
     };
     CompositeTypes: Record<string, never>;
   };

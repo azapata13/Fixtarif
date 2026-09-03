@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { AlertCircle, ArrowLeft, CheckCircle2, Circle, Copy, FileCheck2, MapPin, Scale, Truck } from "lucide-react";
+import { AlertCircle, ArrowLeft, CheckCircle2, Circle, Copy, FileCheck2, LockKeyhole, MapPin, Scale, ShieldCheck, Truck } from "lucide-react";
 import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/page-header";
 import { type Locale } from "@/i18n/config";
@@ -49,6 +49,7 @@ export default async function ShipmentDetailPage({ params, searchParams }: Shipm
   const updateStatusAction = updateShipmentStatus.bind(null, locale);
   const duplicateShipmentAction = duplicateShipmentDraft.bind(null, locale);
   const canMarkReady = Boolean(destination && site && contact && item?.quantity_confirmed && item.weight_confirmed && carrier && packageRow);
+  const destinationCountryName = shipment.destination_country === "US" ? "États-Unis" : "Canada";
 
   return (
     <>
@@ -100,7 +101,7 @@ export default async function ShipmentDetailPage({ params, searchParams }: Shipm
           <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
             <div>
               <p className="text-sm font-semibold uppercase tracking-wide text-[var(--muted)]">{shipment.status}</p>
-              <h2 className="mt-2 text-2xl font-semibold tracking-tight">Expédition Canada</h2>
+              <h2 className="mt-2 text-2xl font-semibold tracking-tight">Expédition {destinationCountryName}</h2>
               <p className="mt-2 text-base text-[var(--muted)]">
                 {shipment.reason} · {shipment.shipment_date}
               </p>
@@ -218,6 +219,25 @@ export default async function ShipmentDetailPage({ params, searchParams }: Shipm
           Génération bloquée volontairement pour l&apos;instant. Quand le statut est prêt, on branchera les documents sans activer PDF/HTS/CUSMA avant validation.
         </p>
       </section>
+      {shipment.destination_country === "US" ? (
+        <section className="mt-6 rounded-[24px] border border-[var(--line)] bg-white p-6 shadow-sm">
+          <div className="flex items-center gap-3">
+            <ShieldCheck aria-hidden="true" size={24} />
+            <h2 className="text-2xl font-semibold tracking-tight">Douane USA</h2>
+          </div>
+          <p className="mt-4 text-base leading-7 text-[var(--muted)]">
+            Les champs HTS, CUSMA, facture commerciale et courtier sont préparés dans la base, mais restent verrouillés jusqu&apos;à validation métier.
+          </p>
+          <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            {["HTS à valider", "Origine à confirmer", "CUSMA verrouillé", "Facture commerciale bloquée"].map((label) => (
+              <div key={label} className="flex items-center gap-3 rounded-2xl bg-neutral-50 px-4 py-3 text-base font-semibold text-neutral-800">
+                <LockKeyhole aria-hidden="true" size={19} />
+                {label}
+              </div>
+            ))}
+          </div>
+        </section>
+      ) : null}
     </>
   );
 }

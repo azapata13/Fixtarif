@@ -36,6 +36,10 @@ function readPaymentTerm(formData: FormData): PaymentTerm {
   return allowed.includes(value as PaymentTerm) ? (value as PaymentTerm) : "prepaid";
 }
 
+function readDestinationCountry(formData: FormData): "CA" | "US" {
+  return readField(formData, "destinationCountry") === "US" ? "US" : "CA";
+}
+
 function readPackageType(formData: FormData): PackageType {
   const value = readField(formData, "packageType");
   const allowed: PackageType[] = ["pallet", "box", "crate", "bundle", "drum", "other"];
@@ -173,6 +177,7 @@ export async function createShipmentDraft(locale: Locale, formData: FormData) {
   const destinationBusinessId = readOptionalId(formData, "destinationBusinessId");
   const destinationSiteId = readOptionalId(formData, "destinationSiteId");
   const destinationContactId = readOptionalId(formData, "destinationContactId");
+  const destinationCountry = readDestinationCountry(formData);
   const packageCount = Math.max(1, Math.trunc(readPositiveNumber(formData, "packageCount") ?? 1));
   const relationValidation = await validateShipmentDraftRelations({
     carrierId,
@@ -206,7 +211,7 @@ export async function createShipmentDraft(locale: Locale, formData: FormData) {
     .insert({
       workspace_id: workspace.id,
       reference,
-      destination_country: "CA",
+      destination_country: destinationCountry,
       reason: readReason(formData),
       language: locale,
       status: "draft",
@@ -290,7 +295,7 @@ export async function createShipmentDraft(locale: Locale, formData: FormData) {
     shipment_id: shipment.id,
     actor_user_id: user.id,
     action: "shipment_draft_created",
-    metadata_json: { source: "manual_canada" },
+    metadata_json: { destination_country: destinationCountry, source: "manual" },
   });
 
   revalidatePath(`/${locale}/shipments`);

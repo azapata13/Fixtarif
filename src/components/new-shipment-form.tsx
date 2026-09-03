@@ -40,6 +40,13 @@ export function NewShipmentForm({ action, businesses, carriers, nextReference, p
           <input className="field" defaultValue={nextReference} name="reference" required />
         </label>
         <label className="block text-base font-semibold">
+          Pays de destination
+          <select className="field" name="destinationCountry" defaultValue="CA">
+            <option value="CA">Canada</option>
+            <option value="US">États-Unis</option>
+          </select>
+        </label>
+        <label className="block text-base font-semibold">
           Motif
           <select className="field" name="reason" defaultValue="sale">
             <option value="sale">Vente</option>
