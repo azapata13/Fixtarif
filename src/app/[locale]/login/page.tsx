@@ -12,6 +12,17 @@ type LoginPageProps = {
   searchParams: Promise<{ message?: string }>;
 };
 
+function GoogleIcon() {
+  return (
+    <svg aria-hidden="true" className="h-5 w-5" viewBox="0 0 24 24">
+      <path d="M21.8 12.2c0-.7-.1-1.3-.2-1.9H12v3.6h5.5a4.7 4.7 0 0 1-2 3.1v2.6h3.2c1.9-1.8 3.1-4.4 3.1-7.4Z" fill="#4285F4" />
+      <path d="M12 22c2.7 0 5-0.9 6.7-2.4L15.5 17c-.9.6-2 .9-3.5.9a6 6 0 0 1-5.6-4.1H3.1v2.6A10 10 0 0 0 12 22Z" fill="#34A853" />
+      <path d="M6.4 13.8A6 6 0 0 1 6 12c0-.6.1-1.2.4-1.8V7.6H3.1a10 10 0 0 0 0 8.8l3.3-2.6Z" fill="#FBBC05" />
+      <path d="M12 6.1c1.5 0 2.8.5 3.8 1.5l2.9-2.9A9.8 9.8 0 0 0 12 2a10 10 0 0 0-8.9 5.6l3.3 2.6A6 6 0 0 1 12 6.1Z" fill="#EA4335" />
+    </svg>
+  );
+}
+
 export default async function LoginPage({ params, searchParams }: LoginPageProps) {
   const { locale: localeParam } = await params;
   const locale = localeParam as Locale;
@@ -64,7 +75,10 @@ export default async function LoginPage({ params, searchParams }: LoginPageProps
               {dictionary.auth.signUp}
             </button>
           </div>
-          <button className="secondary-button w-full" formAction={signInWithGoogleAction}>
+        </form>
+        <form action={signInWithGoogleAction} className="mt-3">
+          <button className="secondary-button inline-flex w-full items-center justify-center gap-3" type="submit">
+            <GoogleIcon />
             {dictionary.auth.signInWithGoogle}
           </button>
         </form>

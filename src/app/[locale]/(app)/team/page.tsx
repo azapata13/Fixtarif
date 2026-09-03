@@ -76,10 +76,13 @@ export default async function TeamPage({ params, searchParams }: TeamPageProps) 
             {team.members.map((member) => (
               <div className="rounded-2xl bg-neutral-50 px-4 py-4" key={member.user_id}>
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                  <p className="inline-flex items-center gap-3 text-base font-semibold text-neutral-950">
+                  <div className="flex items-center gap-3">
                     <UserRound aria-hidden="true" size={20} />
-                    {formatShortId(member.user_id)}
-                  </p>
+                    <div>
+                      <p className="text-base font-semibold text-neutral-950">{member.profile?.full_name ?? member.profile?.email ?? formatShortId(member.user_id)}</p>
+                      {member.profile?.email ? <p className="mt-1 text-sm text-[var(--muted)]">{member.profile.email}</p> : null}
+                    </div>
+                  </div>
                   <div className="flex flex-wrap gap-2">
                     <span className="rounded-full bg-white px-3 py-1 text-sm font-semibold uppercase text-neutral-700">{member.role}</span>
                     <span className="rounded-full bg-white px-3 py-1 text-sm font-semibold uppercase text-neutral-700">{member.status}</span>

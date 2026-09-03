@@ -16,8 +16,18 @@ export async function getTeamForWorkspace(workspaceId: string) {
       .order("created_at", { ascending: false }),
   ]);
 
+  const memberIds = (membersResult.data ?? []).map((member) => member.user_id);
+  const profilesResult =
+    memberIds.length > 0
+      ? await supabase.from("user_profiles").select("user_id,email,full_name,avatar_url").in("user_id", memberIds)
+      : { data: [] };
+  const profilesByUserId = new Map((profilesResult.data ?? []).map((profile) => [profile.user_id, profile]));
+
   return {
-    members: membersResult.data ?? [],
+    members: (membersResult.data ?? []).map((member) => ({
+      ...member,
+      profile: profilesByUserId.get(member.user_id) ?? null,
+    })),
     invites: invitesResult.data ?? [],
   };
 }

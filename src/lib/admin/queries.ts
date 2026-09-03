@@ -43,6 +43,13 @@ export async function getAdminOverviewForWorkspace(workspaceId: string) {
       .limit(5),
   ]);
 
+  const memberIds = (memberRowsResult.data ?? []).map((member) => member.user_id);
+  const profilesResult =
+    memberIds.length > 0
+      ? await supabase.from("user_profiles").select("user_id,email,full_name,avatar_url").in("user_id", memberIds)
+      : { data: [] };
+  const profilesByUserId = new Map((profilesResult.data ?? []).map((profile) => [profile.user_id, profile]));
+
   return {
     counts: {
       members: membersResult.count ?? 0,
@@ -55,7 +62,10 @@ export async function getAdminOverviewForWorkspace(workspaceId: string) {
       pendingInvites: pendingInvitesResult.count ?? 0,
     },
     auditLog: auditLogResult.data ?? [],
-    members: memberRowsResult.data ?? [],
+    members: (memberRowsResult.data ?? []).map((member) => ({
+      ...member,
+      profile: profilesByUserId.get(member.user_id) ?? null,
+    })),
     invites: inviteRowsResult.data ?? [],
   };
 }
