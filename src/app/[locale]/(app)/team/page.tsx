@@ -1,9 +1,9 @@
-import { MailPlus, RotateCw, ShieldCheck, UserRound, Users, X } from "lucide-react";
+import { MailPlus, RotateCw, Save, ShieldCheck, UserMinus, UserRound, Users, X } from "lucide-react";
 import { type LocaleParams } from "@/app/[locale]/layout";
 import { PageHeader } from "@/components/page-header";
 import { type Locale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
-import { cancelTeamInvite, extendTeamInvite, inviteTeamMember } from "@/lib/team/actions";
+import { cancelTeamInvite, disableTeamMember, extendTeamInvite, inviteTeamMember, updateTeamMemberRole } from "@/lib/team/actions";
 import { getTeamForWorkspace } from "@/lib/team/queries";
 import { getCurrentWorkspace } from "@/lib/workspaces/queries";
 
@@ -28,12 +28,14 @@ export default async function TeamPage({ params, searchParams }: TeamPageProps) 
   const locale = localeParam as Locale;
   const dictionary = getDictionary(locale);
   const page = dictionary.pages.team;
-  const { workspace, membership } = await getCurrentWorkspace();
+  const { workspace, membership, user } = await getCurrentWorkspace();
   const team = workspace ? await getTeamForWorkspace(workspace.id) : { members: [], invites: [] };
   const canManage = membership ? ["owner", "admin"].includes(membership.role) : false;
   const inviteTeamMemberAction = inviteTeamMember.bind(null, locale);
   const extendTeamInviteAction = extendTeamInvite.bind(null, locale);
   const cancelTeamInviteAction = cancelTeamInvite.bind(null, locale);
+  const updateTeamMemberRoleAction = updateTeamMemberRole.bind(null, locale);
+  const disableTeamMemberAction = disableTeamMember.bind(null, locale);
 
   return (
     <>
@@ -88,7 +90,33 @@ export default async function TeamPage({ params, searchParams }: TeamPageProps) 
                     <span className="rounded-full bg-white px-3 py-1 text-sm font-semibold uppercase text-neutral-700">{member.status}</span>
                   </div>
                 </div>
-                <p className="mt-2 text-sm text-[var(--muted)]">Depuis le {formatDate(member.created_at, locale)}</p>
+                <div className="mt-3 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                  <p className="text-sm text-[var(--muted)]">Depuis le {formatDate(member.created_at, locale)}</p>
+                  {canManage && user && member.user_id !== user.id && member.role !== "owner" ? (
+                    <div className="flex flex-wrap gap-2">
+                      <form action={updateTeamMemberRoleAction} className="flex flex-wrap gap-2">
+                        <input name="userId" type="hidden" value={member.user_id} />
+                        <select className="min-h-11 rounded-full border border-neutral-300 bg-white px-4 py-2 text-sm font-semibold text-black" defaultValue={member.role} name="role">
+                          <option value="member">Member</option>
+                          <option value="admin">Admin</option>
+                        </select>
+                        <button className="secondary-button !min-h-11 !px-4 !py-2 !text-sm inline-flex items-center justify-center gap-2" type="submit">
+                          <Save aria-hidden="true" size={16} />
+                          Sauver
+                        </button>
+                      </form>
+                      {member.status === "active" ? (
+                        <form action={disableTeamMemberAction}>
+                          <input name="userId" type="hidden" value={member.user_id} />
+                          <button className="secondary-button !min-h-11 !px-4 !py-2 !text-sm inline-flex items-center justify-center gap-2" type="submit">
+                            <UserMinus aria-hidden="true" size={16} />
+                            Désactiver
+                          </button>
+                        </form>
+                      ) : null}
+                    </div>
+                  ) : null}
+                </div>
               </div>
             ))}
           </div>

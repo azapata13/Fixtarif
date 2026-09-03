@@ -8,6 +8,7 @@ export async function getTeamForWorkspace(workspaceId: string) {
       .from("workspace_members")
       .select("user_id, role, status, created_at")
       .eq("workspace_id", workspaceId)
+      .order("status", { ascending: true })
       .order("created_at", { ascending: true }),
     supabase
       .from("workspace_invites")
