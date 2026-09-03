@@ -21,6 +21,7 @@ Fixtarif doit être construit avec une posture Zero Trust et une couverture OWAS
 - Buckets storage privés.
 - URLs signées temporaires pour les fichiers.
 - Audit log avant les actions sensibles.
+- Messages publics génériques pour les erreurs serveur; détails uniquement dans les logs serveur.
 
 ## OWASP Top 10 2025
 
@@ -48,6 +49,7 @@ Contrôles Fixtarif :
 - Appliquer les migrations RLS.
 - Tester qu'un utilisateur ne peut pas lire un autre workspace.
 - Vérifier `npm audit`.
+- Lancer `npm run test:security`.
 - Vérifier les headers HTTP en production.
 
 ## Tests sécurité
@@ -59,3 +61,11 @@ npm run test:rls
 ```
 
 Ce test crée deux utilisateurs temporaires, crée un workspace avec le premier, confirme que le deuxième ne peut pas lire ce workspace ni son profil entreprise, puis supprime les données temporaires.
+
+Test sécurité local complet :
+
+```bash
+npm run test:security
+```
+
+Ce test vérifie les secrets accidentels dans les fichiers versionnés, les headers de sécurité, l'absence d'erreurs serveur brutes exposées, `npm audit`, puis le test RLS.

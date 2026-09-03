@@ -18,6 +18,7 @@ const contentSecurityPolicy = [
 
 const nextConfig: NextConfig = {
   agentRules: false,
+  poweredByHeader: false,
   reactStrictMode: true,
   async headers() {
     return [
