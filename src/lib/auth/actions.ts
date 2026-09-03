@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { isSupabaseConfigured } from "@/lib/env";
+import { genericAuthError, genericOAuthError, logServerError } from "@/lib/security/public-errors";
 import { createClient } from "@/lib/supabase/server";
 import type { Locale } from "@/i18n/config";
 import { syncCurrentUserProfile } from "@/lib/users/profile";
@@ -17,9 +18,37 @@ async function getRequestOrigin() {
   const headerStore = await headers();
   const host = headerStore.get("x-forwarded-host") ?? headerStore.get("host");
   const protocol = headerStore.get("x-forwarded-proto") ?? (host?.startsWith("localhost") ? "http" : "https");
+  const fallbackOrigin = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
   if (!host) {
-    return process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+    return fallbackOrigin;
+  }
+
+  const hostname = host.split(":")[0];
+  const allowedHostnames = new Set(
+    [
+      "localhost",
+      "127.0.0.1",
+      "app.fixtarif.ca",
+      "fixtarif.ca",
+      "fixtarif.netlify.app",
+      process.env.NEXT_PUBLIC_SITE_URL,
+      process.env.NEXT_PUBLIC_APP_URL,
+      process.env.NEXT_PUBLIC_MARKETING_URL,
+    ]
+      .filter(Boolean)
+      .map((value) => {
+        try {
+          return new URL(value as string).hostname;
+        } catch {
+          return value as string;
+        }
+      }),
+  );
+
+  if (!allowedHostnames.has(hostname)) {
+    logServerError({ action: "auth_origin_rejected", error: { host } });
+    return fallbackOrigin;
   }
 
   return `${protocol}://${host}`;
@@ -37,7 +66,8 @@ export async function signIn(locale: Locale, formData: FormData) {
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) {
-    redirect(`/${locale}/login?message=${encodeURIComponent(error.message)}`);
+    logServerError({ action: "sign_in", error });
+    redirect(`/${locale}/login?message=${encodeURIComponent(genericAuthError(locale))}`);
   }
 
   if (data.user) {
@@ -66,7 +96,8 @@ export async function signUp(locale: Locale, formData: FormData) {
   });
 
   if (error) {
-    redirect(`/${locale}/login?message=${encodeURIComponent(error.message)}`);
+    logServerError({ action: "sign_up", error });
+    redirect(`/${locale}/login?message=${encodeURIComponent(genericAuthError(locale))}`);
   }
 
   if (data.user) {
@@ -91,7 +122,8 @@ export async function signInWithGoogle(locale: Locale) {
   });
 
   if (error || !data.url) {
-    redirect(`/${locale}/login?message=${encodeURIComponent(error?.message ?? "Google OAuth is not available yet.")}`);
+    logServerError({ action: "google_oauth_start", error: error ?? new Error("Missing OAuth redirect URL") });
+    redirect(`/${locale}/login?message=${encodeURIComponent(genericOAuthError(locale))}`);
   }
 
   redirect(data.url);

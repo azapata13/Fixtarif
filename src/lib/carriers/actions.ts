@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import type { Locale } from "@/i18n/config";
 import type { CarrierType } from "@/lib/supabase/types";
 import { demoCarriers } from "@/lib/demo/carriers";
+import { genericActionError, logServerError } from "@/lib/security/public-errors";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentWorkspace } from "@/lib/workspaces/queries";
 
@@ -53,7 +54,8 @@ export async function createCarrier(locale: Locale, formData: FormData) {
   });
 
   if (error) {
-    redirect(`/${locale}/carriers?message=${encodeURIComponent(error.message)}`);
+    logServerError({ action: "create_carrier", error });
+    redirect(`/${locale}/carriers?message=${encodeURIComponent(genericActionError(locale))}`);
   }
 
   revalidatePath(`/${locale}/carriers`);
@@ -74,7 +76,8 @@ export async function seedDemoCarriers(locale: Locale) {
       .maybeSingle();
 
     if (lookupError) {
-      redirect(`/${locale}/carriers?message=${encodeURIComponent(lookupError.message)}`);
+      logServerError({ action: "seed_demo_carriers_lookup", error: lookupError });
+      redirect(`/${locale}/carriers?message=${encodeURIComponent(genericActionError(locale))}`);
     }
 
     if (existing) {
@@ -92,7 +95,8 @@ export async function seedDemoCarriers(locale: Locale) {
     });
 
     if (error) {
-      redirect(`/${locale}/carriers?message=${encodeURIComponent(error.message)}`);
+      logServerError({ action: "seed_demo_carriers_insert", error });
+      redirect(`/${locale}/carriers?message=${encodeURIComponent(genericActionError(locale))}`);
     }
 
     insertedCount += 1;

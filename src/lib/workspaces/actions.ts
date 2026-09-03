@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { isSupabaseConfigured } from "@/lib/env";
+import { genericActionError, logServerError } from "@/lib/security/public-errors";
 import { createClient } from "@/lib/supabase/server";
 import type { Locale } from "@/i18n/config";
 import { getCurrentWorkspace } from "@/lib/workspaces/queries";
@@ -38,7 +39,8 @@ export async function createWorkspace(locale: Locale, formData: FormData) {
   });
 
   if (workspaceError || !workspaceId) {
-    redirect(`/${locale}/onboarding?message=${encodeURIComponent(workspaceError?.message ?? "Workspace creation failed.")}`);
+    logServerError({ action: "create_workspace", error: workspaceError ?? new Error("Missing workspace id") });
+    redirect(`/${locale}/onboarding?message=${encodeURIComponent(genericActionError(locale))}`);
   }
 
   const { error: profileError } = await supabase.from("company_profiles").insert({
@@ -48,7 +50,8 @@ export async function createWorkspace(locale: Locale, formData: FormData) {
   });
 
   if (profileError) {
-    redirect(`/${locale}/onboarding?message=${encodeURIComponent(profileError.message)}`);
+    logServerError({ action: "create_company_profile", error: profileError });
+    redirect(`/${locale}/onboarding?message=${encodeURIComponent(genericActionError(locale))}`);
   }
 
   revalidatePath(`/${locale}`, "layout");
@@ -106,7 +109,8 @@ export async function updateWorkspaceSettings(locale: Locale, formData: FormData
     .eq("workspace_id", workspace.id);
 
   if (error) {
-    redirect(`/${locale}/settings?message=${encodeURIComponent(error.message)}`);
+    logServerError({ action: "update_workspace_settings", error });
+    redirect(`/${locale}/settings?message=${encodeURIComponent(genericActionError(locale))}`);
   }
 
   revalidatePath(`/${locale}`, "layout");

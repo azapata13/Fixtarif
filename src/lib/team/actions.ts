@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { Locale } from "@/i18n/config";
 import type { WorkspaceRole } from "@/lib/supabase/types";
+import { genericActionError, logServerError } from "@/lib/security/public-errors";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentWorkspace } from "@/lib/workspaces/queries";
 
@@ -59,7 +60,8 @@ export async function inviteTeamMember(locale: Locale, formData: FormData) {
   );
 
   if (error) {
-    redirect(`/${locale}/team?message=${encodeURIComponent(error.message)}`);
+    logServerError({ action: "invite_team_member", error });
+    redirect(`/${locale}/team?message=${encodeURIComponent(genericActionError(locale))}`);
   }
 
   revalidatePath(`/${locale}/team`);
@@ -97,7 +99,8 @@ export async function extendTeamInvite(locale: Locale, formData: FormData) {
     .eq("id", inviteId);
 
   if (error) {
-    redirect(`/${locale}/team?message=${encodeURIComponent(error.message)}`);
+    logServerError({ action: "extend_team_invite", error });
+    redirect(`/${locale}/team?message=${encodeURIComponent(genericActionError(locale))}`);
   }
 
   revalidatePath(`/${locale}/team`);
@@ -129,7 +132,8 @@ export async function cancelTeamInvite(locale: Locale, formData: FormData) {
     .eq("id", inviteId);
 
   if (error) {
-    redirect(`/${locale}/team?message=${encodeURIComponent(error.message)}`);
+    logServerError({ action: "cancel_team_invite", error });
+    redirect(`/${locale}/team?message=${encodeURIComponent(genericActionError(locale))}`);
   }
 
   revalidatePath(`/${locale}/team`);
@@ -160,7 +164,10 @@ async function getManageableMember(locale: Locale, targetUserId: string) {
     .maybeSingle();
 
   if (error || !targetMember) {
-    redirect(`/${locale}/team?message=${encodeURIComponent(error?.message ?? "Membre introuvable.")}`);
+    if (error) {
+      logServerError({ action: "get_manageable_member", error });
+    }
+    redirect(`/${locale}/team?message=${encodeURIComponent(error ? genericActionError(locale) : "Membre introuvable.")}`);
   }
 
   if (targetMember.role === "owner") {
@@ -186,7 +193,8 @@ export async function updateTeamMemberRole(locale: Locale, formData: FormData) {
     .eq("user_id", targetUserId);
 
   if (error) {
-    redirect(`/${locale}/team?message=${encodeURIComponent(error.message)}`);
+    logServerError({ action: "update_team_member_role", error });
+    redirect(`/${locale}/team?message=${encodeURIComponent(genericActionError(locale))}`);
   }
 
   revalidatePath(`/${locale}/team`);
@@ -204,7 +212,8 @@ export async function disableTeamMember(locale: Locale, formData: FormData) {
     .eq("user_id", targetUserId);
 
   if (error) {
-    redirect(`/${locale}/team?message=${encodeURIComponent(error.message)}`);
+    logServerError({ action: "disable_team_member", error });
+    redirect(`/${locale}/team?message=${encodeURIComponent(genericActionError(locale))}`);
   }
 
   revalidatePath(`/${locale}/team`);

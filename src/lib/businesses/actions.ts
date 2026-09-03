@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { Locale } from "@/i18n/config";
 import type { BusinessRole, ContactType } from "@/lib/supabase/types";
+import { genericActionError, logServerError } from "@/lib/security/public-errors";
 import { createClient } from "@/lib/supabase/server";
 import { demoClients } from "@/lib/demo/clients";
 import { getCurrentWorkspace } from "@/lib/workspaces/queries";
@@ -62,7 +63,8 @@ export async function createBusiness(locale: Locale, formData: FormData) {
   });
 
   if (error) {
-    redirect(`/${locale}/companies?message=${encodeURIComponent(error.message)}`);
+    logServerError({ action: "create_business", error });
+    redirect(`/${locale}/companies?message=${encodeURIComponent(genericActionError(locale))}`);
   }
 
   revalidatePath(`/${locale}/companies`);
@@ -106,7 +108,8 @@ export async function createBusinessSite(locale: Locale, formData: FormData) {
   });
 
   if (error) {
-    redirect(`/${locale}/companies?message=${encodeURIComponent(error.message)}`);
+    logServerError({ action: "create_business_site", error });
+    redirect(`/${locale}/companies?message=${encodeURIComponent(genericActionError(locale))}`);
   }
 
   revalidatePath(`/${locale}/companies`);
@@ -146,7 +149,8 @@ export async function createBusinessContact(locale: Locale, formData: FormData) 
   });
 
   if (error) {
-    redirect(`/${locale}/companies?message=${encodeURIComponent(error.message)}`);
+    logServerError({ action: "create_business_contact", error });
+    redirect(`/${locale}/companies?message=${encodeURIComponent(genericActionError(locale))}`);
   }
 
   revalidatePath(`/${locale}/companies`);
@@ -176,7 +180,8 @@ export async function seedDemoBusinesses(locale: Locale) {
       .maybeSingle();
 
     if (lookupError) {
-      redirect(`/${locale}/companies?message=${encodeURIComponent(lookupError.message)}`);
+      logServerError({ action: "seed_demo_businesses_lookup", error: lookupError });
+      redirect(`/${locale}/companies?message=${encodeURIComponent(genericActionError(locale))}`);
     }
 
     if (existing) {
@@ -197,7 +202,8 @@ export async function seedDemoBusinesses(locale: Locale) {
       .single();
 
     if (businessError) {
-      redirect(`/${locale}/companies?message=${encodeURIComponent(businessError.message)}`);
+      logServerError({ action: "seed_demo_businesses_insert_business", error: businessError });
+      redirect(`/${locale}/companies?message=${encodeURIComponent(genericActionError(locale))}`);
     }
 
     const { data: site, error: siteError } = await supabase
@@ -216,7 +222,8 @@ export async function seedDemoBusinesses(locale: Locale) {
       .single();
 
     if (siteError) {
-      redirect(`/${locale}/companies?message=${encodeURIComponent(siteError.message)}`);
+      logServerError({ action: "seed_demo_businesses_insert_site", error: siteError });
+      redirect(`/${locale}/companies?message=${encodeURIComponent(genericActionError(locale))}`);
     }
 
     const { error: contactError } = await supabase.from("contacts").insert({
@@ -230,7 +237,8 @@ export async function seedDemoBusinesses(locale: Locale) {
     });
 
     if (contactError) {
-      redirect(`/${locale}/companies?message=${encodeURIComponent(contactError.message)}`);
+      logServerError({ action: "seed_demo_businesses_insert_contact", error: contactError });
+      redirect(`/${locale}/companies?message=${encodeURIComponent(genericActionError(locale))}`);
     }
 
     insertedCount += 1;

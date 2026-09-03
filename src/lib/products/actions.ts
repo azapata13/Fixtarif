@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import type { Locale } from "@/i18n/config";
 import type { PackageType } from "@/lib/supabase/types";
 import { demoProducts } from "@/lib/demo/products";
+import { genericActionError, logServerError } from "@/lib/security/public-errors";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentWorkspace } from "@/lib/workspaces/queries";
 
@@ -62,7 +63,8 @@ export async function createProduct(locale: Locale, formData: FormData) {
   });
 
   if (error) {
-    redirect(`/${locale}/products?message=${encodeURIComponent(error.message)}`);
+    logServerError({ action: "create_product", error });
+    redirect(`/${locale}/products?message=${encodeURIComponent(genericActionError(locale))}`);
   }
 
   revalidatePath(`/${locale}/products`);
@@ -92,7 +94,8 @@ export async function seedDemoProducts(locale: Locale) {
       .maybeSingle();
 
     if (lookupError) {
-      redirect(`/${locale}/products?message=${encodeURIComponent(lookupError.message)}`);
+      logServerError({ action: "seed_demo_products_lookup", error: lookupError });
+      redirect(`/${locale}/products?message=${encodeURIComponent(genericActionError(locale))}`);
     }
 
     if (existing) {
@@ -119,7 +122,8 @@ export async function seedDemoProducts(locale: Locale) {
     });
 
     if (error) {
-      redirect(`/${locale}/products?message=${encodeURIComponent(error.message)}`);
+      logServerError({ action: "seed_demo_products_insert", error });
+      redirect(`/${locale}/products?message=${encodeURIComponent(genericActionError(locale))}`);
     }
 
     insertedCount += 1;

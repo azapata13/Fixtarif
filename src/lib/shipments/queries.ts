@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { genericDataError, logServerError } from "@/lib/security/public-errors";
 
 function uniqueIds(values: Array<string | null | undefined>) {
   return [...new Set(values.filter((value): value is string => Boolean(value)))];
@@ -14,7 +15,8 @@ export async function getShipmentsForWorkspace(workspaceId: string) {
     .order("created_at", { ascending: false });
 
   if (error) {
-    throw new Error(error.message);
+    logServerError({ action: "get_shipments_for_workspace", error });
+    throw new Error(genericDataError());
   }
 
   const shipments = data ?? [];
@@ -64,7 +66,8 @@ export async function getShipmentForWorkspace(workspaceId: string, shipmentId: s
     .maybeSingle();
 
   if (error) {
-    throw new Error(error.message);
+    logServerError({ action: "get_shipment_for_workspace", error });
+    throw new Error(genericDataError());
   }
 
   if (!data) {
@@ -123,7 +126,8 @@ export async function getNextShipmentReference(workspaceId: string) {
     .like("reference", "ST-%");
 
   if (error) {
-    throw new Error(error.message);
+    logServerError({ action: "get_next_shipment_reference", error });
+    throw new Error(genericDataError());
   }
 
   const maxNumber = (data ?? []).reduce((max, shipment) => {

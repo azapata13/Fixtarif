@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { genericOAuthError, logServerError } from "@/lib/security/public-errors";
 import { createClient } from "@/lib/supabase/server";
 import { syncCurrentUserProfile } from "@/lib/users/profile";
 
@@ -23,7 +24,8 @@ export async function GET(request: NextRequest) {
   const { error } = await supabase.auth.exchangeCodeForSession(code);
 
   if (error) {
-    return NextResponse.redirect(new URL(`/fr/login?message=${encodeURIComponent(error.message)}`, requestUrl.origin));
+    logServerError({ action: "google_oauth_callback", error });
+    return NextResponse.redirect(new URL(`/fr/login?message=${encodeURIComponent(genericOAuthError("fr"))}`, requestUrl.origin));
   }
 
   const {

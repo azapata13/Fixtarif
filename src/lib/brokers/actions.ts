@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { Locale } from "@/i18n/config";
 import { demoBrokers } from "@/lib/demo/brokers";
+import { genericActionError, logServerError } from "@/lib/security/public-errors";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentWorkspace } from "@/lib/workspaces/queries";
 
@@ -47,7 +48,8 @@ export async function createBroker(locale: Locale, formData: FormData) {
   });
 
   if (error) {
-    redirect(`/${locale}/brokers?message=${encodeURIComponent(error.message)}`);
+    logServerError({ action: "create_broker", error });
+    redirect(`/${locale}/brokers?message=${encodeURIComponent(genericActionError(locale))}`);
   }
 
   revalidatePath(`/${locale}/brokers`);
@@ -68,7 +70,8 @@ export async function seedDemoBrokers(locale: Locale) {
       .maybeSingle();
 
     if (lookupError) {
-      redirect(`/${locale}/brokers?message=${encodeURIComponent(lookupError.message)}`);
+      logServerError({ action: "seed_demo_brokers_lookup", error: lookupError });
+      redirect(`/${locale}/brokers?message=${encodeURIComponent(genericActionError(locale))}`);
     }
 
     if (existing) {
@@ -87,7 +90,8 @@ export async function seedDemoBrokers(locale: Locale) {
     });
 
     if (error) {
-      redirect(`/${locale}/brokers?message=${encodeURIComponent(error.message)}`);
+      logServerError({ action: "seed_demo_brokers_insert", error });
+      redirect(`/${locale}/brokers?message=${encodeURIComponent(genericActionError(locale))}`);
     }
 
     insertedCount += 1;

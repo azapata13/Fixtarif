@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { genericDataError, logServerError } from "@/lib/security/public-errors";
 
 export async function getBrokersForWorkspace(workspaceId: string) {
   const supabase = await createClient();
@@ -10,7 +11,8 @@ export async function getBrokersForWorkspace(workspaceId: string) {
     .order("name", { ascending: true });
 
   if (error) {
-    throw new Error(error.message);
+    logServerError({ action: "get_brokers_for_workspace", error });
+    throw new Error(genericDataError());
   }
 
   return data;

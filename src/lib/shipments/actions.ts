@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { Locale } from "@/i18n/config";
 import type { PackageType, PaymentTerm, ShipmentReason, ShipmentStatus } from "@/lib/supabase/types";
+import { genericActionError, logServerError } from "@/lib/security/public-errors";
 import { createClient } from "@/lib/supabase/server";
 import { getNextShipmentReference } from "@/lib/shipments/queries";
 import { getCurrentWorkspace } from "@/lib/workspaces/queries";
@@ -145,7 +146,8 @@ export async function createShipmentDraft(locale: Locale, formData: FormData) {
     .single();
 
   if (shipmentError) {
-    redirect(`/${locale}/shipments/new?message=${encodeURIComponent(shipmentError.message)}`);
+    logServerError({ action: "create_shipment", error: shipmentError });
+    redirect(`/${locale}/shipments/new?message=${encodeURIComponent(genericActionError(locale))}`);
   }
 
   const { error: itemError } = await supabase.from("shipment_items").insert({
@@ -169,7 +171,8 @@ export async function createShipmentDraft(locale: Locale, formData: FormData) {
   });
 
   if (itemError) {
-    redirect(`/${locale}/shipments/new?message=${encodeURIComponent(itemError.message)}`);
+    logServerError({ action: "create_shipment_item", error: itemError });
+    redirect(`/${locale}/shipments/new?message=${encodeURIComponent(genericActionError(locale))}`);
   }
 
   const { error: packageError } = await supabase.from("shipment_packages").insert({
@@ -189,7 +192,8 @@ export async function createShipmentDraft(locale: Locale, formData: FormData) {
   });
 
   if (packageError) {
-    redirect(`/${locale}/shipments/new?message=${encodeURIComponent(packageError.message)}`);
+    logServerError({ action: "create_shipment_package", error: packageError });
+    redirect(`/${locale}/shipments/new?message=${encodeURIComponent(genericActionError(locale))}`);
   }
 
   const { error: transportError } = await supabase.from("shipment_transport").insert({
@@ -202,7 +206,8 @@ export async function createShipmentDraft(locale: Locale, formData: FormData) {
   });
 
   if (transportError) {
-    redirect(`/${locale}/shipments/new?message=${encodeURIComponent(transportError.message)}`);
+    logServerError({ action: "create_shipment_transport", error: transportError });
+    redirect(`/${locale}/shipments/new?message=${encodeURIComponent(genericActionError(locale))}`);
   }
 
   await supabase.from("shipment_audit_log").insert({
@@ -268,7 +273,8 @@ export async function duplicateShipmentDraft(locale: Locale, formData: FormData)
     .single();
 
   if (shipmentError) {
-    redirect(`/${locale}/shipments/${shipmentId}?message=${encodeURIComponent(shipmentError.message)}`);
+    logServerError({ action: "duplicate_shipment_create", error: shipmentError });
+    redirect(`/${locale}/shipments/${shipmentId}?message=${encodeURIComponent(genericActionError(locale))}`);
   }
 
   if (items?.length) {
@@ -298,7 +304,8 @@ export async function duplicateShipmentDraft(locale: Locale, formData: FormData)
     );
 
     if (error) {
-      redirect(`/${locale}/shipments/${shipmentId}?message=${encodeURIComponent(error.message)}`);
+      logServerError({ action: "duplicate_shipment_items", error });
+      redirect(`/${locale}/shipments/${shipmentId}?message=${encodeURIComponent(genericActionError(locale))}`);
     }
   }
 
@@ -323,7 +330,8 @@ export async function duplicateShipmentDraft(locale: Locale, formData: FormData)
     );
 
     if (error) {
-      redirect(`/${locale}/shipments/${shipmentId}?message=${encodeURIComponent(error.message)}`);
+      logServerError({ action: "duplicate_shipment_packages", error });
+      redirect(`/${locale}/shipments/${shipmentId}?message=${encodeURIComponent(genericActionError(locale))}`);
     }
   }
 
@@ -338,7 +346,8 @@ export async function duplicateShipmentDraft(locale: Locale, formData: FormData)
     });
 
     if (error) {
-      redirect(`/${locale}/shipments/${shipmentId}?message=${encodeURIComponent(error.message)}`);
+      logServerError({ action: "duplicate_shipment_transport", error });
+      redirect(`/${locale}/shipments/${shipmentId}?message=${encodeURIComponent(genericActionError(locale))}`);
     }
   }
 
@@ -392,7 +401,8 @@ export async function updateShipmentItemConfirmations(locale: Locale, formData: 
     .eq("id", itemId);
 
   if (error) {
-    redirect(`/${locale}/shipments/${shipmentId}?message=${encodeURIComponent(error.message)}`);
+    logServerError({ action: "update_shipment_item_confirmations", error });
+    redirect(`/${locale}/shipments/${shipmentId}?message=${encodeURIComponent(genericActionError(locale))}`);
   }
 
   await supabase.from("shipment_audit_log").insert({
@@ -435,7 +445,8 @@ export async function updateShipmentTransportReferences(locale: Locale, formData
     .eq("id", transportId);
 
   if (error) {
-    redirect(`/${locale}/shipments/${shipmentId}?message=${encodeURIComponent(error.message)}`);
+    logServerError({ action: "update_shipment_transport_references", error });
+    redirect(`/${locale}/shipments/${shipmentId}?message=${encodeURIComponent(genericActionError(locale))}`);
   }
 
   await supabase.from("shipment_audit_log").insert({
@@ -486,7 +497,8 @@ export async function updateShipmentStatus(locale: Locale, formData: FormData) {
     .eq("id", shipmentId);
 
   if (error) {
-    redirect(`/${locale}/shipments/${shipmentId}?message=${encodeURIComponent(error.message)}`);
+    logServerError({ action: "update_shipment_status", error });
+    redirect(`/${locale}/shipments/${shipmentId}?message=${encodeURIComponent(genericActionError(locale))}`);
   }
 
   await supabase.from("shipment_audit_log").insert({
