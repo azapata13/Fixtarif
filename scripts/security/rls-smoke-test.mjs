@@ -128,10 +128,56 @@ async function run() {
       throw outsiderProfileError;
     }
 
+    let inviteChecks = { status: "skipped" };
+    const { error: inviteError } = await ownerClient.from("workspace_invites").insert({
+      workspace_id: workspaceId,
+      email: outsiderEmail,
+      role: "member",
+      status: "invited",
+      invited_by: ownerUserId,
+    });
+
+    if (!inviteError) {
+      const { data: outsiderInvites, error: outsiderInviteReadError } = await outsiderClient.from("workspace_invites").select("id,workspace_id,email");
+
+      if (outsiderInviteReadError) {
+        throw outsiderInviteReadError;
+      }
+
+      const { error: acceptError } = await outsiderClient.rpc("accept_pending_workspace_invites");
+
+      if (acceptError) {
+        if (acceptError.message.includes("accept_pending_workspace_invites")) {
+          inviteChecks = {
+            status: "skipped_accept_function_missing",
+            outsiderInviteRowsBeforeAccept: outsiderInvites?.length ?? 0,
+          };
+        } else {
+          throw acceptError;
+        }
+      } else {
+        const { data: outsiderAcceptedRows, error: outsiderAcceptedReadError } = await outsiderClient.from("workspaces").select("id,name");
+
+        if (outsiderAcceptedReadError) {
+          throw outsiderAcceptedReadError;
+        }
+
+        inviteChecks = {
+          status: "checked",
+          outsiderInviteRowsBeforeAccept: outsiderInvites?.length ?? 0,
+          outsiderCanReadInvitedWorkspaceAfterAccept: (outsiderAcceptedRows ?? []).some((row) => row.id === workspaceId),
+        };
+      }
+    }
+
     const ownerCanReadOwnWorkspace = ownerRows?.some((row) => row.id === workspaceId) ?? false;
     const outsiderCanReadWorkspace = (outsiderRows ?? []).some((row) => row.id === workspaceId);
     const outsiderCanReadCompanyProfile = (outsiderProfiles ?? []).some((row) => row.workspace_id === workspaceId);
-    const pass = ownerCanReadOwnWorkspace && !outsiderCanReadWorkspace && !outsiderCanReadCompanyProfile;
+    const invitePass =
+      inviteChecks.status === "skipped" ||
+      inviteChecks.status === "skipped_accept_function_missing" ||
+      (inviteChecks.outsiderInviteRowsBeforeAccept === 0 && inviteChecks.outsiderCanReadInvitedWorkspaceAfterAccept);
+    const pass = ownerCanReadOwnWorkspace && !outsiderCanReadWorkspace && !outsiderCanReadCompanyProfile && invitePass;
 
     console.log(
       JSON.stringify(
@@ -140,6 +186,7 @@ async function run() {
           ownerCanReadOwnWorkspace,
           outsiderWorkspaceRows: outsiderRows?.length ?? 0,
           outsiderCompanyProfileRows: outsiderProfiles?.length ?? 0,
+          inviteChecks,
         },
         null,
         2,

@@ -5,6 +5,7 @@ export type Dictionary = {
     email: string;
     password: string;
     signIn: string;
+    signInWithGoogle: string;
     signUp: string;
     signOut: string;
     subtitle: string;
@@ -30,6 +31,7 @@ const dictionaries: Record<Locale, Dictionary> = {
       email: "Courriel",
       password: "Mot de passe",
       signIn: "Connexion",
+      signInWithGoogle: "Continuer avec Google",
       signUp: "Créer un compte",
       signOut: "Déconnexion",
       subtitle: "Connectez-vous pour accéder à votre workspace Fixtarif.",
@@ -105,6 +107,7 @@ const dictionaries: Record<Locale, Dictionary> = {
       email: "Email",
       password: "Password",
       signIn: "Sign in",
+      signInWithGoogle: "Continue with Google",
       signUp: "Create account",
       signOut: "Sign out",
       subtitle: "Sign in to access your Fixtarif workspace.",

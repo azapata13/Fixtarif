@@ -4,7 +4,7 @@ import { type LocaleParams } from "@/app/[locale]/layout";
 import { isSupabaseConfigured } from "@/lib/env";
 import { type Locale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
-import { signIn, signUp } from "@/lib/auth/actions";
+import { signIn, signInWithGoogle, signUp } from "@/lib/auth/actions";
 import { createClient } from "@/lib/supabase/server";
 
 type LoginPageProps = {
@@ -27,6 +27,7 @@ export default async function LoginPage({ params, searchParams }: LoginPageProps
   const dictionary = getDictionary(locale);
   const signInAction = signIn.bind(null, locale);
   const signUpAction = signUp.bind(null, locale);
+  const signInWithGoogleAction = signInWithGoogle.bind(null, locale);
 
   return (
     <main className="grid min-h-screen place-items-center px-5 py-10">
@@ -63,6 +64,9 @@ export default async function LoginPage({ params, searchParams }: LoginPageProps
               {dictionary.auth.signUp}
             </button>
           </div>
+          <button className="secondary-button w-full" formAction={signInWithGoogleAction}>
+            {dictionary.auth.signInWithGoogle}
+          </button>
         </form>
       </section>
     </main>

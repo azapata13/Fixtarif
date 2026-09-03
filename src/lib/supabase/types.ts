@@ -742,6 +742,10 @@ export type Database = {
         };
         Returns: string;
       };
+      accept_pending_workspace_invites: {
+        Args: Record<string, never>;
+        Returns: number;
+      };
     };
     Enums: {
       workspace_role: WorkspaceRole;

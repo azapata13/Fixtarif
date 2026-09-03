@@ -54,6 +54,27 @@ export async function signUp(locale: Locale, formData: FormData) {
   redirect(`/${locale}/onboarding`);
 }
 
+export async function signInWithGoogle(locale: Locale) {
+  if (!isSupabaseConfigured()) {
+    redirect(`/${locale}/login?message=${encodeURIComponent("Supabase is not configured yet.")}`);
+  }
+
+  const supabase = await createClient();
+  const origin = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: {
+      redirectTo: `${origin}/auth/callback?next=/${locale}/dashboard`,
+    },
+  });
+
+  if (error || !data.url) {
+    redirect(`/${locale}/login?message=${encodeURIComponent(error?.message ?? "Google OAuth is not available yet.")}`);
+  }
+
+  redirect(data.url);
+}
+
 export async function signOut(locale: Locale) {
   if (!isSupabaseConfigured()) {
     redirect(`/${locale}/login`);
