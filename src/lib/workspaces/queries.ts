@@ -10,11 +10,20 @@ export async function getCurrentWorkspace() {
   const supabase = await createClient();
   const userResult = await supabase.auth.getUser().catch((error) => {
     if (isExpiredRefreshTokenError(error)) {
-      return { data: { user: null } };
+      return { data: { user: null }, error: null };
     }
 
     throw error;
   });
+
+  if (userResult.error) {
+    if (isExpiredRefreshTokenError(userResult.error)) {
+      return { user: null, membership: null, workspace: null };
+    }
+
+    throw userResult.error;
+  }
+
   const user = userResult.data.user;
 
   if (!user) {
@@ -56,11 +65,20 @@ export async function getCurrentWorkspaceNoInviteAccept() {
   const supabase = await createClient();
   const userResult = await supabase.auth.getUser().catch((error) => {
     if (isExpiredRefreshTokenError(error)) {
-      return { data: { user: null } };
+      return { data: { user: null }, error: null };
     }
 
     throw error;
   });
+
+  if (userResult.error) {
+    if (isExpiredRefreshTokenError(userResult.error)) {
+      return { user: null, membership: null, workspace: null };
+    }
+
+    throw userResult.error;
+  }
+
   const user = userResult.data.user;
 
   if (!user) {

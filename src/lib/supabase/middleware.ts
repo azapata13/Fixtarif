@@ -31,19 +31,27 @@ export async function updateSession(request: NextRequest) {
   );
 
   try {
-    await supabase.auth.getUser();
+    const { error } = await supabase.auth.getUser();
+
+    if (error && !isExpiredRefreshTokenError(error)) {
+      throw error;
+    }
+
+    if (!error) {
+      return response;
+    }
   } catch (error) {
     if (!isExpiredRefreshTokenError(error)) {
       throw error;
     }
-
-    response = NextResponse.next({ request });
-    request.cookies.getAll().forEach((cookie) => {
-      if (isSupabaseAuthCookieName(cookie.name)) {
-        response.cookies.delete(cookie.name);
-      }
-    });
   }
+
+  response = NextResponse.next({ request });
+  request.cookies.getAll().forEach((cookie) => {
+    if (isSupabaseAuthCookieName(cookie.name)) {
+      response.cookies.delete(cookie.name);
+    }
+  });
 
   return response;
 }
