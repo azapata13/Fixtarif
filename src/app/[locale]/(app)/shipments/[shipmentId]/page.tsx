@@ -107,6 +107,7 @@ export default async function ShipmentDetailPage({ params, searchParams }: Shipm
             <StatusRow checked={Boolean(item?.quantity_confirmed)} label="Quantité confirmée" />
             <StatusRow checked={Boolean(item?.weight_confirmed)} label="Poids confirmé" />
             <StatusRow checked={Boolean(carrier)} label={carrier ? `Transporteur : ${carrier.name}` : "Transporteur à compléter"} />
+            <StatusRow checked={Boolean(packageRow)} label={packageRow ? `Colis : ${packageRow.package_count} ${packageRow.package_type}` : "Colis / palettes à compléter"} />
           </ul>
           <form action={updateStatusAction} className="mt-6 grid gap-3">
             <input name="shipmentId" type="hidden" value={shipment.id} />
@@ -250,6 +251,11 @@ export default async function ShipmentDetailPage({ params, searchParams }: Shipm
             <button className="primary-button min-w-56" disabled={!canGenerateDocuments} type="submit">
               Générer packing slip
             </button>
+            {!canGenerateDocuments ? (
+              <p className="mt-2 max-w-56 text-sm leading-5 text-[var(--muted)]">
+                Disponible après `Marquer prêt`.
+              </p>
+            ) : null}
           </form>
         </div>
         {generatedDocuments.length ? (

@@ -35,7 +35,7 @@ const dictionaries: Record<Locale, Dictionary> = {
       signUp: "Créer un compte",
       signOut: "Déconnexion",
       subtitle: "Connectez-vous pour accéder à votre workspace Fixtarif.",
-      title: "Bienvenue dans Fixtarif",
+      title: "Connexion sécurisée",
     },
     common: {
       loading: "Chargement",
@@ -111,7 +111,7 @@ const dictionaries: Record<Locale, Dictionary> = {
       signUp: "Create account",
       signOut: "Sign out",
       subtitle: "Sign in to access your Fixtarif workspace.",
-      title: "Welcome to Fixtarif",
+      title: "Secure sign in",
     },
     common: {
       loading: "Loading",
