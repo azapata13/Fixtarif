@@ -1,0 +1,124 @@
+# Fixtarif - production runbook
+
+## Objectif du prochain deploy
+
+Publier une version propre de demonstration sur `app.fixtarif.ca` sans activer de fonctions legales non validees.
+
+Inclus:
+
+- Auth email/password et Google OAuth.
+- Workspace multi-tenant avec roles `owner`, `admin`, `member`.
+- Dashboard, admin, equipe, reglages.
+- Bibliotheques entreprises, sites, contacts, produits, transporteurs, courtiers.
+- Expeditions Canada/USA en brouillon, validation, duplication.
+- Import prive de documents source.
+- Packing slip PDF brouillon prive avec URL signee courte.
+- Page Documents montrant PDF/HTS/CUSMA comme modules verrouilles.
+
+Non inclus:
+
+- Extraction IA depuis scans.
+- PDF legal/final avance.
+- Classification HTS automatique.
+- Generation CUSMA.
+- API/ERP.
+- Paiement/billing.
+
+## Avant deploy Netlify
+
+Executer:
+
+```bash
+npm run typecheck
+npm run lint
+npm run test:security
+npm run build
+```
+
+Verifier:
+
+- `git status --short` propre.
+- Toutes les migrations Supabase appliquees.
+- Aucun secret dans les fichiers versionnes.
+- `.env.local` absent du commit.
+
+## Variables Netlify requises
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+NEXT_PUBLIC_SITE_URL=https://app.fixtarif.ca
+NEXT_PUBLIC_APP_URL=https://app.fixtarif.ca
+NEXT_PUBLIC_MARKETING_URL=https://fixtarif.ca
+NEXT_PUBLIC_APP_NAME=Fixtarif
+DEFAULT_LOCALE=fr
+```
+
+Notes:
+
+- La service role key reste serveur seulement.
+- Les secrets partages pendant la configuration initiale devront etre regeneres avant une exposition plus large.
+- Garder le deploy groupe pour economiser le forfait gratuit Netlify.
+
+## Supabase production
+
+Authentication URL Configuration:
+
+- Site URL: `https://app.fixtarif.ca`
+- Redirect URLs:
+  - `https://app.fixtarif.ca/auth/callback`
+  - `http://localhost:3000/auth/callback`
+
+Storage:
+
+- `source-documents` prive.
+- `generated-documents` prive.
+- Pas de bucket public pour documents clients.
+
+Securite:
+
+- RLS active sur toutes les tables multi-tenant.
+- Test RLS a relancer avant deploy.
+- URLs signees courtes pour ouvrir les PDF.
+
+## DNS
+
+Application:
+
+- `app.fixtarif.ca` pointe vers Netlify.
+
+Marketing:
+
+- `fixtarif.ca` reste separe et pourra devenir une landing page.
+
+## Test de demonstration
+
+1. Connexion Google.
+2. Verifier le workspace et le role owner.
+3. Creer ou verifier deux clients demo.
+4. Creer ou verifier deux produits demo.
+5. Creer une expedition Canada.
+6. Confirmer destination, site, contact, produit, quantite, poids, transporteur.
+7. Marquer l'expedition `ready`.
+8. Generer un packing slip brouillon.
+9. Ouvrir le PDF via le lien signe.
+10. Importer un petit document source non sensible.
+11. Creer une expedition USA et verifier le bloc Douane USA verrouille.
+12. Ouvrir `/fr/admin` et confirmer les logs d'activite.
+
+## Decision go / no-go
+
+Go demo si:
+
+- Le parcours ci-dessus fonctionne en local.
+- Aucun test local n'echoue.
+- Les boutons restent lisibles sur mobile.
+- Les documents prives s'ouvrent uniquement via route authentifiee.
+
+No-go si:
+
+- Erreur Supabase/RLS en creation d'expedition.
+- PDF impossible a generer apres statut `ready`.
+- Acces document possible sans session.
+- Secrets visibles dans logs publics ou fichiers versionnes.

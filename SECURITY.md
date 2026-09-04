@@ -22,6 +22,7 @@ Fixtarif doit être construit avec une posture Zero Trust et une couverture OWAS
 - URLs signées temporaires pour les fichiers.
 - Audit log avant les actions sensibles.
 - Messages publics génériques pour les erreurs serveur; détails uniquement dans les logs serveur.
+- Rotation des secrets avant toute exposition client large.
 
 ## OWASP Top 10 2025
 
@@ -51,6 +52,7 @@ Contrôles Fixtarif :
 - Vérifier `npm audit`.
 - Lancer `npm run test:security`.
 - Vérifier les headers HTTP en production.
+- Tester qu'un PDF généré ne peut pas être ouvert sans session applicative.
 
 ## Tests sécurité
 
@@ -69,3 +71,12 @@ npm run test:security
 ```
 
 Ce test vérifie les secrets accidentels dans les fichiers versionnés, les headers de sécurité, l'absence d'erreurs serveur brutes exposées, `npm audit`, puis le test RLS.
+
+## Documents privés
+
+- Les sources importées sont stockées dans `source-documents`.
+- Les PDF brouillons sont stockés dans `generated-documents`.
+- Les deux buckets sont privés.
+- Les chemins commencent par le `workspace_id`.
+- L'ouverture d'un PDF passe par une route serveur authentifiée qui crée une URL signée courte.
+- Aucun document client ne doit être placé dans `public/`.

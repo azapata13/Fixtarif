@@ -14,7 +14,7 @@ Le principe produit est : **Valider au lieu de créer**.
 - Tailwind CSS
 - Supabase Auth + PostgreSQL + Storage
 - Netlify
-- Cloudflare DNS
+- GoDaddy DNS
 - GitHub
 
 ## Docs
@@ -25,6 +25,9 @@ Le principe produit est : **Valider au lieu de créer**.
 - `DECISIONS.md` : décisions déjà prises
 - `REGULATORY_TODO.md` : sujets à ne pas inventer
 - `IMPLEMENTATION_PLAN.md` : ordre de construction
+- `PROTOTYPE_CHECKLIST.md` : état courant et tests manuels
+- `LAUNCH_ROADMAP.md` : stratégie pricing/lancement
+- `PRODUCTION_RUNBOOK.md` : checklist deploy production
 - `CODEX_START_PROMPT.md` : premier prompt à coller dans Codex
 
 ## Règle absolue
@@ -44,10 +47,12 @@ Socle créé :
 - navigation principale responsive
 - pages placeholders
 - migrations SQL versionnées
+- import privé de documents source
+- packing slip PDF brouillon privé
 
 Pas encore inclus volontairement :
-- scan/import IA
-- PDF
+- extraction scan/import IA
+- PDF légal/final avancé
 - HTS
 - CUSMA
 - règles douanières
@@ -78,19 +83,20 @@ Créer un projet Supabase nommé `Fixtarif`, puis récupérer :
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
 
-Appliquer ensuite la migration :
+Appliquer ensuite les migrations :
 
 ```bash
 supabase db push
 ```
 
-Ou copier le contenu de `supabase/migrations/20260902171000_phase_0_foundation.sql` dans le SQL editor Supabase.
+Ou copier les fichiers SQL de `supabase/migrations/` dans le SQL editor Supabase, dans l'ordre chronologique.
 
 ## Vérifications
 
 ```bash
 npm run lint
 npm run typecheck
+npm run test:security
 npm run build
 ```
 
