@@ -25,17 +25,6 @@ function StatusRow({ checked, label }: { checked: boolean; label: string }) {
   );
 }
 
-function ProgressStep({ checked, label }: { checked: boolean; label: string }) {
-  return (
-    <div className="rounded-2xl bg-neutral-50 p-4">
-      <p className="flex items-center gap-3 text-base font-semibold text-neutral-900">
-        {checked ? <CheckCircle2 aria-hidden="true" size={21} /> : <AlertCircle aria-hidden="true" size={21} />}
-        {label}
-      </p>
-    </div>
-  );
-}
-
 function getHtsStatusLabel(status?: string | null) {
   if (status === "validated") {
     return "HTS validé";
@@ -87,16 +76,6 @@ export default async function ShipmentDetailPage({ params, searchParams }: Shipm
   const hasValidatedHts = productCustoms?.validation_status === "validated";
   const hasGeneratedDocuments = generatedDocuments.length > 0;
   const destinationCountryName = shipment.destination_country === "US" ? "États-Unis" : "Canada";
-  const progressSteps = [
-    Boolean(destination && site && contact),
-    Boolean(item),
-    Boolean(item?.quantity_confirmed && item?.weight_confirmed),
-    Boolean(carrier && packageRow),
-    shipment.status === "ready",
-    hasGeneratedDocuments,
-  ];
-  const completedSteps = progressSteps.filter(Boolean).length;
-  const progressPercent = Math.round((completedSteps / progressSteps.length) * 100);
   const sectionCards = [
     {
       complete: canMarkReady,
@@ -176,26 +155,6 @@ export default async function ShipmentDetailPage({ params, searchParams }: Shipm
       <PageHeader title={shipment.reference} description="Vérifier le brouillon avant toute génération de document." />
       {message ? <p className="mb-4 rounded-2xl bg-neutral-100 px-4 py-3 text-base text-neutral-700">{message}</p> : null}
       <ShipmentSectionCards locale={locale} sections={sectionCards} />
-      <section className="mb-6 rounded-[24px] border border-[var(--line)] bg-white p-6 shadow-sm">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-wide text-[var(--muted)]">Progression</p>
-            <h2 className="mt-2 text-2xl font-semibold tracking-tight">{completedSteps}/{progressSteps.length} étapes complétées</h2>
-          </div>
-          <span className="rounded-full bg-neutral-100 px-4 py-2 text-sm font-semibold text-neutral-700">{progressPercent}%</span>
-        </div>
-        <div className="mt-5 h-3 overflow-hidden rounded-full bg-neutral-100">
-          <div className="h-full rounded-full bg-black transition-all" style={{ width: `${progressPercent}%` }} />
-        </div>
-        <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-          <ProgressStep checked={Boolean(destination && site && contact)} label="Destination complète" />
-          <ProgressStep checked={Boolean(item)} label="Produit ajouté" />
-          <ProgressStep checked={Boolean(item?.quantity_confirmed && item?.weight_confirmed)} label="Quantité et poids confirmés" />
-          <ProgressStep checked={Boolean(carrier && packageRow)} label="Transport et colis prêts" />
-          <ProgressStep checked={shipment.status === "ready"} label="Expédition marquée prête" />
-          <ProgressStep checked={hasGeneratedDocuments} label="PDF brouillon généré" />
-        </div>
-      </section>
       <form action={duplicateShipmentAction} className="mb-6 rounded-[24px] border border-[var(--line)] bg-white p-5 shadow-sm">
         <input name="shipmentId" type="hidden" value={shipment.id} />
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">

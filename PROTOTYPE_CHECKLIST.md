@@ -8,7 +8,7 @@
 - Admin workspace visible seulement aux roles client `owner/admin`; section Fixtarif interne visible seulement aux emails serveur `FIXTARIF_PLATFORM_ADMIN_EMAILS`.
 - Bibliotheques: entreprises, sites, contacts, produits, transporteurs, courtiers.
 - Expedition Canada/USA manuelle: creation de brouillon, validation, transport, statut, duplication.
-- Detail d'expedition simplifie par cartes et modals de section pour faciliter la demo.
+- Detail d'expedition simplifie par ligne d'etapes horizontale et assistant modal sequentiel pour faciliter la demo.
 - Page Documents preparee: import prive de documents sources actif; packing slip PDF brouillon prive actif; HTS live USITC en suggestion produit avec validation humaine owner/admin; CUSMA et automatisation douaniere visibles mais verrouilles.
 - Nouvelle migration Supabase preparee pour documents, extractions, PDF generes et tables douanieres USA.
 - Extraction scan, PDF avance, classification HTS automatique et CUSMA restent volontairement non automatises dans la demo actuelle.

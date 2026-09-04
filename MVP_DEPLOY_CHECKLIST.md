@@ -11,7 +11,7 @@ Objectif: faire un seul deploy Netlify propre, puis tester avec Sandra sans cons
 - Clients, sites, contacts, produits, transporteurs et courtiers.
 - Bouton `Preparer la demo` sur le dashboard pour creer les donnees de test.
 - Brouillons d'expedition Canada et USA, validation, duplication, statut `ready`.
-- Detail d'expedition par cartes ouvrables en modal: validation, destination, marchandise, documents, douane USA.
+- Detail d'expedition avec ligne d'etapes horizontale et assistant modal `Suivant` pour validation, destination, marchandise, documents, douane USA.
 - Import prive de documents sources.
 - Packing slip PDF brouillon avec acces authentifie.
 - Recherche HTS USITC cote serveur, suggestion `A verifier`, validation humaine, reverification USITC.
@@ -59,7 +59,7 @@ Ne jamais exposer `SUPABASE_SERVICE_ROLE_KEY` cote client.
 5. Ouvrir `Nouvelle expedition` et confirmer que Destination, Site, Contact, Transporteur et Produit ont un lien `Ajouter`.
 6. En saisie manuelle, confirmer que le poids peut etre en `lb` ou `kg`.
 7. Ouvrir l'expedition USA et verifier le bloc Douane USA.
-8. Cliquer les cartes de section et confirmer que les modals s'ouvrent correctement.
+8. Cliquer `Commencer` dans la ligne d'etapes et confirmer que le modal avance avec `Suivant`.
 9. Aller sur `Produits`, chercher un HTS, enregistrer `A verifier`, puis valider.
 10. Retourner dans l'expedition USA et confirmer `HTS valide`.
 11. Marquer une expedition `ready`, generer le packing slip, ouvrir le PDF.
