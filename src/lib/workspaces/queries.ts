@@ -1,4 +1,5 @@
 import { isSupabaseConfigured } from "@/lib/env";
+import { isExpiredRefreshTokenError } from "@/lib/supabase/auth-errors";
 import { createClient } from "@/lib/supabase/server";
 
 export async function getCurrentWorkspace() {
@@ -7,9 +8,14 @@ export async function getCurrentWorkspace() {
   }
 
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const userResult = await supabase.auth.getUser().catch((error) => {
+    if (isExpiredRefreshTokenError(error)) {
+      return { data: { user: null } };
+    }
+
+    throw error;
+  });
+  const user = userResult.data.user;
 
   if (!user) {
     return { user: null, membership: null, workspace: null };
@@ -48,9 +54,14 @@ export async function getCurrentWorkspaceNoInviteAccept() {
   }
 
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const userResult = await supabase.auth.getUser().catch((error) => {
+    if (isExpiredRefreshTokenError(error)) {
+      return { data: { user: null } };
+    }
+
+    throw error;
+  });
+  const user = userResult.data.user;
 
   if (!user) {
     return { user: null, membership: null, workspace: null };

@@ -56,6 +56,7 @@ npm run build
 - Messages publics generiques pour les erreurs serveur.
 - Logs serveur internes avec contexte d'action.
 - Headers HTTP incluant CSP, HSTS, anti-clickjacking et permissions policy.
+- Refresh tokens Supabase expires nettoyes proprement au lieu de polluer les logs serveur.
 - Test statique contre secrets accidentels.
 - Audit log pour actions d'expedition, equipe, reglages et bibliotheques.
 - Validation serveur des liens workspace/client/site/contact/produit/transporteur avant creation d'expedition.
