@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import type { Locale } from "@/i18n/config";
 import { genericActionError, logServerError } from "@/lib/security/public-errors";
 import { createClient } from "@/lib/supabase/server";
+import type { ValidationStatus } from "@/lib/supabase/types";
 import { getCurrentWorkspace } from "@/lib/workspaces/queries";
 
 function readField(formData: FormData, key: string) {
@@ -17,6 +18,11 @@ function splitUnits(value: string) {
     .split("|")
     .map((unit) => unit.trim())
     .filter(Boolean);
+}
+
+function readValidationStatus(formData: FormData): ValidationStatus | null {
+  const status = readField(formData, "status");
+  return ["needs_review", "validated", "rejected"].includes(status) ? (status as ValidationStatus) : null;
 }
 
 export async function saveProductHtsSuggestion(locale: Locale, formData: FormData) {
@@ -93,4 +99,67 @@ export async function saveProductHtsSuggestion(locale: Locale, formData: FormDat
 
   revalidatePath(`/${locale}/products`);
   redirect(`/${locale}/products?message=${encodeURIComponent("Suggestion HTS enregistrée. Validation humaine requise.")}`);
+}
+
+export async function updateProductHtsValidation(locale: Locale, formData: FormData) {
+  const { workspace, membership, user } = await getCurrentWorkspace();
+
+  if (!workspace || !membership || !user) {
+    redirect(`/${locale}/onboarding`);
+  }
+
+  if (!["owner", "admin"].includes(membership.role)) {
+    redirect(`/${locale}/products?message=${encodeURIComponent("Permission refusée.")}`);
+  }
+
+  const productCustomsId = readField(formData, "productCustomsId");
+  const status = readValidationStatus(formData);
+
+  if (!productCustomsId || !status) {
+    redirect(`/${locale}/products?message=${encodeURIComponent("Validation HTS incomplète.")}`);
+  }
+
+  const supabase = await createClient();
+  const { data: customsRow, error: lookupError } = await supabase
+    .from("product_customs")
+    .select("id,product_id,hts_code")
+    .eq("workspace_id", workspace.id)
+    .eq("id", productCustomsId)
+    .eq("destination_country", "US")
+    .maybeSingle();
+
+  if (lookupError || !customsRow) {
+    if (lookupError) {
+      logServerError({ action: "update_product_hts_validation_lookup", error: lookupError });
+    }
+    redirect(`/${locale}/products?message=${encodeURIComponent(lookupError ? genericActionError(locale) : "Suggestion HTS introuvable.")}`);
+  }
+
+  const { error } = await supabase
+    .from("product_customs")
+    .update({
+      validation_status: status,
+      validated_by: status === "validated" ? user.id : null,
+      validated_at: status === "validated" ? new Date().toISOString() : null,
+    })
+    .eq("workspace_id", workspace.id)
+    .eq("id", customsRow.id);
+
+  if (error) {
+    logServerError({ action: "update_product_hts_validation", error });
+    redirect(`/${locale}/products?message=${encodeURIComponent(genericActionError(locale))}`);
+  }
+
+  await supabase.from("shipment_audit_log").insert({
+    workspace_id: workspace.id,
+    actor_user_id: user.id,
+    action: "product_hts_validation_updated",
+    metadata_json: { productId: customsRow.product_id, productCustomsId: customsRow.id, htsCode: customsRow.hts_code, status },
+  });
+
+  revalidatePath(`/${locale}/products`);
+  revalidatePath(`/${locale}/shipments`);
+
+  const label = status === "validated" ? "HTS validé." : status === "rejected" ? "HTS rejeté." : "HTS remis à vérifier.";
+  redirect(`/${locale}/products?message=${encodeURIComponent(label)}`);
 }

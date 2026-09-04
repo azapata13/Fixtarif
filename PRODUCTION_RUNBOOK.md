@@ -13,7 +13,7 @@ Inclus:
 - Expeditions Canada/USA en brouillon, validation, duplication.
 - Import prive de documents source.
 - Packing slip PDF brouillon prive avec URL signee courte.
-- Recherche HTS live via USITC, sauvegardee seulement comme suggestion `needs_review`.
+- Recherche HTS live via USITC, sauvegardee seulement comme suggestion `needs_review`, puis validable par owner/admin.
 - Page Documents montrant PDF/CUSMA comme modules verrouilles.
 
 Non inclus:
@@ -63,6 +63,8 @@ Notes:
 - `FIXTARIF_PLATFORM_ADMIN_EMAILS` contient seulement les emails internes Fixtarif autorises, separes par virgule.
 - Les secrets partages pendant la configuration initiale devront etre regeneres avant une exposition plus large.
 - Garder le deploy groupe pour economiser le forfait gratuit Netlify.
+- Pour HTS USA, utiliser la recherche officielle USITC uniquement comme aide. Les codes sauvegardes commencent en `A verifier`; seuls les roles `owner/admin` peuvent les marquer `Valide`.
+- Les factures commerciales USA doivent rester bloquees tant que HTS, origine et CUSMA ne sont pas confirmes.
 
 ## Supabase production
 
@@ -110,7 +112,8 @@ Marketing:
 11. Creer une expedition USA et verifier le bloc Douane USA verrouille.
 12. Ouvrir `/fr/admin` et confirmer les logs d'activite.
 13. Confirmer que la section Fixtarif interne est visible seulement pour un email interne autorise.
-14. Chercher un HTS dans `/fr/products`, sauvegarder une suggestion, confirmer le statut `needs_review`.
+14. Chercher un HTS dans `/fr/products`, sauvegarder une suggestion, confirmer le statut `A verifier`.
+15. Valider le HTS comme owner/admin et confirmer que l'expedition USA affiche `HTS valide`.
 
 ## Decision go / no-go
 

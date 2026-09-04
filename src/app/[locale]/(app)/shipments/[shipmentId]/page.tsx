@@ -3,6 +3,7 @@ import { AlertCircle, ArrowLeft, CheckCircle2, Circle, Copy, FileCheck2, LockKey
 import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/page-header";
 import { type Locale } from "@/i18n/config";
+import { getProductCustomsForProduct } from "@/lib/customs/queries";
 import { generatePackingSlipDraft } from "@/lib/documents/actions";
 import { getGeneratedDocumentsForShipment } from "@/lib/documents/queries";
 import { duplicateShipmentDraft, updateShipmentItemConfirmations, updateShipmentStatus, updateShipmentTransportReferences } from "@/lib/shipments/actions";
@@ -21,6 +22,19 @@ function StatusRow({ checked, label }: { checked: boolean; label: string }) {
       {label}
     </li>
   );
+}
+
+function getHtsStatusLabel(status?: string | null) {
+  if (status === "validated") {
+    return "HTS validé";
+  }
+  if (status === "needs_review") {
+    return "HTS à vérifier";
+  }
+  if (status === "rejected") {
+    return "HTS rejeté";
+  }
+  return "HTS manquant";
 }
 
 export default async function ShipmentDetailPage({ params, searchParams }: ShipmentDetailPageProps) {
@@ -49,6 +63,8 @@ export default async function ShipmentDetailPage({ params, searchParams }: Shipm
   const site = Array.isArray(shipment.business_sites) ? shipment.business_sites[0] : shipment.business_sites;
   const contact = Array.isArray(shipment.contacts) ? shipment.contacts[0] : shipment.contacts;
   const carrier = Array.isArray(shipment.carriers) ? shipment.carriers[0] : shipment.carriers;
+  const productCustoms =
+    shipment.destination_country === "US" && item?.product_id ? await getProductCustomsForProduct(workspace.id, item.product_id) : null;
   const updateConfirmationsAction = updateShipmentItemConfirmations.bind(null, locale);
   const updateTransportReferencesAction = updateShipmentTransportReferences.bind(null, locale);
   const updateStatusAction = updateShipmentStatus.bind(null, locale);
@@ -56,6 +72,7 @@ export default async function ShipmentDetailPage({ params, searchParams }: Shipm
   const generatePackingSlipAction = generatePackingSlipDraft.bind(null, locale);
   const canMarkReady = Boolean(destination && site && contact && item?.quantity_confirmed && item.weight_confirmed && carrier && packageRow);
   const canGenerateDocuments = shipment.status === "ready";
+  const hasValidatedHts = productCustoms?.validation_status === "validated";
   const destinationCountryName = shipment.destination_country === "US" ? "États-Unis" : "Canada";
 
   return (
@@ -258,16 +275,27 @@ export default async function ShipmentDetailPage({ params, searchParams }: Shipm
             <h2 className="text-2xl font-semibold tracking-tight">Douane USA</h2>
           </div>
           <p className="mt-4 text-base leading-7 text-[var(--muted)]">
-            Les champs HTS, CUSMA, facture commerciale et courtier sont préparés dans la base, mais restent verrouillés jusqu&apos;à validation métier.
+            Les champs HTS, CUSMA, facture commerciale et courtier sont préparés dans la base. La facture commerciale reste bloquée tant que la douane USA
+            n&apos;est pas complète et validée.
           </p>
           <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-            {["HTS à valider", "Origine à confirmer", "CUSMA verrouillé", "Facture commerciale bloquée"].map((label) => (
+            <div className="rounded-2xl bg-neutral-50 px-4 py-3 text-base font-semibold text-neutral-800">
+              <p className="flex items-center gap-3">
+                {hasValidatedHts ? <CheckCircle2 aria-hidden="true" size={19} /> : <LockKeyhole aria-hidden="true" size={19} />}
+                {getHtsStatusLabel(productCustoms?.validation_status)}
+              </p>
+              {productCustoms?.hts_code ? <p className="mt-2 text-sm text-[var(--muted)]">{productCustoms.hts_code}</p> : null}
+            </div>
+            {["Origine à confirmer", "CUSMA verrouillé", "Facture commerciale bloquée"].map((label) => (
               <div key={label} className="flex items-center gap-3 rounded-2xl bg-neutral-50 px-4 py-3 text-base font-semibold text-neutral-800">
                 <LockKeyhole aria-hidden="true" size={19} />
                 {label}
               </div>
             ))}
           </div>
+          <Link className="secondary-button mt-5 inline-flex !min-h-11 !px-5 !py-2 !text-sm" href={`/${locale}/products`}>
+            Valider les codes produits
+          </Link>
         </section>
       ) : null}
     </>

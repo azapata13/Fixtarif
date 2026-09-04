@@ -32,6 +32,12 @@
 ## Acier/aluminium et anti-dumping
 Aucune déclaration automatique sans règle officielle et données validées.
 
+## HTS USA
+- Source live actuelle: recherche officielle USITC cote serveur.
+- L'app peut enregistrer une suggestion `needs_review`, mais ne doit jamais declarer un HTS comme legalement valide sans action humaine.
+- La validation HTS doit etre reservee aux roles workspace `owner/admin`.
+- Les documents USA doivent rester bloques si HTS, origine, CUSMA ou facture commerciale sont incomplets.
+
 ## Return of Goods / RMA
 À définir précisément pour sous-traitance, réparation, retour fournisseur et retour au Canada.
 

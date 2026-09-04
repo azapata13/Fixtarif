@@ -1,9 +1,10 @@
-import { Box, CircleDollarSign, Landmark, PackagePlus, Ruler, Scale, Sparkles } from "lucide-react";
+import Link from "next/link";
+import { AlertCircle, Box, CheckCircle2, Circle, CircleDollarSign, Landmark, PackagePlus, Ruler, Scale, Search, Sparkles, XCircle } from "lucide-react";
 import { type LocaleParams } from "@/app/[locale]/layout";
 import { PageHeader } from "@/components/page-header";
 import { type Locale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
-import { saveProductHtsSuggestion } from "@/lib/customs/actions";
+import { saveProductHtsSuggestion, updateProductHtsValidation } from "@/lib/customs/actions";
 import { searchHtsEntries } from "@/lib/customs/hts";
 import { getProductCustomsForWorkspace } from "@/lib/customs/queries";
 import { createProduct, seedDemoProducts } from "@/lib/products/actions";
@@ -14,6 +15,43 @@ type ProductsPageProps = {
   params: LocaleParams;
   searchParams: Promise<{ htsProductId?: string; htsQuery?: string; message?: string }>;
 };
+
+function getStatusLabel(status?: string | null) {
+  if (status === "validated") {
+    return "Validé";
+  }
+  if (status === "rejected") {
+    return "Rejeté";
+  }
+  if (status === "needs_review") {
+    return "À vérifier";
+  }
+  return "Manquant";
+}
+
+function getStatusIcon(status?: string | null) {
+  if (status === "validated") {
+    return <CheckCircle2 aria-hidden="true" size={19} />;
+  }
+  if (status === "rejected") {
+    return <XCircle aria-hidden="true" size={19} />;
+  }
+  if (status === "needs_review") {
+    return <AlertCircle aria-hidden="true" size={19} />;
+  }
+  return <Circle aria-hidden="true" size={19} />;
+}
+
+function buildSearchTerms(product: { name: string; part_number: string | null; description_fr: string | null }) {
+  const descriptionWords = product.description_fr
+    ?.split(/\s+/)
+    .map((word) => word.replace(/[^a-zA-Z0-9-]/g, ""))
+    .filter((word) => word.length > 3)
+    .slice(0, 3)
+    .join(" ");
+
+  return [product.name, product.part_number, descriptionWords].filter((term): term is string => Boolean(term));
+}
 
 export default async function ProductsPage({ params, searchParams }: ProductsPageProps) {
   const { locale: localeParam } = await params;
@@ -31,10 +69,13 @@ export default async function ProductsPage({ params, searchParams }: ProductsPag
   const createProductAction = createProduct.bind(null, locale);
   const seedDemoProductsAction = seedDemoProducts.bind(null, locale);
   const saveProductHtsSuggestionAction = saveProductHtsSuggestion.bind(null, locale);
+  const updateProductHtsValidationAction = updateProductHtsValidation.bind(null, locale);
   const selectedHtsProductId = products.some((product) => product.id === queryParams.htsProductId) ? queryParams.htsProductId : products[0]?.id;
+  const selectedHtsProduct = products.find((product) => product.id === selectedHtsProductId);
   const htsQuery = queryParams.htsQuery?.trim() ?? "";
   const htsResults = htsQuery ? await searchHtsEntries(htsQuery) : [];
   const customsByProductId = new Map(customsRows.map((row) => [row.product_id, row]));
+  const selectedSearchTerms = selectedHtsProduct ? buildSearchTerms(selectedHtsProduct) : [];
 
   return (
     <>
@@ -127,6 +168,20 @@ export default async function ProductsPage({ params, searchParams }: ProductsPag
           <p className="mt-3 text-base leading-7 text-[var(--muted)]">
             Recherche officielle USITC. Une sélection est enregistrée comme suggestion à vérifier, jamais comme classification validée automatiquement.
           </p>
+          {selectedSearchTerms.length ? (
+            <div className="mt-5 flex flex-wrap gap-2">
+              {selectedSearchTerms.map((term) => (
+                <Link
+                  className="inline-flex min-h-11 items-center gap-2 rounded-full border border-neutral-300 bg-white px-4 py-2 text-sm font-semibold text-neutral-900 transition hover:bg-neutral-100"
+                  href={`/${locale}/products?htsProductId=${selectedHtsProductId}&htsQuery=${encodeURIComponent(term)}`}
+                  key={term}
+                >
+                  <Search aria-hidden="true" size={16} />
+                  {term}
+                </Link>
+              ))}
+            </div>
+          ) : null}
           <form className="mt-5 grid gap-4 md:grid-cols-[1fr_1fr_auto]" method="get">
             <label className="block text-base font-semibold">
               Produit
@@ -185,7 +240,12 @@ export default async function ProductsPage({ params, searchParams }: ProductsPag
             <p className="text-lg leading-7 text-[var(--muted)]">Aucun produit dans ce workspace pour l&apos;instant.</p>
           </div>
         ) : null}
-        {products.map((product) => (
+        {products.map((product) => {
+          const customs = customsByProductId.get(product.id);
+          const customsStatus = customs?.validation_status;
+          const customsStatusLabel = getStatusLabel(customsStatus);
+
+          return (
           <article className="rounded-[24px] border border-[var(--line)] bg-white p-6 shadow-sm" key={product.id}>
             <div className="flex items-start justify-between gap-4">
               <div>
@@ -216,21 +276,75 @@ export default async function ProductsPage({ params, searchParams }: ProductsPag
               </p>
             </div>
             {product.notes ? <p className="mt-6 rounded-2xl bg-neutral-50 p-4 text-base leading-7 text-[var(--muted)]">{product.notes}</p> : null}
-            {customsByProductId.get(product.id) ? (
-              <div className="mt-6 rounded-2xl bg-neutral-50 p-4">
-                <p className="text-sm font-semibold uppercase tracking-wide text-[var(--muted)]">HTS USA - {customsByProductId.get(product.id)?.validation_status}</p>
-                <p className="mt-2 text-lg font-semibold tracking-tight text-neutral-950">{customsByProductId.get(product.id)?.hts_code}</p>
-                <p className="mt-2 text-base leading-7 text-[var(--muted)]">{customsByProductId.get(product.id)?.official_description}</p>
-                <p className="mt-2 text-sm font-semibold text-neutral-700">
-                  General: {customsByProductId.get(product.id)?.general_rate ?? "n/a"} · Vérifié:{" "}
-                  {customsByProductId.get(product.id)?.last_checked_at
-                    ? new Intl.DateTimeFormat(locale === "fr" ? "fr-CA" : "en-CA", { dateStyle: "medium" }).format(new Date(customsByProductId.get(product.id)?.last_checked_at ?? ""))
-                    : "n/a"}
+            <div className="mt-6 rounded-2xl bg-neutral-50 p-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <p className="inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-[var(--muted)]">
+                  {getStatusIcon(customsStatus)}
+                  HTS USA - {customsStatusLabel}
                 </p>
+                <Link
+                  className="inline-flex min-h-10 items-center justify-center rounded-full border border-neutral-300 bg-white px-4 py-2 text-sm font-semibold text-neutral-900 transition hover:bg-neutral-100"
+                  href={`/${locale}/products?htsProductId=${product.id}&htsQuery=${encodeURIComponent(product.part_number ?? product.name)}`}
+                >
+                  Chercher
+                </Link>
               </div>
-            ) : null}
+              {customs ? (
+                <>
+                  <p className="mt-2 text-lg font-semibold tracking-tight text-neutral-950">{customs.hts_code}</p>
+                  <p className="mt-2 text-base leading-7 text-[var(--muted)]">{customs.official_description}</p>
+                  <p className="mt-2 text-sm font-semibold text-neutral-700">
+                    General: {customs.general_rate ?? "n/a"} · Dernière consultation:{" "}
+                    {customs.last_checked_at
+                      ? new Intl.DateTimeFormat(locale === "fr" ? "fr-CA" : "en-CA", { dateStyle: "medium" }).format(new Date(customs.last_checked_at))
+                      : "n/a"}
+                  </p>
+                  {customs.validated_at ? (
+                    <p className="mt-2 text-sm font-semibold text-neutral-700">
+                      Validé le{" "}
+                      {new Intl.DateTimeFormat(locale === "fr" ? "fr-CA" : "en-CA", { dateStyle: "medium" }).format(new Date(customs.validated_at))}
+                    </p>
+                  ) : null}
+                  {canManage ? (
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {customs.validation_status !== "validated" ? (
+                        <form action={updateProductHtsValidationAction}>
+                          <input name="productCustomsId" type="hidden" value={customs.id} />
+                          <input name="status" type="hidden" value="validated" />
+                          <button className="primary-button !min-h-11 !px-4 !py-2 !text-sm" type="submit">
+                            Valider HTS
+                          </button>
+                        </form>
+                      ) : (
+                        <form action={updateProductHtsValidationAction}>
+                          <input name="productCustomsId" type="hidden" value={customs.id} />
+                          <input name="status" type="hidden" value="needs_review" />
+                          <button className="secondary-button !min-h-11 !px-4 !py-2 !text-sm" type="submit">
+                            Remettre à vérifier
+                          </button>
+                        </form>
+                      )}
+                      {customs.validation_status !== "rejected" ? (
+                        <form action={updateProductHtsValidationAction}>
+                          <input name="productCustomsId" type="hidden" value={customs.id} />
+                          <input name="status" type="hidden" value="rejected" />
+                          <button className="secondary-button !min-h-11 !px-4 !py-2 !text-sm" type="submit">
+                            Rejeter
+                          </button>
+                        </form>
+                      ) : null}
+                    </div>
+                  ) : null}
+                </>
+              ) : (
+                <p className="mt-3 text-base leading-7 text-[var(--muted)]">
+                  Aucun code HTS USA enregistré. Lance une recherche avec le nom, le numéro de pièce ou une description courte.
+                </p>
+              )}
+            </div>
           </article>
-        ))}
+          );
+        })}
       </section>
     </>
   );

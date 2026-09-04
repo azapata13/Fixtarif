@@ -89,7 +89,7 @@ export async function getShipmentForWorkspace(workspaceId: string, shipmentId: s
       : Promise.resolve({ data: null }),
     supabase
       .from("shipment_items")
-      .select("id,name,part_number,quantity,quantity_confirmed,weight,weight_unit,weight_confirmed,package_type,lot_number,product_snapshot_json")
+      .select("id,name,part_number,product_id,quantity,quantity_confirmed,weight,weight_unit,weight_confirmed,package_type,lot_number,product_snapshot_json")
       .eq("workspace_id", workspaceId)
       .eq("shipment_id", shipmentId),
     supabase

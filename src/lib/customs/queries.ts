@@ -6,7 +6,9 @@ export async function getProductCustomsForWorkspace(workspaceId: string) {
 
   const { data, error } = await supabase
     .from("product_customs")
-    .select("id,product_id,destination_country,hs_code,hts_code,official_description,general_rate,special_rate,other_rate,units,validation_status,last_checked_at,source_name")
+    .select(
+      "id,product_id,destination_country,hs_code,hts_code,official_description,country_of_origin,general_rate,special_rate,other_rate,units,validation_status,validated_at,validated_by,last_checked_at,source_name",
+    )
     .eq("workspace_id", workspaceId)
     .order("updated_at", { ascending: false });
 
@@ -16,4 +18,25 @@ export async function getProductCustomsForWorkspace(workspaceId: string) {
   }
 
   return data ?? [];
+}
+
+export async function getProductCustomsForProduct(workspaceId: string, productId: string) {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("product_customs")
+    .select(
+      "id,product_id,destination_country,hs_code,hts_code,official_description,country_of_origin,general_rate,special_rate,other_rate,units,validation_status,validated_at,validated_by,last_checked_at,source_name",
+    )
+    .eq("workspace_id", workspaceId)
+    .eq("product_id", productId)
+    .eq("destination_country", "US")
+    .maybeSingle();
+
+  if (error) {
+    logServerError({ action: "get_product_customs_for_product", error });
+    throw new Error(genericDataError());
+  }
+
+  return data;
 }

@@ -8,7 +8,7 @@
 - Admin workspace visible seulement aux roles client `owner/admin`; section Fixtarif interne visible seulement aux emails serveur `FIXTARIF_PLATFORM_ADMIN_EMAILS`.
 - Bibliotheques: entreprises, sites, contacts, produits, transporteurs, courtiers.
 - Expedition Canada/USA manuelle: creation de brouillon, validation, transport, statut, duplication.
-- Page Documents preparee: import prive de documents sources actif; packing slip PDF brouillon prive actif; HTS live USITC en suggestion produit; CUSMA et automatisation douaniere visibles mais verrouilles.
+- Page Documents preparee: import prive de documents sources actif; packing slip PDF brouillon prive actif; HTS live USITC en suggestion produit avec validation humaine owner/admin; CUSMA et automatisation douaniere visibles mais verrouilles.
 - Nouvelle migration Supabase preparee pour documents, extractions, PDF generes et tables douanieres USA.
 - Extraction scan, PDF avance, classification HTS automatique et CUSMA restent volontairement non automatises dans la demo actuelle.
 - Les prochains modules garderont une validation humaine obligatoire avant toute generation ou classification.
@@ -66,6 +66,8 @@ npm run build
 - Buckets documents prives prevus avec politiques Storage/RLS par workspace.
 - Portail support client prevu seulement avec consentement explicite, acces temporaire et audit complet.
 - HTS live consulte l'API USITC cote serveur et sauvegarde seulement une suggestion `needs_review`.
+- Les produits affichent l'etat HTS USA en langage simple: `Manquant`, `A verifier`, `Valide`, `Rejete`.
+- Les expeditions USA affichent l'etat HTS du produit et gardent la facture commerciale bloquee tant que les donnees douanieres ne sont pas validees.
 
 ## Roadmap restante
 
@@ -100,6 +102,6 @@ Objectif: supporter les expeditions USA sans automatiser des declarations legale
 
 - Champs USA: acheteur, consignee, courtier, valeur, devise, origine, incoterm/terme commercial.
 - Facture commerciale brouillon avec validation humaine.
-- HTS: recherche live USITC active, champ structure et statut de validation, sans classification automatique avant validation officielle.
+- HTS: recherche live USITC active, champ structure, statut de validation humain et rappel dans les expeditions USA, sans classification automatique avant validation officielle.
 - CUSMA: stockage des donnees et pieces justificatives, mais generation seulement apres validation reglementaire.
 - Regles de blocage: document impossible si les donnees douanieres requises sont manquantes.
