@@ -8,6 +8,7 @@
 - Admin workspace visible seulement aux roles client `owner/admin`; section Fixtarif interne visible seulement aux emails serveur `FIXTARIF_PLATFORM_ADMIN_EMAILS`.
 - Bibliotheques: entreprises, sites, contacts, produits, transporteurs, courtiers.
 - Expedition Canada/USA manuelle: creation de brouillon, validation, transport, statut, duplication.
+- Detail d'expedition simplifie par cartes et modals de section pour faciliter la demo.
 - Page Documents preparee: import prive de documents sources actif; packing slip PDF brouillon prive actif; HTS live USITC en suggestion produit avec validation humaine owner/admin; CUSMA et automatisation douaniere visibles mais verrouilles.
 - Nouvelle migration Supabase preparee pour documents, extractions, PDF generes et tables douanieres USA.
 - Extraction scan, PDF avance, classification HTS automatique et CUSMA restent volontairement non automatises dans la demo actuelle.
@@ -37,6 +38,7 @@ npm run build
 - Ajouter PRO/BOL si disponible.
 - Passer en validation, puis en pret seulement lorsque la checklist est complete.
 - Generer un packing slip PDF brouillon seulement apres le statut `ready`, puis l'ouvrir via le lien signe.
+- Depuis le detail d'expedition, verifier que la carte Documents propose l'import de fichier; camera/scan reste V2.
 - Dupliquer une expedition et confirmer que quantite/poids/lot doivent etre revalides.
 - Verifier `/fr/admin` pour confirmer que les evenements sensibles apparaissent.
 - Verifier dans `/fr/admin` que la strategie lancement/pricing apparait seulement pour un admin interne Fixtarif.

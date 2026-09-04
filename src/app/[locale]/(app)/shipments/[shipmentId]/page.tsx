@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { AlertCircle, ArrowLeft, CheckCircle2, Circle, Copy, FileCheck2, LockKeyhole, MapPin, Scale, ShieldCheck, Truck } from "lucide-react";
+import { AlertCircle, ArrowLeft, CheckCircle2, Circle, Copy, FileCheck2, FileUp, LockKeyhole, MapPin, Scale, ShieldCheck, Truck } from "lucide-react";
 import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/page-header";
+import { ShipmentSectionCards } from "@/components/shipment-section-cards";
 import { type Locale } from "@/i18n/config";
 import { getProductCustomsForProduct } from "@/lib/customs/queries";
 import { generatePackingSlipDraft } from "@/lib/documents/actions";
@@ -96,6 +97,75 @@ export default async function ShipmentDetailPage({ params, searchParams }: Shipm
   ];
   const completedSteps = progressSteps.filter(Boolean).length;
   const progressPercent = Math.round((completedSteps / progressSteps.length) * 100);
+  const sectionCards = [
+    {
+      complete: canMarkReady,
+      details: [
+        destination ? `Destination: ${destination.name}` : "Destination manquante",
+        site ? `Site: ${site.name}` : "Site manquant",
+        contact ? `Contact: ${contact.name}` : "Contact manquant",
+        carrier ? `Transporteur: ${carrier.name}` : "Transporteur manquant",
+        packageRow ? `Colis: ${packageRow.package_count} ${packageRow.package_type}` : "Colis manquant",
+      ],
+      href: "#validation-section",
+      key: "validation" as const,
+      summary: canMarkReady ? "Tous les prérequis sont cochés." : "Complète les éléments manquants avant les documents.",
+      title: "Validation",
+    },
+    {
+      complete: Boolean(destination && site && contact),
+      details: [
+        destination?.name ?? "Client à compléter",
+        site ? [site.name, site.city, site.region, site.country].filter(Boolean).join(" · ") : "Site à compléter",
+        contact ? [contact.name, contact.email, contact.phone].filter(Boolean).join(" · ") : "Contact à compléter",
+      ],
+      href: "#destination-section",
+      key: "destination" as const,
+      summary: destination ? `${destination.name}${site?.city ? ` · ${site.city}` : ""}` : "Client, site et contact.",
+      title: "Destination",
+    },
+    {
+      complete: Boolean(item?.quantity_confirmed && item?.weight_confirmed),
+      details: [
+        item?.name ?? "Produit à compléter",
+        item ? `Quantité: ${item.quantity}${item.quantity_confirmed ? " confirmée" : " à confirmer"}` : "Quantité manquante",
+        item ? `Poids: ${item.weight} ${item.weight_unit}${item.weight_confirmed ? " confirmé" : " à confirmer"}` : "Poids manquant",
+        item?.lot_number ? `Lot: ${item.lot_number}` : "Lot optionnel à compléter si requis",
+      ],
+      href: "#goods-section",
+      key: "goods" as const,
+      summary: item ? `${item.name} · ${item.weight} ${item.weight_unit}` : "Produit, quantité et poids.",
+      title: "Marchandise",
+    },
+    {
+      complete: hasGeneratedDocuments,
+      details: [
+        canGenerateDocuments ? "Packing slip prêt à générer." : canMarkReady ? "Marque l'expédition prête pour générer." : "Validation incomplète.",
+        hasGeneratedDocuments ? `${generatedDocuments.length} PDF brouillon généré${generatedDocuments.length > 1 ? "s" : ""}.` : "Aucun PDF généré.",
+        "Import fichier disponible dans Documents. Caméra/scan prévu en V2.",
+      ],
+      href: "#documents-section",
+      key: "documents" as const,
+      summary: hasGeneratedDocuments ? "PDF brouillon disponible." : "PDF et fichiers sources.",
+      title: "Documents",
+    },
+    ...(shipment.destination_country === "US"
+      ? [
+          {
+            complete: hasValidatedHts,
+            details: [
+              getHtsStatusLabel(productCustoms?.validation_status),
+              productCustoms?.hts_code ? `Code: ${productCustoms.hts_code}` : "Code HTS à trouver dans Produits",
+              "Origine, CUSMA et facture commerciale restent verrouillés pour le MVP.",
+            ],
+            href: "#customs-section",
+            key: "customs" as const,
+            summary: hasValidatedHts ? "HTS validé; CUSMA verrouillé." : "HTS/origine/CUSMA à compléter.",
+            title: "Douane USA",
+          },
+        ]
+      : []),
+  ];
 
   return (
     <>
@@ -105,6 +175,7 @@ export default async function ShipmentDetailPage({ params, searchParams }: Shipm
       </Link>
       <PageHeader title={shipment.reference} description="Vérifier le brouillon avant toute génération de document." />
       {message ? <p className="mb-4 rounded-2xl bg-neutral-100 px-4 py-3 text-base text-neutral-700">{message}</p> : null}
+      <ShipmentSectionCards locale={locale} sections={sectionCards} />
       <section className="mb-6 rounded-[24px] border border-[var(--line)] bg-white p-6 shadow-sm">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
@@ -139,7 +210,7 @@ export default async function ShipmentDetailPage({ params, searchParams }: Shipm
         </div>
       </form>
       <section className="grid gap-4 xl:grid-cols-[0.8fr_1.2fr]">
-        <aside className="rounded-[24px] border border-[var(--line)] bg-white p-6 shadow-sm">
+        <aside className="rounded-[24px] border border-[var(--line)] bg-white p-6 shadow-sm" id="validation-section">
           <h2 className="text-2xl font-semibold tracking-tight">Validation</h2>
           <ul className="mt-5 grid gap-3">
             <StatusRow checked={Boolean(destination)} label={destination ? `Destination : ${destination.name}` : "Destination manquante"} />
@@ -164,7 +235,7 @@ export default async function ShipmentDetailPage({ params, searchParams }: Shipm
             </button>
           </form>
         </aside>
-        <article className="rounded-[24px] border border-[var(--line)] bg-white p-6 shadow-sm">
+        <article className="rounded-[24px] border border-[var(--line)] bg-white p-6 shadow-sm" id="goods-section">
           <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
             <div>
               <p className="text-sm font-semibold uppercase tracking-wide text-[var(--muted)]">{shipment.status}</p>
@@ -227,7 +298,7 @@ export default async function ShipmentDetailPage({ params, searchParams }: Shipm
         </article>
       </section>
       <section className="mt-6 grid gap-4 xl:grid-cols-2">
-        <article className="rounded-[24px] border border-[var(--line)] bg-white p-6 shadow-sm">
+        <article className="rounded-[24px] border border-[var(--line)] bg-white p-6 shadow-sm" id="destination-section">
           <div className="flex items-center gap-3">
             <MapPin aria-hidden="true" size={24} />
             <h2 className="text-2xl font-semibold tracking-tight">Destination</h2>
@@ -277,7 +348,7 @@ export default async function ShipmentDetailPage({ params, searchParams }: Shipm
           )}
         </article>
       </section>
-      <section className="mt-6 rounded-[24px] border border-[var(--line)] bg-white p-6 shadow-sm">
+      <section className="mt-6 rounded-[24px] border border-[var(--line)] bg-white p-6 shadow-sm" id="documents-section">
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div>
             <div className="flex items-center gap-3">
@@ -289,6 +360,10 @@ export default async function ShipmentDetailPage({ params, searchParams }: Shipm
             </p>
           </div>
           <div className="grid gap-3">
+            <Link className="secondary-button min-w-56 gap-2" href={`/${locale}/documents`}>
+              <FileUp aria-hidden="true" size={18} />
+              Importer fichier
+            </Link>
             {canGenerateDocuments ? (
               <form action={generatePackingSlipAction}>
                 <input name="shipmentId" type="hidden" value={shipment.id} />
@@ -334,7 +409,7 @@ export default async function ShipmentDetailPage({ params, searchParams }: Shipm
         )}
       </section>
       {shipment.destination_country === "US" ? (
-        <section className="mt-6 rounded-[24px] border border-[var(--line)] bg-white p-6 shadow-sm">
+        <section className="mt-6 rounded-[24px] border border-[var(--line)] bg-white p-6 shadow-sm" id="customs-section">
           <div className="flex items-center gap-3">
             <ShieldCheck aria-hidden="true" size={24} />
             <h2 className="text-2xl font-semibold tracking-tight">Douane USA</h2>
