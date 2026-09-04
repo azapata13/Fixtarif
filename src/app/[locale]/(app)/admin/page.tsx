@@ -98,7 +98,7 @@ export default async function AdminPage({ params }: { params: LocaleParams }) {
           <div className="mt-5 grid gap-3 text-base leading-7 text-[var(--muted)]">
             <p className="rounded-2xl bg-neutral-50 p-4">RLS actif: chaque lecture et écriture reste attachée au workspace courant.</p>
             <p className="rounded-2xl bg-neutral-50 p-4">Écritures sensibles: limitées à `owner` et `admin` côté serveur.</p>
-            <p className="rounded-2xl bg-neutral-50 p-4">Google OAuth et invitations: prochaine étape, avec validation stricte des redirections.</p>
+            <p className="rounded-2xl bg-neutral-50 p-4">Google OAuth actif: redirections Supabase configurées pour local et `app.fixtarif.ca`.</p>
           </div>
         </article>
       </section>

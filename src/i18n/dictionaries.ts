@@ -66,27 +66,27 @@ const dictionaries: Record<Locale, Dictionary> = {
       },
       shipments: {
         title: "Expéditions",
-        description: "Liste et recherche. La création détaillée arrivera en phase 2.",
+        description: "Brouillons Canada/USA, validation, duplication et préparation documentaire.",
       },
       products: {
         title: "Produits",
-        description: "Bibliothèque produit prévue en phase 1.",
+        description: "Bibliothèque produit avec dimensions, valeurs et validation HTS USA.",
       },
       companies: {
         title: "Entreprises",
-        description: "Clients, fournisseurs, sites et contacts seront ajoutés en phase 1.",
+        description: "Clients, fournisseurs, sites de livraison et contacts de réception.",
       },
       carriers: {
         title: "Transporteurs",
-        description: "Transporteurs et préférences de transport en phase 1.",
+        description: "Transporteurs, préférences BOL et coordonnées de dispatch.",
       },
       brokers: {
         title: "Courtiers",
-        description: "Courtiers USA préparés pour les phases suivantes.",
+        description: "Courtiers USA préparés pour les flux douaniers à validation humaine.",
       },
       documents: {
         title: "Documents",
-        description: "Espace réservé aux documents générés après validation future.",
+        description: "Documents sources privés et PDF brouillons générés après validation.",
       },
       team: {
         title: "Équipe",
@@ -142,27 +142,27 @@ const dictionaries: Record<Locale, Dictionary> = {
       },
       shipments: {
         title: "Shipments",
-        description: "List and search. Detailed creation arrives in phase 2.",
+        description: "Canada/USA drafts, validation, duplication and document preparation.",
       },
       products: {
         title: "Products",
-        description: "Product library planned for phase 1.",
+        description: "Product library with dimensions, values and US HTS validation.",
       },
       companies: {
         title: "Companies",
-        description: "Customers, suppliers, sites and contacts will be added in phase 1.",
+        description: "Customers, suppliers, delivery sites and receiving contacts.",
       },
       carriers: {
         title: "Carriers",
-        description: "Carrier records and transport preferences in phase 1.",
+        description: "Carrier records, BOL preferences and dispatch details.",
       },
       brokers: {
         title: "Brokers",
-        description: "US brokers prepared for later phases.",
+        description: "US brokers prepared for customs workflows with human validation.",
       },
       documents: {
         title: "Documents",
-        description: "Placeholder for generated documents after future validation.",
+        description: "Private source documents and draft PDFs generated after validation.",
       },
       team: {
         title: "Team",

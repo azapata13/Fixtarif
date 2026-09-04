@@ -45,6 +45,7 @@ export default async function NewShipmentPage({ params, searchParams }: NewShipm
         action={createShipmentDraftAction}
         businesses={businesses}
         carriers={carriers}
+        locale={locale}
         nextReference={nextReference}
         productCustomsRows={productCustomsRows}
         products={products}

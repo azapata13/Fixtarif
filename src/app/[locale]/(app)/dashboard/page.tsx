@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { ArrowRight, Building2, FileText, Package, Plus, Truck } from "lucide-react";
+import { ArrowRight, Building2, FileText, Package, Plus, Sparkles, Truck } from "lucide-react";
 import { type LocaleParams } from "@/app/[locale]/layout";
 import { PageHeader } from "@/components/page-header";
 import { type Locale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
+import { prepareDemoWorkspace } from "@/lib/demo/actions";
 import { getShipmentsForWorkspace } from "@/lib/shipments/queries";
 import { getCurrentWorkspace } from "@/lib/workspaces/queries";
 
@@ -14,17 +15,20 @@ const quickLinks = [
   { key: "documents", icon: FileText },
 ] as const;
 
-export default async function DashboardPage({ params }: { params: LocaleParams }) {
+export default async function DashboardPage({ params, searchParams }: { params: LocaleParams; searchParams: Promise<{ message?: string }> }) {
   const { locale: localeParam } = await params;
+  const { message } = await searchParams;
   const locale = localeParam as Locale;
   const dictionary = getDictionary(locale);
   const page = dictionary.pages.dashboard;
   const { workspace } = await getCurrentWorkspace();
   const shipments = workspace ? (await getShipmentsForWorkspace(workspace.id)).slice(0, 3) : [];
+  const prepareDemoWorkspaceAction = prepareDemoWorkspace.bind(null, locale);
 
   return (
     <>
       <PageHeader title={page.title} description={page.description} />
+      {message ? <p className="mb-4 rounded-2xl bg-neutral-100 px-4 py-3 text-base text-neutral-700">{message}</p> : null}
       <section className="mb-6 rounded-[28px] border border-[var(--line)] bg-white p-7 shadow-sm">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
           <div>
@@ -37,6 +41,24 @@ export default async function DashboardPage({ params }: { params: LocaleParams }
             <Plus aria-hidden="true" size={22} />
             Nouvelle expédition
           </Link>
+        </div>
+      </section>
+      <section className="mb-6 rounded-[24px] border border-[var(--line)] bg-white p-6 shadow-sm">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <div className="flex items-center gap-3">
+              <Sparkles aria-hidden="true" size={24} />
+              <h2 className="text-2xl font-semibold tracking-tight">Mode démo MVP</h2>
+            </div>
+            <p className="mt-3 max-w-3xl text-base leading-7 text-[var(--muted)]">
+              Prépare les clients, produits, transporteurs, courtiers et deux brouillons Canada/USA pour tester vite sans données sensibles.
+            </p>
+          </div>
+          <form action={prepareDemoWorkspaceAction}>
+            <button className="secondary-button min-w-56" type="submit">
+              Préparer la démo
+            </button>
+          </form>
         </div>
       </section>
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">

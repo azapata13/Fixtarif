@@ -1,7 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import { AlertCircle, CheckCircle2, Circle, ClipboardCheck, XCircle } from "lucide-react";
+import type { Locale } from "@/i18n/config";
 import type { getBusinessesForWorkspace } from "@/lib/businesses/queries";
 import type { getCarriersForWorkspace } from "@/lib/carriers/queries";
 import type { getProductCustomsForWorkspace } from "@/lib/customs/queries";
@@ -16,6 +18,7 @@ type NewShipmentFormProps = {
   action: (formData: FormData) => void;
   businesses: BusinessOption[];
   carriers: CarrierOption[];
+  locale: Locale;
   nextReference: string;
   productCustomsRows: ProductCustomsOption[];
   products: ProductOption[];
@@ -47,10 +50,19 @@ function getHtsStatusIcon(status?: string | null) {
   return <Circle aria-hidden="true" size={20} />;
 }
 
-export function NewShipmentForm({ action, businesses, carriers, nextReference, productCustomsRows, products }: NewShipmentFormProps) {
+function AddLink({ href }: { href: string }) {
+  return (
+    <Link className="text-sm font-semibold text-neutral-600 underline-offset-4 hover:text-neutral-950 hover:underline" href={href}>
+      Ajouter
+    </Link>
+  );
+}
+
+export function NewShipmentForm({ action, businesses, carriers, locale, nextReference, productCustomsRows, products }: NewShipmentFormProps) {
   const [selectedProductId, setSelectedProductId] = useState("");
   const [selectedCarrierId, setSelectedCarrierId] = useState("");
   const [selectedBusinessId, setSelectedBusinessId] = useState("");
+  const [manualWeightUnit, setManualWeightUnit] = useState<"lb" | "kg">("lb");
   const selectedProduct = useMemo(() => products.find((product) => product.id === selectedProductId), [products, selectedProductId]);
   const selectedProductCustoms = useMemo(
     () => productCustomsRows.find((customsRow) => customsRow.product_id === selectedProductId && customsRow.destination_country === "US"),
@@ -60,6 +72,7 @@ export function NewShipmentForm({ action, businesses, carriers, nextReference, p
   const selectedBusiness = useMemo(() => businesses.find((business) => business.id === selectedBusinessId), [businesses, selectedBusinessId]);
   const businessSites = Array.isArray(selectedBusiness?.business_sites) ? selectedBusiness.business_sites : [];
   const businessContacts = Array.isArray(selectedBusiness?.contacts) ? selectedBusiness.contacts : [];
+  const weightUnit = selectedProduct?.weight_unit ?? manualWeightUnit;
 
   return (
     <form action={action} className="rounded-[24px] border border-[var(--line)] bg-white p-6 shadow-sm">
@@ -94,7 +107,10 @@ export function NewShipmentForm({ action, businesses, carriers, nextReference, p
           </select>
         </label>
         <label className="block text-base font-semibold">
-          Destination
+          <span className="flex items-center justify-between gap-3">
+            Destination
+            <AddLink href={`/${locale}/companies`} />
+          </span>
           <select className="field" name="destinationBusinessId" value={selectedBusinessId} onChange={(event) => setSelectedBusinessId(event.target.value)}>
             <option value="">À compléter</option>
             {businesses.map((business) => (
@@ -105,7 +121,10 @@ export function NewShipmentForm({ action, businesses, carriers, nextReference, p
           </select>
         </label>
         <label className="block text-base font-semibold">
-          Site de livraison
+          <span className="flex items-center justify-between gap-3">
+            Site de livraison
+            <AddLink href={`/${locale}/companies`} />
+          </span>
           <select className="field" name="destinationSiteId" defaultValue="" key={`site-${selectedBusinessId}`}>
             <option value="">Site à compléter</option>
             {businessSites.map((site) => (
@@ -116,7 +135,10 @@ export function NewShipmentForm({ action, businesses, carriers, nextReference, p
           </select>
         </label>
         <label className="block text-base font-semibold">
-          Contact réception
+          <span className="flex items-center justify-between gap-3">
+            Contact réception
+            <AddLink href={`/${locale}/companies`} />
+          </span>
           <select className="field" name="destinationContactId" defaultValue="" key={`contact-${selectedBusinessId}`}>
             <option value="">Contact à compléter</option>
             {businessContacts.map((contact) => (
@@ -127,7 +149,10 @@ export function NewShipmentForm({ action, businesses, carriers, nextReference, p
           </select>
         </label>
         <label className="block text-base font-semibold">
-          Transporteur
+          <span className="flex items-center justify-between gap-3">
+            Transporteur
+            <AddLink href={`/${locale}/carriers`} />
+          </span>
           <select className="field" name="carrierId" value={selectedCarrierId} onChange={(event) => setSelectedCarrierId(event.target.value)}>
             <option value="">À compléter</option>
             {carriers.map((carrier) => (
@@ -138,7 +163,10 @@ export function NewShipmentForm({ action, businesses, carriers, nextReference, p
           </select>
         </label>
         <label className="block text-base font-semibold">
-          Produit enregistré
+          <span className="flex items-center justify-between gap-3">
+            Produit enregistré
+            <AddLink href={`/${locale}/products`} />
+          </span>
           <select className="field" name="productId" value={selectedProductId} onChange={(event) => setSelectedProductId(event.target.value)}>
             <option value="">Saisie manuelle</option>
             {products.map((product) => (
@@ -174,10 +202,20 @@ export function NewShipmentForm({ action, businesses, carriers, nextReference, p
           <input className="field" min="0.001" name="quantity" step="0.001" type="number" required />
         </label>
         <label className="block text-base font-semibold">
-          Poids total {selectedProduct?.weight_unit ?? "lb"}
+          Poids total {weightUnit}
           <input className="field" defaultValue={selectedProduct?.weight ?? ""} key={`weight-${selectedProduct?.id ?? "manual"}`} min="0.001" name="weight" step="0.001" type="number" required />
         </label>
-        <input name="weightUnit" type="hidden" value={selectedProduct?.weight_unit ?? "lb"} />
+        {selectedProduct ? (
+          <input name="weightUnit" type="hidden" value={selectedProduct.weight_unit} />
+        ) : (
+          <label className="block text-base font-semibold">
+            Unité poids
+            <select className="field" name="weightUnit" value={manualWeightUnit} onChange={(event) => setManualWeightUnit(event.target.value === "kg" ? "kg" : "lb")}>
+              <option value="lb">lb</option>
+              <option value="kg">kg</option>
+            </select>
+          </label>
+        )}
         <input name="length" type="hidden" value={selectedProduct?.length ?? ""} />
         <input name="width" type="hidden" value={selectedProduct?.width ?? ""} />
         <input name="height" type="hidden" value={selectedProduct?.height ?? ""} />

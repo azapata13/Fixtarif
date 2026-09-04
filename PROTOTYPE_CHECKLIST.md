@@ -13,6 +13,7 @@
 - Extraction scan, PDF avance, classification HTS automatique et CUSMA restent volontairement non automatises dans la demo actuelle.
 - Les prochains modules garderont une validation humaine obligatoire avant toute generation ou classification.
 - Roadmap lancement/pricing resumee dans `LAUNCH_ROADMAP.md` et visible dans l'admin.
+- Checklist de deploy MVP ajoutee dans `MVP_DEPLOY_CHECKLIST.md`.
 
 ## A lancer avant chaque push
 
@@ -28,6 +29,8 @@ npm run build
 - Creer un client, un site et un contact.
 - Creer un produit.
 - Creer une expedition Canada depuis le dashboard.
+- Depuis `Nouvelle expedition`, verifier que les champs Destination/Site/Contact/Transporteur/Produit ont un lien `Ajouter`.
+- Verifier que la saisie manuelle permet de choisir le poids en `lb` ou `kg`.
 - Creer une expedition USA et confirmer que le bloc Douane USA apparait dans le detail.
 - Si la creation echoue, noter le message exact et verifier d'abord destination, site, contact, produit, transporteur, quantite et poids.
 - Confirmer quantite et poids.
@@ -45,6 +48,7 @@ npm run build
 ## A faire par Felipe avant production reelle
 
 - Tourner une seule fois en local avec le compte demo et valider le parcours complet.
+- Utiliser `Preparer la demo` depuis le dashboard pour creer rapidement les donnees de test avant de montrer l'app.
 - Quand on decide de redeployer, pousser tous les commits en une seule batch pour economiser Netlify.
 - Appliquer la migration `supabase/migrations/20260903160000_documents_customs_foundation.sql` dans Supabase avant de tester upload/PDF/douane.
 - Tester l'import avec un petit fichier non sensible; les vrais documents clients attendront la validation de securite finale.
