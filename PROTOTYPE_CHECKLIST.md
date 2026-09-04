@@ -11,6 +11,7 @@
 - Nouvelle migration Supabase preparee pour documents, extractions, PDF generes et tables douanieres USA.
 - Extraction scan, PDF avance, HTS et CUSMA restent volontairement non automatises dans la demo actuelle.
 - Les prochains modules garderont une validation humaine obligatoire avant toute generation ou classification.
+- Roadmap lancement/pricing resumee dans `LAUNCH_ROADMAP.md` et visible dans l'admin.
 
 ## A lancer avant chaque push
 
@@ -34,6 +35,7 @@ npm run build
 - Generer un packing slip PDF brouillon seulement apres le statut `ready`, puis l'ouvrir via le lien signe.
 - Dupliquer une expedition et confirmer que quantite/poids/lot doivent etre revalides.
 - Verifier `/fr/admin` pour confirmer que les evenements sensibles apparaissent.
+- Verifier dans `/fr/admin` que la strategie lancement/pricing reste presente pour la demo.
 - Verifier `/fr/documents` pour confirmer que l'import prive fonctionne avec PDF/PNG/JPG/WebP.
 
 ## A faire par Felipe avant production reelle
@@ -45,6 +47,7 @@ npm run build
 - Dans Supabase, garder seulement les URLs de redirection necessaires pour production et local.
 - Avant un lancement public, regenerer les secrets partages pendant la configuration initiale.
 - Activer MFA sur les comptes Google, Supabase, Netlify, GoDaddy et GitHub.
+- Decider si le premier deploy public montre seulement `app.fixtarif.ca`, ou si on ajoute une landing separee `fixtarif.ca`.
 
 ## Points de securite deja couverts
 
@@ -82,6 +85,7 @@ Objectif: passer de "fondation de preparation" a assistant de documents.
 - Edition complete: modifier/supprimer clients, sites, contacts, produits, transporteurs, courtiers.
 - Invitations par courriel reelles.
 - Landing page `fixtarif.ca` separee de `app.fixtarif.ca`.
+- Pricing lancement: Pro a 89 CAD/mois, 45 jours gratuits pour les 30 premieres entreprises, puis offre fondateur optionnelle.
 
 ### V3 USA / douane
 

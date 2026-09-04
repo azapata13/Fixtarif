@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { Activity, Boxes, Building2, FileLock2, ShieldCheck, Truck, Users } from "lucide-react";
+import { Activity, Boxes, Building2, FileLock2, Rocket, ShieldCheck, Truck, Users } from "lucide-react";
 import { type LocaleParams } from "@/app/[locale]/layout";
 import { PageHeader } from "@/components/page-header";
 import { type Locale } from "@/i18n/config";
@@ -14,6 +14,13 @@ const countCards = [
   { key: "members", label: "Membres", icon: Users },
   { key: "pendingInvites", label: "Invitations", icon: ShieldCheck },
 ] as const;
+
+const launchPlans = [
+  { name: "Essentiel", price: "39 CAD", target: "Tres petite entreprise" },
+  { name: "Pro", price: "89 CAD", target: "PME principale" },
+  { name: "Business", price: "179 CAD", target: "Equipe et volume superieur" },
+  { name: "Enterprise", price: "399+ CAD", target: "Sur mesure apres demande reelle" },
+];
 
 function formatShortId(value: string) {
   return `${value.slice(0, 8)}...${value.slice(-4)}`;
@@ -133,6 +140,27 @@ export default async function AdminPage({ params }: { params: LocaleParams }) {
             </div>
           ))}
         </div>
+      </section>
+      <section className="mt-6 rounded-[24px] border border-[var(--line)] bg-white p-6 shadow-sm">
+        <div className="flex items-center gap-3">
+          <Rocket aria-hidden="true" size={24} />
+          <h2 className="text-2xl font-semibold tracking-tight">Lancement</h2>
+        </div>
+        <p className="mt-3 text-base leading-7 text-[var(--muted)]">
+          MVP PME: importer, vérifier, générer. API/ERP restent hors lancement tant que les clients ne les demandent pas.
+        </p>
+        <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          {launchPlans.map((plan) => (
+            <article className="rounded-2xl bg-neutral-50 p-4" key={plan.name}>
+              <p className="text-base font-semibold text-neutral-950">{plan.name}</p>
+              <p className="mt-2 text-2xl font-semibold tracking-tight">{plan.price}</p>
+              <p className="mt-2 text-sm leading-6 text-[var(--muted)]">{plan.target}</p>
+            </article>
+          ))}
+        </div>
+        <p className="mt-5 rounded-2xl bg-neutral-50 p-4 text-base font-semibold text-neutral-800">
+          Offre de lancement: 45 jours gratuits sur Pro pour les 30 premières entreprises.
+        </p>
       </section>
     </>
   );
