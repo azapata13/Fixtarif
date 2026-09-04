@@ -13,7 +13,8 @@ Inclus:
 - Expeditions Canada/USA en brouillon, validation, duplication.
 - Import prive de documents source.
 - Packing slip PDF brouillon prive avec URL signee courte.
-- Page Documents montrant PDF/HTS/CUSMA comme modules verrouilles.
+- Recherche HTS live via USITC, sauvegardee seulement comme suggestion `needs_review`.
+- Page Documents montrant PDF/CUSMA comme modules verrouilles.
 
 Non inclus:
 
@@ -109,6 +110,7 @@ Marketing:
 11. Creer une expedition USA et verifier le bloc Douane USA verrouille.
 12. Ouvrir `/fr/admin` et confirmer les logs d'activite.
 13. Confirmer que la section Fixtarif interne est visible seulement pour un email interne autorise.
+14. Chercher un HTS dans `/fr/products`, sauvegarder une suggestion, confirmer le statut `needs_review`.
 
 ## Decision go / no-go
 
@@ -123,6 +125,7 @@ No-go si:
 
 - Erreur Supabase/RLS en creation d'expedition.
 - PDF impossible a generer apres statut `ready`.
+- Recherche HTS exposee cote client avec une cle secrete ou sauvegarde une classification comme validee automatiquement.
 - Acces document possible sans session.
 - Bloc Fixtarif interne visible par un client non autorise.
 - Secrets visibles dans logs publics ou fichiers versionnes.

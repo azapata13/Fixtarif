@@ -1,29 +1,40 @@
-import { Box, CircleDollarSign, PackagePlus, Ruler, Scale, Sparkles } from "lucide-react";
+import { Box, CircleDollarSign, Landmark, PackagePlus, Ruler, Scale, Sparkles } from "lucide-react";
 import { type LocaleParams } from "@/app/[locale]/layout";
 import { PageHeader } from "@/components/page-header";
 import { type Locale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
+import { saveProductHtsSuggestion } from "@/lib/customs/actions";
+import { searchHtsEntries } from "@/lib/customs/hts";
+import { getProductCustomsForWorkspace } from "@/lib/customs/queries";
 import { createProduct, seedDemoProducts } from "@/lib/products/actions";
 import { getProductsForWorkspace } from "@/lib/products/queries";
 import { getCurrentWorkspace } from "@/lib/workspaces/queries";
 
 type ProductsPageProps = {
   params: LocaleParams;
-  searchParams: Promise<{ message?: string }>;
+  searchParams: Promise<{ htsProductId?: string; htsQuery?: string; message?: string }>;
 };
 
 export default async function ProductsPage({ params, searchParams }: ProductsPageProps) {
   const { locale: localeParam } = await params;
-  const { message } = await searchParams;
+  const queryParams = await searchParams;
+  const { message } = queryParams;
   const locale = localeParam as Locale;
   const dictionary = getDictionary(locale);
   const page = dictionary.pages.products;
   const { workspace, membership } = await getCurrentWorkspace();
-  const products = workspace ? await getProductsForWorkspace(workspace.id) : [];
+  const [products, customsRows] = workspace
+    ? await Promise.all([getProductsForWorkspace(workspace.id), getProductCustomsForWorkspace(workspace.id)])
+    : [[], []];
   const canManage = membership ? ["owner", "admin"].includes(membership.role) : false;
   const hasDemoProducts = products.some((product) => product.part_number === "ID-43567") && products.some((product) => product.part_number === "BR-1204");
   const createProductAction = createProduct.bind(null, locale);
   const seedDemoProductsAction = seedDemoProducts.bind(null, locale);
+  const saveProductHtsSuggestionAction = saveProductHtsSuggestion.bind(null, locale);
+  const selectedHtsProductId = products.some((product) => product.id === queryParams.htsProductId) ? queryParams.htsProductId : products[0]?.id;
+  const htsQuery = queryParams.htsQuery?.trim() ?? "";
+  const htsResults = htsQuery ? await searchHtsEntries(htsQuery) : [];
+  const customsByProductId = new Map(customsRows.map((row) => [row.product_id, row]));
 
   return (
     <>
@@ -107,6 +118,64 @@ export default async function ProductsPage({ params, searchParams }: ProductsPag
           </form>
         </section>
       ) : null}
+      {canManage ? (
+        <section className="mb-6 rounded-[24px] border border-[var(--line)] bg-white p-6 shadow-sm">
+          <div className="flex items-center gap-3">
+            <Landmark aria-hidden="true" size={24} />
+            <h2 className="text-2xl font-semibold tracking-tight">HTS USA live</h2>
+          </div>
+          <p className="mt-3 text-base leading-7 text-[var(--muted)]">
+            Recherche officielle USITC. Une sélection est enregistrée comme suggestion à vérifier, jamais comme classification validée automatiquement.
+          </p>
+          <form className="mt-5 grid gap-4 md:grid-cols-[1fr_1fr_auto]" method="get">
+            <label className="block text-base font-semibold">
+              Produit
+              <select className="field" defaultValue={selectedHtsProductId} name="htsProductId">
+                {products.map((product) => (
+                  <option key={product.id} value={product.id}>
+                    {product.part_number ? `${product.part_number} - ${product.name}` : product.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="block text-base font-semibold">
+              Code ou mot-clé
+              <input className="field" defaultValue={htsQuery} name="htsQuery" placeholder="ex: bracket, 8302" />
+            </label>
+            <button className="primary-button self-end" disabled={!products.length} type="submit">
+              Rechercher
+            </button>
+          </form>
+          {htsQuery ? (
+            <div className="mt-5 grid gap-3">
+              {htsResults.length === 0 ? <p className="rounded-2xl bg-neutral-50 p-4 text-base text-[var(--muted)]">Aucun résultat USITC trouvé.</p> : null}
+              {htsResults.map((result) => (
+                <form action={saveProductHtsSuggestionAction} className="rounded-2xl bg-neutral-50 p-4" key={`${result.htsno}-${result.description}`}>
+                  <input name="productId" type="hidden" value={selectedHtsProductId ?? ""} />
+                  <input name="htsno" type="hidden" value={result.htsno} />
+                  <input name="description" type="hidden" value={result.description} />
+                  <input name="generalRate" type="hidden" value={result.generalRate ?? ""} />
+                  <input name="specialRate" type="hidden" value={result.specialRate ?? ""} />
+                  <input name="otherRate" type="hidden" value={result.otherRate ?? ""} />
+                  <input name="units" type="hidden" value={result.units.join("|")} />
+                  <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+                    <div>
+                      <p className="text-lg font-semibold tracking-tight text-neutral-950">{result.htsno}</p>
+                      <p className="mt-2 text-base leading-7 text-[var(--muted)]">{result.description}</p>
+                      <p className="mt-2 text-sm font-semibold text-neutral-700">
+                        General: {result.generalRate ?? "n/a"} · Special: {result.specialRate ?? "n/a"} · Other: {result.otherRate ?? "n/a"}
+                      </p>
+                    </div>
+                    <button className="secondary-button shrink-0" disabled={!selectedHtsProductId} type="submit">
+                      Enregistrer à vérifier
+                    </button>
+                  </div>
+                </form>
+              ))}
+            </div>
+          ) : null}
+        </section>
+      ) : null}
       <p className="mb-4 text-base font-semibold text-[var(--muted)]">
         {products.length} produit{products.length > 1 ? "s" : ""}
       </p>
@@ -147,6 +216,19 @@ export default async function ProductsPage({ params, searchParams }: ProductsPag
               </p>
             </div>
             {product.notes ? <p className="mt-6 rounded-2xl bg-neutral-50 p-4 text-base leading-7 text-[var(--muted)]">{product.notes}</p> : null}
+            {customsByProductId.get(product.id) ? (
+              <div className="mt-6 rounded-2xl bg-neutral-50 p-4">
+                <p className="text-sm font-semibold uppercase tracking-wide text-[var(--muted)]">HTS USA - {customsByProductId.get(product.id)?.validation_status}</p>
+                <p className="mt-2 text-lg font-semibold tracking-tight text-neutral-950">{customsByProductId.get(product.id)?.hts_code}</p>
+                <p className="mt-2 text-base leading-7 text-[var(--muted)]">{customsByProductId.get(product.id)?.official_description}</p>
+                <p className="mt-2 text-sm font-semibold text-neutral-700">
+                  General: {customsByProductId.get(product.id)?.general_rate ?? "n/a"} · Vérifié:{" "}
+                  {customsByProductId.get(product.id)?.last_checked_at
+                    ? new Intl.DateTimeFormat(locale === "fr" ? "fr-CA" : "en-CA", { dateStyle: "medium" }).format(new Date(customsByProductId.get(product.id)?.last_checked_at ?? ""))
+                    : "n/a"}
+                </p>
+              </div>
+            ) : null}
           </article>
         ))}
       </section>

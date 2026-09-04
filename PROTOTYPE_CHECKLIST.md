@@ -8,9 +8,9 @@
 - Admin workspace visible seulement aux roles client `owner/admin`; section Fixtarif interne visible seulement aux emails serveur `FIXTARIF_PLATFORM_ADMIN_EMAILS`.
 - Bibliotheques: entreprises, sites, contacts, produits, transporteurs, courtiers.
 - Expedition Canada/USA manuelle: creation de brouillon, validation, transport, statut, duplication.
-- Page Documents preparee: import prive de documents sources actif; packing slip PDF brouillon prive actif; HTS, CUSMA et automatisation douaniere visibles mais verrouilles.
+- Page Documents preparee: import prive de documents sources actif; packing slip PDF brouillon prive actif; HTS live USITC en suggestion produit; CUSMA et automatisation douaniere visibles mais verrouilles.
 - Nouvelle migration Supabase preparee pour documents, extractions, PDF generes et tables douanieres USA.
-- Extraction scan, PDF avance, HTS et CUSMA restent volontairement non automatises dans la demo actuelle.
+- Extraction scan, PDF avance, classification HTS automatique et CUSMA restent volontairement non automatises dans la demo actuelle.
 - Les prochains modules garderont une validation humaine obligatoire avant toute generation ou classification.
 - Roadmap lancement/pricing resumee dans `LAUNCH_ROADMAP.md` et visible dans l'admin.
 
@@ -38,6 +38,7 @@ npm run build
 - Verifier `/fr/admin` pour confirmer que les evenements sensibles apparaissent.
 - Verifier dans `/fr/admin` que la strategie lancement/pricing apparait seulement pour un admin interne Fixtarif.
 - Verifier `/fr/documents` pour confirmer que l'import prive fonctionne avec PDF/PNG/JPG/WebP.
+- Verifier `/fr/products?htsQuery=bracket` pour confirmer la recherche HTS officielle USITC.
 
 ## A faire par Felipe avant production reelle
 
@@ -64,6 +65,7 @@ npm run build
 - Validation serveur des liens workspace/client/site/contact/produit/transporteur avant creation d'expedition.
 - Buckets documents prives prevus avec politiques Storage/RLS par workspace.
 - Portail support client prevu seulement avec consentement explicite, acces temporaire et audit complet.
+- HTS live consulte l'API USITC cote serveur et sauvegarde seulement une suggestion `needs_review`.
 
 ## Roadmap restante
 
@@ -98,6 +100,6 @@ Objectif: supporter les expeditions USA sans automatiser des declarations legale
 
 - Champs USA: acheteur, consignee, courtier, valeur, devise, origine, incoterm/terme commercial.
 - Facture commerciale brouillon avec validation humaine.
-- HTS: champ structure et statut de validation, sans classification automatique avant validation officielle.
+- HTS: recherche live USITC active, champ structure et statut de validation, sans classification automatique avant validation officielle.
 - CUSMA: stockage des donnees et pieces justificatives, mais generation seulement apres validation reglementaire.
 - Regles de blocage: document impossible si les donnees douanieres requises sont manquantes.
