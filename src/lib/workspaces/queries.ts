@@ -1,5 +1,5 @@
 import { isSupabaseConfigured } from "@/lib/env";
-import { isExpiredRefreshTokenError } from "@/lib/supabase/auth-errors";
+import { isRecoverableAuthSessionError } from "@/lib/supabase/auth-errors";
 import { createClient } from "@/lib/supabase/server";
 
 export async function getCurrentWorkspace() {
@@ -9,7 +9,7 @@ export async function getCurrentWorkspace() {
 
   const supabase = await createClient();
   const userResult = await supabase.auth.getUser().catch((error) => {
-    if (isExpiredRefreshTokenError(error)) {
+    if (isRecoverableAuthSessionError(error)) {
       return { data: { user: null }, error: null };
     }
 
@@ -17,7 +17,7 @@ export async function getCurrentWorkspace() {
   });
 
   if (userResult.error) {
-    if (isExpiredRefreshTokenError(userResult.error)) {
+    if (isRecoverableAuthSessionError(userResult.error)) {
       return { user: null, membership: null, workspace: null };
     }
 
@@ -64,7 +64,7 @@ export async function getCurrentWorkspaceNoInviteAccept() {
 
   const supabase = await createClient();
   const userResult = await supabase.auth.getUser().catch((error) => {
-    if (isExpiredRefreshTokenError(error)) {
+    if (isRecoverableAuthSessionError(error)) {
       return { data: { user: null }, error: null };
     }
 
@@ -72,7 +72,7 @@ export async function getCurrentWorkspaceNoInviteAccept() {
   });
 
   if (userResult.error) {
-    if (isExpiredRefreshTokenError(userResult.error)) {
+    if (isRecoverableAuthSessionError(userResult.error)) {
       return { user: null, membership: null, workspace: null };
     }
 

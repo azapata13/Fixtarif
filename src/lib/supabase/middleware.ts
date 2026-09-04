@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { getSupabasePublicEnv, isSupabaseConfigured } from "@/lib/env";
-import { isExpiredRefreshTokenError, isSupabaseAuthCookieName } from "@/lib/supabase/auth-errors";
+import { isRecoverableAuthSessionError, isSupabaseAuthCookieName } from "@/lib/supabase/auth-errors";
 import type { Database } from "@/lib/supabase/types";
 
 export async function updateSession(request: NextRequest) {
@@ -33,7 +33,7 @@ export async function updateSession(request: NextRequest) {
   try {
     const { error } = await supabase.auth.getUser();
 
-    if (error && !isExpiredRefreshTokenError(error)) {
+    if (error && !isRecoverableAuthSessionError(error)) {
       throw error;
     }
 
@@ -41,7 +41,7 @@ export async function updateSession(request: NextRequest) {
       return response;
     }
   } catch (error) {
-    if (!isExpiredRefreshTokenError(error)) {
+    if (!isRecoverableAuthSessionError(error)) {
       throw error;
     }
   }
