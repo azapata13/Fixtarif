@@ -5,6 +5,7 @@
 - Application privee sur `app.fixtarif.ca`, developpement local sur `http://localhost:3000`.
 - Auth Supabase email/mot de passe et Google OAuth branches.
 - Workspace, roles `owner/admin/member`, RLS et dashboard admin actifs.
+- Admin workspace visible seulement aux roles client `owner/admin`; section Fixtarif interne visible seulement aux emails serveur `FIXTARIF_PLATFORM_ADMIN_EMAILS`.
 - Bibliotheques: entreprises, sites, contacts, produits, transporteurs, courtiers.
 - Expedition Canada/USA manuelle: creation de brouillon, validation, transport, statut, duplication.
 - Page Documents preparee: import prive de documents sources actif; packing slip PDF brouillon prive actif; HTS, CUSMA et automatisation douaniere visibles mais verrouilles.
@@ -35,7 +36,7 @@ npm run build
 - Generer un packing slip PDF brouillon seulement apres le statut `ready`, puis l'ouvrir via le lien signe.
 - Dupliquer une expedition et confirmer que quantite/poids/lot doivent etre revalides.
 - Verifier `/fr/admin` pour confirmer que les evenements sensibles apparaissent.
-- Verifier dans `/fr/admin` que la strategie lancement/pricing reste presente pour la demo.
+- Verifier dans `/fr/admin` que la strategie lancement/pricing apparait seulement pour un admin interne Fixtarif.
 - Verifier `/fr/documents` pour confirmer que l'import prive fonctionne avec PDF/PNG/JPG/WebP.
 
 ## A faire par Felipe avant production reelle
@@ -48,6 +49,7 @@ npm run build
 - Avant un lancement public, regenerer les secrets partages pendant la configuration initiale.
 - Activer MFA sur les comptes Google, Supabase, Netlify, GoDaddy et GitHub.
 - Decider si le premier deploy public montre seulement `app.fixtarif.ca`, ou si on ajoute une landing separee `fixtarif.ca`.
+- Definir `FIXTARIF_PLATFORM_ADMIN_EMAILS` dans Netlify avec les emails internes autorises, separes par virgule.
 
 ## Points de securite deja couverts
 
@@ -61,6 +63,7 @@ npm run build
 - Audit log pour actions d'expedition, equipe, reglages et bibliotheques.
 - Validation serveur des liens workspace/client/site/contact/produit/transporteur avant creation d'expedition.
 - Buckets documents prives prevus avec politiques Storage/RLS par workspace.
+- Portail support client prevu seulement avec consentement explicite, acces temporaire et audit complet.
 
 ## Roadmap restante
 
@@ -87,6 +90,7 @@ Objectif: passer de "fondation de preparation" a assistant de documents.
 - Invitations par courriel reelles.
 - Landing page `fixtarif.ca` separee de `app.fixtarif.ca`.
 - Pricing lancement: Pro a 89 CAD/mois, 45 jours gratuits pour les 30 premieres entreprises, puis offre fondateur optionnelle.
+- Admin interne Fixtarif: vue support des portails clients, sans impersonation silencieuse.
 
 ### V3 USA / douane
 

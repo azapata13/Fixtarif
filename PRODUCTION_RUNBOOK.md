@@ -53,11 +53,13 @@ NEXT_PUBLIC_APP_URL=https://app.fixtarif.ca
 NEXT_PUBLIC_MARKETING_URL=https://fixtarif.ca
 NEXT_PUBLIC_APP_NAME=Fixtarif
 DEFAULT_LOCALE=fr
+FIXTARIF_PLATFORM_ADMIN_EMAILS=
 ```
 
 Notes:
 
 - La service role key reste serveur seulement.
+- `FIXTARIF_PLATFORM_ADMIN_EMAILS` contient seulement les emails internes Fixtarif autorises, separes par virgule.
 - Les secrets partages pendant la configuration initiale devront etre regeneres avant une exposition plus large.
 - Garder le deploy groupe pour economiser le forfait gratuit Netlify.
 
@@ -106,6 +108,7 @@ Marketing:
 10. Importer un petit document source non sensible.
 11. Creer une expedition USA et verifier le bloc Douane USA verrouille.
 12. Ouvrir `/fr/admin` et confirmer les logs d'activite.
+13. Confirmer que la section Fixtarif interne est visible seulement pour un email interne autorise.
 
 ## Decision go / no-go
 
@@ -121,4 +124,5 @@ No-go si:
 - Erreur Supabase/RLS en creation d'expedition.
 - PDF impossible a generer apres statut `ready`.
 - Acces document possible sans session.
+- Bloc Fixtarif interne visible par un client non autorise.
 - Secrets visibles dans logs publics ou fichiers versionnes.

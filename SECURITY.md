@@ -23,6 +23,7 @@ Fixtarif doit être construit avec une posture Zero Trust et une couverture OWAS
 - Audit log avant les actions sensibles.
 - Messages publics génériques pour les erreurs serveur; détails uniquement dans les logs serveur.
 - Rotation des secrets avant toute exposition client large.
+- Support interne Fixtarif separe des admins clients.
 
 ## OWASP Top 10 2025
 
@@ -53,6 +54,8 @@ Contrôles Fixtarif :
 - Lancer `npm run test:security`.
 - Vérifier les headers HTTP en production.
 - Tester qu'un PDF généré ne peut pas être ouvert sans session applicative.
+- Tester qu'un utilisateur `member` ne voit pas `/fr/admin`.
+- Tester qu'un admin client qui n'est pas dans `FIXTARIF_PLATFORM_ADMIN_EMAILS` ne voit pas les blocs internes Fixtarif.
 
 ## Tests sécurité
 
@@ -80,3 +83,10 @@ Ce test vérifie les secrets accidentels dans les fichiers versionnés, les head
 - Les chemins commencent par le `workspace_id`.
 - L'ouverture d'un PDF passe par une route serveur authentifiée qui crée une URL signée courte.
 - Aucun document client ne doit être placé dans `public/`.
+
+## Support client
+
+- Un admin Fixtarif interne ne doit pas avoir d'impersonation silencieuse.
+- Toute aide dans un portail client doit exiger consentement explicite, raison, duree limitee et audit log.
+- Les admins clients restent limites a leur propre workspace.
+- La configuration `FIXTARIF_PLATFORM_ADMIN_EMAILS` est serveur seulement et ne doit pas etre exposee au navigateur.

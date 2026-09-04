@@ -97,8 +97,8 @@ const dictionaries: Record<Locale, Dictionary> = {
         description: "Préférences workspace, langue, unités et références.",
       },
       admin: {
-        title: "Administration",
-        description: "Vue propriétaire du workspace, des rôles et des contrôles de sécurité.",
+        title: "Administration du workspace",
+        description: "Vue propriétaire du workspace client, des rôles et des contrôles de sécurité.",
       },
     },
   },
@@ -173,8 +173,8 @@ const dictionaries: Record<Locale, Dictionary> = {
         description: "Workspace preferences, language, units and references.",
       },
       admin: {
-        title: "Administration",
-        description: "Owner view for workspace, roles and security controls.",
+        title: "Workspace administration",
+        description: "Owner view for the client workspace, roles and security controls.",
       },
     },
   },

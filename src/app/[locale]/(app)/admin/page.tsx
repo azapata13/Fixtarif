@@ -4,6 +4,7 @@ import { type LocaleParams } from "@/app/[locale]/layout";
 import { PageHeader } from "@/components/page-header";
 import { type Locale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
+import { isPlatformAdminEmail } from "@/lib/admin/platform";
 import { getAdminOverviewForWorkspace } from "@/lib/admin/queries";
 import { getCurrentWorkspace } from "@/lib/workspaces/queries";
 
@@ -38,13 +39,14 @@ export default async function AdminPage({ params }: { params: LocaleParams }) {
   const locale = localeParam as Locale;
   const dictionary = getDictionary(locale);
   const page = dictionary.pages.admin;
-  const { workspace, membership } = await getCurrentWorkspace();
+  const { workspace, membership, user } = await getCurrentWorkspace();
 
   if (!workspace || !membership || !["owner", "admin"].includes(membership.role)) {
     notFound();
   }
 
   const overview = await getAdminOverviewForWorkspace(workspace.id);
+  const isPlatformAdmin = isPlatformAdminEmail(user?.email);
 
   return (
     <>
@@ -141,27 +143,45 @@ export default async function AdminPage({ params }: { params: LocaleParams }) {
           ))}
         </div>
       </section>
-      <section className="mt-6 rounded-[24px] border border-[var(--line)] bg-white p-6 shadow-sm">
-        <div className="flex items-center gap-3">
-          <Rocket aria-hidden="true" size={24} />
-          <h2 className="text-2xl font-semibold tracking-tight">Lancement</h2>
-        </div>
-        <p className="mt-3 text-base leading-7 text-[var(--muted)]">
-          MVP PME: importer, vérifier, générer. API/ERP restent hors lancement tant que les clients ne les demandent pas.
-        </p>
-        <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-          {launchPlans.map((plan) => (
-            <article className="rounded-2xl bg-neutral-50 p-4" key={plan.name}>
-              <p className="text-base font-semibold text-neutral-950">{plan.name}</p>
-              <p className="mt-2 text-2xl font-semibold tracking-tight">{plan.price}</p>
-              <p className="mt-2 text-sm leading-6 text-[var(--muted)]">{plan.target}</p>
-            </article>
-          ))}
-        </div>
-        <p className="mt-5 rounded-2xl bg-neutral-50 p-4 text-base font-semibold text-neutral-800">
-          Offre de lancement: 45 jours gratuits sur Pro pour les 30 premières entreprises.
-        </p>
-      </section>
+      {isPlatformAdmin ? (
+        <>
+          <section className="mt-6 rounded-[24px] border border-[var(--line)] bg-white p-6 shadow-sm">
+            <div className="flex items-center gap-3">
+              <Rocket aria-hidden="true" size={24} />
+              <h2 className="text-2xl font-semibold tracking-tight">Fixtarif interne</h2>
+            </div>
+            <p className="mt-3 text-base leading-7 text-[var(--muted)]">
+              MVP PME: importer, vérifier, générer. API/ERP restent hors lancement tant que les clients ne les demandent pas.
+            </p>
+            <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+              {launchPlans.map((plan) => (
+                <article className="rounded-2xl bg-neutral-50 p-4" key={plan.name}>
+                  <p className="text-base font-semibold text-neutral-950">{plan.name}</p>
+                  <p className="mt-2 text-2xl font-semibold tracking-tight">{plan.price}</p>
+                  <p className="mt-2 text-sm leading-6 text-[var(--muted)]">{plan.target}</p>
+                </article>
+              ))}
+            </div>
+            <p className="mt-5 rounded-2xl bg-neutral-50 p-4 text-base font-semibold text-neutral-800">
+              Offre de lancement: 45 jours gratuits sur Pro pour les 30 premières entreprises.
+            </p>
+          </section>
+          <section className="mt-6 rounded-[24px] border border-[var(--line)] bg-white p-6 shadow-sm">
+            <div className="flex items-center gap-3">
+              <FileLock2 aria-hidden="true" size={24} />
+              <h2 className="text-2xl font-semibold tracking-tight">Portails clients support</h2>
+            </div>
+            <p className="mt-3 text-base leading-7 text-[var(--muted)]">
+              Fonctionnalité prévue: voir l&apos;état d&apos;un portail client pour aider, seulement avec consentement explicite, journalisation complète et accès temporaire.
+            </p>
+            <div className="mt-5 grid gap-3 md:grid-cols-3">
+              <p className="rounded-2xl bg-neutral-50 p-4 text-base font-semibold text-neutral-800">Consentement client requis</p>
+              <p className="rounded-2xl bg-neutral-50 p-4 text-base font-semibold text-neutral-800">Accès limité dans le temps</p>
+              <p className="rounded-2xl bg-neutral-50 p-4 text-base font-semibold text-neutral-800">Audit complet obligatoire</p>
+            </div>
+          </section>
+        </>
+      ) : null}
     </>
   );
 }
