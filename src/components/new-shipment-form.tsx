@@ -1,13 +1,15 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ClipboardCheck } from "lucide-react";
+import { AlertCircle, CheckCircle2, Circle, ClipboardCheck, XCircle } from "lucide-react";
 import type { getBusinessesForWorkspace } from "@/lib/businesses/queries";
 import type { getCarriersForWorkspace } from "@/lib/carriers/queries";
+import type { getProductCustomsForWorkspace } from "@/lib/customs/queries";
 import type { getProductsForWorkspace } from "@/lib/products/queries";
 
 type BusinessOption = Awaited<ReturnType<typeof getBusinessesForWorkspace>>[number];
 type CarrierOption = Awaited<ReturnType<typeof getCarriersForWorkspace>>[number];
+type ProductCustomsOption = Awaited<ReturnType<typeof getProductCustomsForWorkspace>>[number];
 type ProductOption = Awaited<ReturnType<typeof getProductsForWorkspace>>[number];
 
 type NewShipmentFormProps = {
@@ -15,14 +17,45 @@ type NewShipmentFormProps = {
   businesses: BusinessOption[];
   carriers: CarrierOption[];
   nextReference: string;
+  productCustomsRows: ProductCustomsOption[];
   products: ProductOption[];
 };
 
-export function NewShipmentForm({ action, businesses, carriers, nextReference, products }: NewShipmentFormProps) {
+function getHtsStatusLabel(status?: string | null) {
+  if (status === "validated") {
+    return "HTS USA validé";
+  }
+  if (status === "rejected") {
+    return "HTS USA rejeté";
+  }
+  if (status === "needs_review") {
+    return "HTS USA à vérifier";
+  }
+  return "HTS USA manquant";
+}
+
+function getHtsStatusIcon(status?: string | null) {
+  if (status === "validated") {
+    return <CheckCircle2 aria-hidden="true" size={20} />;
+  }
+  if (status === "rejected") {
+    return <XCircle aria-hidden="true" size={20} />;
+  }
+  if (status === "needs_review") {
+    return <AlertCircle aria-hidden="true" size={20} />;
+  }
+  return <Circle aria-hidden="true" size={20} />;
+}
+
+export function NewShipmentForm({ action, businesses, carriers, nextReference, productCustomsRows, products }: NewShipmentFormProps) {
   const [selectedProductId, setSelectedProductId] = useState("");
   const [selectedCarrierId, setSelectedCarrierId] = useState("");
   const [selectedBusinessId, setSelectedBusinessId] = useState("");
   const selectedProduct = useMemo(() => products.find((product) => product.id === selectedProductId), [products, selectedProductId]);
+  const selectedProductCustoms = useMemo(
+    () => productCustomsRows.find((customsRow) => customsRow.product_id === selectedProductId && customsRow.destination_country === "US"),
+    [productCustomsRows, selectedProductId],
+  );
   const selectedCarrier = useMemo(() => carriers.find((carrier) => carrier.id === selectedCarrierId), [carriers, selectedCarrierId]);
   const selectedBusiness = useMemo(() => businesses.find((business) => business.id === selectedBusinessId), [businesses, selectedBusinessId]);
   const businessSites = Array.isArray(selectedBusiness?.business_sites) ? selectedBusiness.business_sites : [];
@@ -115,6 +148,15 @@ export function NewShipmentForm({ action, businesses, carriers, nextReference, p
             ))}
           </select>
         </label>
+        {selectedProduct ? (
+          <div className="rounded-2xl bg-neutral-50 px-4 py-3 text-base font-semibold text-neutral-800">
+            <p className="flex items-center gap-3">
+              {getHtsStatusIcon(selectedProductCustoms?.validation_status)}
+              {getHtsStatusLabel(selectedProductCustoms?.validation_status)}
+            </p>
+            {selectedProductCustoms?.hts_code ? <p className="mt-2 text-sm text-[var(--muted)]">{selectedProductCustoms.hts_code}</p> : null}
+          </div>
+        ) : null}
         <label className="block text-base font-semibold">
           Nom produit
           <input className="field" defaultValue={selectedProduct?.name ?? ""} key={`name-${selectedProduct?.id ?? "manual"}`} name="productName" required />

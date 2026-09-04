@@ -39,6 +39,8 @@ npm run build
 - Verifier dans `/fr/admin` que la strategie lancement/pricing apparait seulement pour un admin interne Fixtarif.
 - Verifier `/fr/documents` pour confirmer que l'import prive fonctionne avec PDF/PNG/JPG/WebP.
 - Verifier `/fr/products?htsQuery=bracket` pour confirmer la recherche HTS officielle USITC.
+- Dans `/fr/products`, cliquer `Reverifier USITC` sur un code HTS sauvegarde et confirmer le message aucun changement ou remise a verifier.
+- Creer une expedition USA avec un produit enregistre et confirmer que le statut HTS apparait dans la creation, la liste et le detail.
 
 ## A faire par Felipe avant production reelle
 
@@ -68,6 +70,7 @@ npm run build
 - HTS live consulte l'API USITC cote serveur et sauvegarde seulement une suggestion `needs_review`.
 - Les produits affichent l'etat HTS USA en langage simple: `Manquant`, `A verifier`, `Valide`, `Rejete`.
 - Les expeditions USA affichent l'etat HTS du produit et gardent la facture commerciale bloquee tant que les donnees douanieres ne sont pas validees.
+- La reverification HTS USITC est disponible manuellement. Si taux, description ou unites changent, le statut revient a `A verifier`.
 
 ## Roadmap restante
 
@@ -90,6 +93,7 @@ Objectif: passer de "fondation de preparation" a assistant de documents.
 - PDF Canada: packing slip brouillon actif; prochaine etape bordereau avance, etiquettes, connaissement simple si requis.
 - Documents: stockage prive Supabase, URLs signees courtes, historique de generations.
 - Verification intelligente: statut `confirme`, `a verifier`, `manquant` par champ.
+- Surveillance des donnees officielles: ajouter une tache planifiee quotidienne/hebdomadaire qui reverifie les HTS valides, journalise les changements et notifie les admins.
 - Edition complete: modifier/supprimer clients, sites, contacts, produits, transporteurs, courtiers.
 - Invitations par courriel reelles.
 - Landing page `fixtarif.ca` separee de `app.fixtarif.ca`.

@@ -20,6 +20,10 @@ export type HtsSearchResult = {
   units: string[];
 };
 
+function normalizeCode(value: string) {
+  return value.replace(/\D/g, "");
+}
+
 function cleanDescription(value: string | null | undefined) {
   return (value ?? "")
     .replace(/<[^>]*>/g, "")
@@ -79,4 +83,11 @@ export async function searchHtsEntries(query: string) {
   } finally {
     clearTimeout(timeout);
   }
+}
+
+export async function findHtsEntryByCode(htsCode: string) {
+  const normalizedTarget = normalizeCode(htsCode);
+  const results = await searchHtsEntries(htsCode);
+
+  return results.find((result) => normalizeCode(result.htsno) === normalizedTarget) ?? null;
 }

@@ -12,6 +12,19 @@ type ShipmentsPageProps = {
   searchParams: Promise<{ message?: string }>;
 };
 
+function getHtsLabel(status?: string | null) {
+  if (status === "validated") {
+    return "HTS validé";
+  }
+  if (status === "needs_review") {
+    return "HTS à vérifier";
+  }
+  if (status === "rejected") {
+    return "HTS rejeté";
+  }
+  return "HTS manquant";
+}
+
 export default async function ShipmentsPage({ params, searchParams }: ShipmentsPageProps) {
   const { locale: localeParam } = await params;
   const { message } = await searchParams;
@@ -46,6 +59,7 @@ export default async function ShipmentsPage({ params, searchParams }: ShipmentsP
           const site = Array.isArray(shipment.business_sites) ? shipment.business_sites[0] : shipment.business_sites;
           const carrier = Array.isArray(shipment.carriers) ? shipment.carriers[0] : shipment.carriers;
           const packageRow = Array.isArray(shipment.shipment_packages) ? shipment.shipment_packages[0] : shipment.shipment_packages;
+          const productCustoms = shipment.product_customs;
           const quantityConfirmed = item?.quantity_confirmed ?? false;
           const weightConfirmed = item?.weight_confirmed ?? false;
 
@@ -83,6 +97,16 @@ export default async function ShipmentsPage({ params, searchParams }: ShipmentsP
                     <Truck aria-hidden="true" size={20} />
                     {packageRow ? `${packageRow.package_count} ${packageRow.package_type}` : "Colis à compléter"}
                   </p>
+                  {shipment.destination_country === "US" ? (
+                    <p className="flex items-center gap-3">
+                      {productCustoms?.validation_status === "validated" ? (
+                        <CheckCircle2 aria-hidden="true" size={20} />
+                      ) : (
+                        <AlertCircle aria-hidden="true" size={20} />
+                      )}
+                      {getHtsLabel(productCustoms?.validation_status)}
+                    </p>
+                  ) : null}
                 </div>
               ) : null}
             </Link>

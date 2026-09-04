@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/page-header";
 import { type Locale } from "@/i18n/config";
 import { getBusinessesForWorkspace } from "@/lib/businesses/queries";
 import { getCarriersForWorkspace } from "@/lib/carriers/queries";
+import { getProductCustomsForWorkspace } from "@/lib/customs/queries";
 import { getProductsForWorkspace } from "@/lib/products/queries";
 import { createShipmentDraft } from "@/lib/shipments/actions";
 import { getNextShipmentReference } from "@/lib/shipments/queries";
@@ -21,10 +22,15 @@ export default async function NewShipmentPage({ params, searchParams }: NewShipm
   const { message } = await searchParams;
   const locale = localeParam as Locale;
   const { workspace } = await getCurrentWorkspace();
-  const businesses = workspace ? await getBusinessesForWorkspace(workspace.id) : [];
-  const products = workspace ? await getProductsForWorkspace(workspace.id) : [];
-  const carriers = workspace ? await getCarriersForWorkspace(workspace.id) : [];
-  const nextReference = workspace ? await getNextShipmentReference(workspace.id) : "ST-0001";
+  const [businesses, products, carriers, productCustomsRows, nextReference] = workspace
+    ? await Promise.all([
+        getBusinessesForWorkspace(workspace.id),
+        getProductsForWorkspace(workspace.id),
+        getCarriersForWorkspace(workspace.id),
+        getProductCustomsForWorkspace(workspace.id),
+        getNextShipmentReference(workspace.id),
+      ])
+    : [[], [], [], [], "ST-0001"];
   const createShipmentDraftAction = createShipmentDraft.bind(null, locale);
 
   return (
@@ -35,7 +41,14 @@ export default async function NewShipmentPage({ params, searchParams }: NewShipm
       </Link>
       <PageHeader title="Nouvelle expédition" description="Créer un brouillon manuel avec validation humaine de la quantité, du poids et du pays." />
       {message ? <p className="mb-4 rounded-2xl bg-neutral-100 px-4 py-3 text-base text-neutral-700">{message}</p> : null}
-      <NewShipmentForm action={createShipmentDraftAction} businesses={businesses} carriers={carriers} nextReference={nextReference} products={products} />
+      <NewShipmentForm
+        action={createShipmentDraftAction}
+        businesses={businesses}
+        carriers={carriers}
+        nextReference={nextReference}
+        productCustomsRows={productCustomsRows}
+        products={products}
+      />
     </>
   );
 }

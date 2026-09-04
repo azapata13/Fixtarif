@@ -37,6 +37,8 @@ Aucune déclaration automatique sans règle officielle et données validées.
 - L'app peut enregistrer une suggestion `needs_review`, mais ne doit jamais declarer un HTS comme legalement valide sans action humaine.
 - La validation HTS doit etre reservee aux roles workspace `owner/admin`.
 - Les documents USA doivent rester bloques si HTS, origine, CUSMA ou facture commerciale sont incomplets.
+- Une reverification USITC peut detecter changement de taux, description ou unites; tout changement doit remettre le code a `needs_review`.
+- Avant automatisation, ajouter historique des changements HTS et notification aux admins.
 
 ## Return of Goods / RMA
 À définir précisément pour sous-traitance, réparation, retour fournisseur et retour au Canada.

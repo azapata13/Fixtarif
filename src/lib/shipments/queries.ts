@@ -32,17 +32,28 @@ export async function getShipmentsForWorkspace(workspaceId: string) {
     contactIds.length > 0 ? supabase.from("contacts").select("id,name").eq("workspace_id", workspaceId).in("id", contactIds) : Promise.resolve({ data: [] }),
     carrierIds.length > 0 ? supabase.from("carriers").select("id,name").eq("workspace_id", workspaceId).in("id", carrierIds) : Promise.resolve({ data: [] }),
     shipmentIds.length > 0
-      ? supabase.from("shipment_items").select("id,shipment_id,quantity,weight,weight_unit,quantity_confirmed,weight_confirmed,name").eq("workspace_id", workspaceId).in("shipment_id", shipmentIds)
+      ? supabase.from("shipment_items").select("id,shipment_id,product_id,quantity,weight,weight_unit,quantity_confirmed,weight_confirmed,name").eq("workspace_id", workspaceId).in("shipment_id", shipmentIds)
       : Promise.resolve({ data: [] }),
     shipmentIds.length > 0
       ? supabase.from("shipment_packages").select("id,shipment_id,package_count,package_type").eq("workspace_id", workspaceId).in("shipment_id", shipmentIds)
       : Promise.resolve({ data: [] }),
   ]);
+  const productIds = uniqueIds((itemsResult.data ?? []).map((item) => item.product_id));
+  const customsResult =
+    productIds.length > 0
+      ? await supabase
+          .from("product_customs")
+          .select("id,product_id,hts_code,validation_status")
+          .eq("workspace_id", workspaceId)
+          .eq("destination_country", "US")
+          .in("product_id", productIds)
+      : { data: [] };
 
   const businessesById = new Map((businessesResult.data ?? []).map((business) => [business.id, business]));
   const sitesById = new Map((sitesResult.data ?? []).map((site) => [site.id, site]));
   const contactsById = new Map((contactsResult.data ?? []).map((contact) => [contact.id, contact]));
   const carriersById = new Map((carriersResult.data ?? []).map((carrier) => [carrier.id, carrier]));
+  const customsByProductId = new Map((customsResult.data ?? []).map((customs) => [customs.product_id, customs]));
 
   return shipments.map((shipment) => ({
     ...shipment,
@@ -52,6 +63,7 @@ export async function getShipmentsForWorkspace(workspaceId: string) {
     carriers: shipment.carrier_id ? carriersById.get(shipment.carrier_id) ?? null : null,
     shipment_items: (itemsResult.data ?? []).filter((item) => item.shipment_id === shipment.id),
     shipment_packages: (packagesResult.data ?? []).filter((packageRow) => packageRow.shipment_id === shipment.id),
+    product_customs: customsByProductId.get((itemsResult.data ?? []).find((item) => item.shipment_id === shipment.id)?.product_id ?? "") ?? null,
   }));
 }
 

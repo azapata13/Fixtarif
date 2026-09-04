@@ -65,6 +65,7 @@ Notes:
 - Garder le deploy groupe pour economiser le forfait gratuit Netlify.
 - Pour HTS USA, utiliser la recherche officielle USITC uniquement comme aide. Les codes sauvegardes commencent en `A verifier`; seuls les roles `owner/admin` peuvent les marquer `Valide`.
 - Les factures commerciales USA doivent rester bloquees tant que HTS, origine et CUSMA ne sont pas confirmes.
+- `Reverifier USITC` compare le code sauvegarde avec la source officielle. Si taux, description ou unites changent, le code revient a `A verifier`.
 
 ## Supabase production
 
@@ -114,6 +115,7 @@ Marketing:
 13. Confirmer que la section Fixtarif interne est visible seulement pour un email interne autorise.
 14. Chercher un HTS dans `/fr/products`, sauvegarder une suggestion, confirmer le statut `A verifier`.
 15. Valider le HTS comme owner/admin et confirmer que l'expedition USA affiche `HTS valide`.
+16. Cliquer `Reverifier USITC` et confirmer que l'app garde `Valide` si rien n'a change.
 
 ## Decision go / no-go
 

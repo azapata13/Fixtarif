@@ -4,7 +4,7 @@ import { type LocaleParams } from "@/app/[locale]/layout";
 import { PageHeader } from "@/components/page-header";
 import { type Locale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
-import { saveProductHtsSuggestion, updateProductHtsValidation } from "@/lib/customs/actions";
+import { refreshProductHtsRate, saveProductHtsSuggestion, updateProductHtsValidation } from "@/lib/customs/actions";
 import { searchHtsEntries } from "@/lib/customs/hts";
 import { getProductCustomsForWorkspace } from "@/lib/customs/queries";
 import { createProduct, seedDemoProducts } from "@/lib/products/actions";
@@ -70,6 +70,7 @@ export default async function ProductsPage({ params, searchParams }: ProductsPag
   const seedDemoProductsAction = seedDemoProducts.bind(null, locale);
   const saveProductHtsSuggestionAction = saveProductHtsSuggestion.bind(null, locale);
   const updateProductHtsValidationAction = updateProductHtsValidation.bind(null, locale);
+  const refreshProductHtsRateAction = refreshProductHtsRate.bind(null, locale);
   const selectedHtsProductId = products.some((product) => product.id === queryParams.htsProductId) ? queryParams.htsProductId : products[0]?.id;
   const selectedHtsProduct = products.find((product) => product.id === selectedHtsProductId);
   const htsQuery = queryParams.htsQuery?.trim() ?? "";
@@ -307,6 +308,12 @@ export default async function ProductsPage({ params, searchParams }: ProductsPag
                   ) : null}
                   {canManage ? (
                     <div className="mt-4 flex flex-wrap gap-2">
+                      <form action={refreshProductHtsRateAction}>
+                        <input name="productCustomsId" type="hidden" value={customs.id} />
+                        <button className="secondary-button !min-h-11 !px-4 !py-2 !text-sm" type="submit">
+                          Revérifier USITC
+                        </button>
+                      </form>
                       {customs.validation_status !== "validated" ? (
                         <form action={updateProductHtsValidationAction}>
                           <input name="productCustomsId" type="hidden" value={customs.id} />
