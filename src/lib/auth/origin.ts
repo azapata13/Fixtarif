@@ -29,7 +29,7 @@ export function getAuthRedirectOrigin(request: NextRequest) {
   const configured = configuredPublicOrigin();
 
   if (hostname.endsWith(".netlify.app")) {
-    return configured;
+    return "https://app.fixtarif.ca";
   }
 
   const allowedHostnames = new Set(
