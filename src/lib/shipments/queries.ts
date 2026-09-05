@@ -101,17 +101,17 @@ export async function getShipmentForWorkspace(workspaceId: string, shipmentId: s
       : Promise.resolve({ data: null }),
     supabase
       .from("shipment_items")
-      .select("id,name,part_number,product_id,quantity,quantity_confirmed,weight,weight_unit,weight_confirmed,package_type,lot_number,product_snapshot_json")
+      .select("id,name,part_number,product_id,quantity,quantity_confirmed,weight,weight_unit,weight_confirmed,length,width,height,dimension_unit,package_type,lot_number,notes,product_snapshot_json")
       .eq("workspace_id", workspaceId)
       .eq("shipment_id", shipmentId),
     supabase
       .from("shipment_packages")
-      .select("id,package_number,package_count,package_type,weight,weight_unit,length,width,height,dimension_unit,stackable,destination_label")
+      .select("id,package_number,package_count,package_type,weight,weight_unit,length,width,height,dimension_unit,stackable,destination_label,notes")
       .eq("workspace_id", workspaceId)
       .eq("shipment_id", shipmentId),
     supabase
       .from("shipment_transport")
-      .select("id,payment_term,needs_bol,pro_number,bol_number")
+      .select("id,carrier_id,payment_term,needs_bol,pro_number,bol_number")
       .eq("workspace_id", workspaceId)
       .eq("shipment_id", shipmentId),
   ]);

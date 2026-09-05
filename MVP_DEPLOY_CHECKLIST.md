@@ -11,7 +11,7 @@ Objectif: faire un seul deploy Netlify propre, puis tester avec Sandra sans cons
 - Clients, sites, contacts, produits, transporteurs et courtiers.
 - Bouton `Preparer la demo` sur le dashboard pour creer les donnees de test.
 - Brouillons d'expedition Canada et USA, validation, duplication, statut `ready`.
-- Detail d'expedition avec ligne d'etapes horizontale et assistant modal `Suivant` pour validation, destination, marchandise, documents, douane USA.
+- Detail d'expedition court, sans grande page de formulaires: ligne d'etapes et assistant modal editable pour validation, destination, marchandise, transport, documents, douane USA.
 - Import prive de documents sources.
 - Packing slip PDF brouillon avec acces authentifie.
 - Recherche HTS USITC cote serveur, suggestion `A verifier`, validation humaine, reverification USITC.
@@ -59,12 +59,13 @@ Ne jamais exposer `SUPABASE_SERVICE_ROLE_KEY` cote client.
 5. Ouvrir `Nouvelle expedition` et confirmer que Destination, Site, Contact, Transporteur et Produit ont un lien `Ajouter`.
 6. En saisie manuelle, confirmer que le poids peut etre en `lb` ou `kg`.
 7. Ouvrir l'expedition USA et verifier le bloc Douane USA.
-8. Cliquer `Commencer` dans la ligne d'etapes et confirmer que le modal avance avec `Suivant`.
-9. Aller sur `Produits`, chercher un HTS, enregistrer `A verifier`, puis valider.
-10. Retourner dans l'expedition USA et confirmer `HTS valide`.
-11. Marquer une expedition `ready`, generer le packing slip, ouvrir le PDF.
-12. Depuis l'expedition ou `Documents`, importer un petit fichier non sensible.
-13. Aller sur `Admin` et verifier les logs.
+8. Cliquer `Commencer / modifier` dans la ligne d'etapes et confirmer que le modal avance avec `Suivant`.
+9. Corriger une destination, une marchandise ou un transport directement dans son modal, puis sauvegarder.
+10. Aller sur `Produits`, chercher un HTS, enregistrer `A verifier`, puis valider.
+11. Retourner dans l'expedition USA et confirmer `HTS valide`.
+12. Marquer une expedition `ready`, generer le packing slip, ouvrir le PDF.
+13. Depuis l'expedition ou `Documents`, importer un petit fichier non sensible.
+14. Aller sur `Admin` et verifier les logs.
 
 ## Go / no-go demo
 

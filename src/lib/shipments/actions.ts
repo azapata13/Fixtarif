@@ -501,6 +501,179 @@ export async function updateShipmentItemConfirmations(locale: Locale, formData: 
   redirect(`/${locale}/shipments/${shipmentId}?message=${encodeURIComponent("Confirmations mises à jour.")}`);
 }
 
+export async function updateShipmentDestination(locale: Locale, formData: FormData) {
+  const { workspace, user } = await getCurrentWorkspace();
+
+  if (!workspace || !user) {
+    redirect(`/${locale}/onboarding`);
+  }
+
+  const shipmentId = readField(formData, "shipmentId");
+  const destinationBusinessId = readOptionalId(formData, "destinationBusinessId");
+  const destinationSiteId = readOptionalId(formData, "destinationSiteId");
+  const destinationContactId = readOptionalId(formData, "destinationContactId");
+
+  if (!shipmentId) {
+    redirect(`/${locale}/shipments?message=${encodeURIComponent("Expédition introuvable.")}`);
+  }
+
+  const relationValidation = await validateShipmentDraftRelations({
+    carrierId: null,
+    contactId: destinationContactId,
+    destinationBusinessId,
+    productId: null,
+    siteId: destinationSiteId,
+    workspaceId: workspace.id,
+  });
+
+  if (!relationValidation.valid) {
+    redirect(`/${locale}/shipments/${shipmentId}?message=${encodeURIComponent(relationValidation.message)}`);
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("shipments")
+    .update({
+      destination_business_id: destinationBusinessId,
+      destination_site_id: destinationSiteId,
+      destination_contact_id: destinationContactId,
+    })
+    .eq("workspace_id", workspace.id)
+    .eq("id", shipmentId);
+
+  if (error) {
+    logServerError({ action: "update_shipment_destination", error });
+    redirect(`/${locale}/shipments/${shipmentId}?message=${encodeURIComponent(genericActionError(locale))}`);
+  }
+
+  await supabase.from("shipment_audit_log").insert({
+    workspace_id: workspace.id,
+    shipment_id: shipmentId,
+    actor_user_id: user.id,
+    action: "shipment_destination_updated",
+    metadata_json: { destinationBusinessId, destinationSiteId, destinationContactId },
+  });
+
+  revalidatePath(`/${locale}/shipments/${shipmentId}`);
+  revalidatePath(`/${locale}/shipments`);
+  redirect(`/${locale}/shipments/${shipmentId}?message=${encodeURIComponent("Destination mise à jour.")}`);
+}
+
+export async function updateShipmentGoodsAndPackage(locale: Locale, formData: FormData) {
+  const { workspace, user } = await getCurrentWorkspace();
+
+  if (!workspace || !user) {
+    redirect(`/${locale}/onboarding`);
+  }
+
+  const shipmentId = readField(formData, "shipmentId");
+  const itemId = readField(formData, "itemId");
+  const packageId = readField(formData, "packageId");
+  const productId = readOptionalId(formData, "productId");
+  const quantity = readPositiveNumber(formData, "quantity");
+  const weight = readPositiveNumber(formData, "weight");
+  const productNameFromForm = readField(formData, "productName");
+
+  if (!shipmentId || !itemId || !quantity || !weight) {
+    redirect(`/${locale}/shipments/${shipmentId || ""}?message=${encodeURIComponent("Produit, quantité et poids sont requis.")}`);
+  }
+
+  const relationValidation = await validateShipmentDraftRelations({
+    carrierId: null,
+    contactId: null,
+    destinationBusinessId: null,
+    productId,
+    siteId: null,
+    workspaceId: workspace.id,
+  });
+
+  if (!relationValidation.valid) {
+    redirect(`/${locale}/shipments/${shipmentId}?message=${encodeURIComponent(relationValidation.message)}`);
+  }
+
+  const supabase = await createClient();
+  const { data: product } = productId
+    ? await supabase.from("products").select("*").eq("workspace_id", workspace.id).eq("id", productId).maybeSingle()
+    : { data: null };
+  const productName = productNameFromForm || product?.name;
+
+  if (!productName) {
+    redirect(`/${locale}/shipments/${shipmentId}?message=${encodeURIComponent("Le nom du produit est requis.")}`);
+  }
+
+  const weightUnit = readField(formData, "weightUnit") === "kg" ? "kg" : "lb";
+  const dimensionUnit = readField(formData, "dimensionUnit") === "cm" ? "cm" : "in";
+  const packageType = readPackageType(formData);
+  const packageCount = Math.max(1, Math.trunc(readPositiveNumber(formData, "packageCount") ?? 1));
+
+  const { error: itemError } = await supabase
+    .from("shipment_items")
+    .update({
+      product_id: productId,
+      product_snapshot_json: product ?? {},
+      name: productName,
+      part_number: readField(formData, "partNumber") || product?.part_number || null,
+      quantity,
+      quantity_confirmed: formData.get("quantityConfirmed") === "on",
+      weight,
+      weight_unit: weightUnit,
+      weight_confirmed: formData.get("weightConfirmed") === "on",
+      length: readPositiveNumber(formData, "length"),
+      width: readPositiveNumber(formData, "width"),
+      height: readPositiveNumber(formData, "height"),
+      dimension_unit: dimensionUnit,
+      package_type: packageType,
+      lot_number: readField(formData, "lotNumber") || null,
+      notes: readField(formData, "itemNotes") || null,
+    })
+    .eq("workspace_id", workspace.id)
+    .eq("shipment_id", shipmentId)
+    .eq("id", itemId);
+
+  if (itemError) {
+    logServerError({ action: "update_shipment_goods", error: itemError });
+    redirect(`/${locale}/shipments/${shipmentId}?message=${encodeURIComponent(genericActionError(locale))}`);
+  }
+
+  if (packageId) {
+    const { error: packageError } = await supabase
+      .from("shipment_packages")
+      .update({
+        package_count: packageCount,
+        package_type: packageType,
+        weight,
+        weight_unit: weightUnit,
+        length: readPositiveNumber(formData, "length"),
+        width: readPositiveNumber(formData, "width"),
+        height: readPositiveNumber(formData, "height"),
+        dimension_unit: dimensionUnit,
+        stackable: formData.get("stackable") === "on",
+        destination_label: readField(formData, "destinationLabel") || null,
+        notes: readField(formData, "packageNotes") || null,
+      })
+      .eq("workspace_id", workspace.id)
+      .eq("shipment_id", shipmentId)
+      .eq("id", packageId);
+
+    if (packageError) {
+      logServerError({ action: "update_shipment_package", error: packageError });
+      redirect(`/${locale}/shipments/${shipmentId}?message=${encodeURIComponent(genericActionError(locale))}`);
+    }
+  }
+
+  await supabase.from("shipment_audit_log").insert({
+    workspace_id: workspace.id,
+    shipment_id: shipmentId,
+    actor_user_id: user.id,
+    action: "shipment_goods_package_updated",
+    metadata_json: { itemId, packageId, productId, quantity, weight, weightUnit },
+  });
+
+  revalidatePath(`/${locale}/shipments/${shipmentId}`);
+  revalidatePath(`/${locale}/shipments`);
+  redirect(`/${locale}/shipments/${shipmentId}?message=${encodeURIComponent("Marchandise mise à jour.")}`);
+}
+
 export async function updateShipmentTransportReferences(locale: Locale, formData: FormData) {
   const { workspace, user } = await getCurrentWorkspace();
 
@@ -510,17 +683,49 @@ export async function updateShipmentTransportReferences(locale: Locale, formData
 
   const shipmentId = readField(formData, "shipmentId");
   const transportId = readField(formData, "transportId");
+  const carrierId = readOptionalId(formData, "carrierId");
 
   if (!shipmentId || !transportId) {
     redirect(`/${locale}/shipments?message=${encodeURIComponent("Transport introuvable.")}`);
   }
 
+  const relationValidation = await validateShipmentDraftRelations({
+    carrierId,
+    contactId: null,
+    destinationBusinessId: null,
+    productId: null,
+    siteId: null,
+    workspaceId: workspace.id,
+  });
+
+  if (!relationValidation.valid) {
+    redirect(`/${locale}/shipments/${shipmentId}?message=${encodeURIComponent(relationValidation.message)}`);
+  }
+
   const supabase = await createClient();
+  const { data: carrier } = carrierId
+    ? await supabase.from("carriers").select("*").eq("workspace_id", workspace.id).eq("id", carrierId).maybeSingle()
+    : { data: null };
+
+  const { error: shipmentError } = await supabase
+    .from("shipments")
+    .update({ carrier_id: carrierId })
+    .eq("workspace_id", workspace.id)
+    .eq("id", shipmentId);
+
+  if (shipmentError) {
+    logServerError({ action: "update_shipment_transport_carrier", error: shipmentError });
+    redirect(`/${locale}/shipments/${shipmentId}?message=${encodeURIComponent(genericActionError(locale))}`);
+  }
+
   const { error } = await supabase
     .from("shipment_transport")
     .update({
+      carrier_id: carrierId,
+      carrier_snapshot_json: carrier ?? {},
       pro_number: readField(formData, "proNumber") || null,
       bol_number: readField(formData, "bolNumber") || null,
+      payment_term: readPaymentTerm(formData),
       needs_bol: formData.get("needsBol") === "on",
     })
     .eq("workspace_id", workspace.id)
@@ -538,6 +743,7 @@ export async function updateShipmentTransportReferences(locale: Locale, formData
     actor_user_id: user.id,
     action: "shipment_transport_references_updated",
     metadata_json: {
+      carrierId,
       hasProNumber: Boolean(readField(formData, "proNumber")),
       hasBolNumber: Boolean(readField(formData, "bolNumber")),
     },
