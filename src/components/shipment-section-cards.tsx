@@ -166,7 +166,13 @@ function ValidationLine({ checked, label, onFix }: { checked: boolean; label: st
   return (
     <div className="flex items-center justify-between gap-3 rounded-2xl bg-neutral-50 px-4 py-3">
       <p className="flex min-w-0 items-center gap-3 text-base font-semibold text-neutral-800">
-        {checked ? <CheckCircle2 aria-hidden="true" className="shrink-0" size={19} /> : <Circle aria-hidden="true" className="shrink-0" size={17} />}
+        <span
+          className={`grid h-7 w-7 shrink-0 place-items-center rounded-full ${
+            checked ? "bg-emerald-100 text-emerald-700" : "bg-neutral-200 text-neutral-500"
+          }`}
+        >
+          {checked ? <CheckCircle2 aria-hidden="true" size={18} /> : <Circle aria-hidden="true" size={15} />}
+        </span>
         <span className="truncate">{label}</span>
       </p>
       {!checked ? (
@@ -301,24 +307,44 @@ export function ShipmentSectionCards({
               {openStep.key === "validation" ? (
                 <div className="grid gap-3">
                   <div className="grid gap-2 sm:grid-cols-2">
-                    <ValidationLine checked={Boolean(shipment.destinationBusinessId)} label="Destination choisie" onFix={() => setStepIndex(1)} />
-                    <ValidationLine checked={Boolean(shipment.destinationSiteId)} label="Site choisi" onFix={() => setStepIndex(1)} />
-                    <ValidationLine checked={Boolean(shipment.destinationContactId)} label="Contact choisi" onFix={() => setStepIndex(1)} />
-                    <ValidationLine checked={Boolean(shipmentItem)} label="Produit ajouté" onFix={() => setStepIndex(2)} />
-                    <ValidationLine checked={Boolean(shipmentItem?.quantity_confirmed)} label="Quantité confirmée" onFix={() => setStepIndex(2)} />
-                    <ValidationLine checked={Boolean(shipmentItem?.weight_confirmed)} label="Poids confirmé" onFix={() => setStepIndex(2)} />
-                    <ValidationLine checked={Boolean(shipment.carrierId)} label="Transporteur choisi" onFix={() => setStepIndex(3)} />
-                    <ValidationLine checked={Boolean(shipmentPackage)} label="Colis prêt" onFix={() => setStepIndex(2)} />
+                    <ValidationLine
+                      checked={Boolean(shipment.destinationBusinessId)}
+                      label={`Destination: ${shipment.destinationBusinessId ? summaries.destination : "à choisir"}`}
+                      onFix={() => setStepIndex(1)}
+                    />
+                    <ValidationLine
+                      checked={Boolean(shipment.destinationSiteId && shipment.destinationContactId)}
+                      label={shipment.destinationSiteId && shipment.destinationContactId ? `Réception: ${summaries.destination}` : "Site/contact: à choisir"}
+                      onFix={() => setStepIndex(1)}
+                    />
+                    <ValidationLine checked={Boolean(shipmentItem)} label={`Produit: ${shipmentItem?.name ?? "à choisir"}`} onFix={() => setStepIndex(2)} />
+                    <ValidationLine
+                      checked={Boolean(shipmentItem?.quantity_confirmed)}
+                      label={`Quantité: ${shipmentItem ? `${shipmentItem.quantity} ${shipmentItem.quantity_confirmed ? "confirmée" : "à confirmer"}` : "à compléter"}`}
+                      onFix={() => setStepIndex(2)}
+                    />
+                    <ValidationLine
+                      checked={Boolean(shipmentItem?.weight_confirmed)}
+                      label={`Poids: ${shipmentItem ? `${shipmentItem.weight} ${shipmentItem.weight_unit} ${shipmentItem.weight_confirmed ? "confirmé" : "à confirmer"}` : "à compléter"}`}
+                      onFix={() => setStepIndex(2)}
+                    />
+                    <ValidationLine
+                      checked={Boolean(shipmentPackage)}
+                      label={`Colis: ${shipmentPackage ? `${shipmentPackage.package_count} ${shipmentPackage.package_type}` : "à compléter"}`}
+                      onFix={() => setStepIndex(2)}
+                    />
+                    <ValidationLine checked={Boolean(shipment.carrierId)} label={`Transporteur: ${summaries.transport}`} onFix={() => setStepIndex(3)} />
+                    <ValidationLine checked={state.htsValidated || shipment.destinationCountry !== "US"} label={shipment.destinationCountry === "US" ? state.htsLabel : "Douane: Canada"} onFix={() => setStepIndex(5)} />
                   </div>
-                  <form action={actions.updateStatus} className="mt-3 grid gap-3 sm:grid-cols-3">
+                  <form action={actions.updateStatus} className="mt-3 flex min-w-0 max-w-full flex-col gap-3 overflow-hidden sm:flex-row" style={{ maxWidth: "100%", minWidth: 0, width: "100%" }}>
                     <input name="shipmentId" type="hidden" value={shipment.id} />
-                    <button className="secondary-button" name="status" type="submit" value="validation">
+                    <button className="secondary-button !w-full !min-w-0 !max-w-full" name="status" style={{ maxWidth: "100%", minWidth: 0, width: "100%" }} type="submit" value="validation">
                       En validation
                     </button>
-                    <button className="primary-button" disabled={!state.canMarkReady} name="status" type="submit" value="ready">
+                    <button className="primary-button !w-full !min-w-0 !max-w-full" disabled={!state.canMarkReady} name="status" style={{ maxWidth: "100%", minWidth: 0, width: "100%" }} type="submit" value="ready">
                       Marquer prêt
                     </button>
-                    <button className="secondary-button" name="status" type="submit" value="archived">
+                    <button className="secondary-button !w-full !min-w-0 !max-w-full" name="status" style={{ maxWidth: "100%", minWidth: 0, width: "100%" }} type="submit" value="archived">
                       Archiver
                     </button>
                   </form>
