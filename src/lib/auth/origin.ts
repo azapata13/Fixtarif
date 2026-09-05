@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 
 function configuredPublicOrigin() {
-  return process.env.NEXT_PUBLIC_SITE_URL ?? process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  return process.env.NEXT_PUBLIC_SITE_URL ?? process.env.NEXT_PUBLIC_APP_URL ?? (process.env.NODE_ENV === "production" ? "https://app.fixtarif.ca" : "http://localhost:3000");
 }
 
 function hostnameFromUrlOrHost(value: string) {
@@ -27,6 +27,11 @@ export function getAuthRedirectOrigin(request: NextRequest) {
   }
 
   const configured = configuredPublicOrigin();
+
+  if (hostname.endsWith(".netlify.app")) {
+    return configured;
+  }
+
   const allowedHostnames = new Set(
     [configured, process.env.NEXT_PUBLIC_APP_URL, process.env.NEXT_PUBLIC_MARKETING_URL, "app.fixtarif.ca", "fixtarif.ca", "fixtarif.netlify.app"]
       .filter(Boolean)
