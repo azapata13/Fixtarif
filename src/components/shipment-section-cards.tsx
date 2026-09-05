@@ -162,6 +162,22 @@ function StatusLine({ checked, label }: { checked: boolean; label: string }) {
   );
 }
 
+function ValidationLine({ checked, label, onFix }: { checked: boolean; label: string; onFix: () => void }) {
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-2xl bg-neutral-50 px-4 py-3">
+      <p className="flex min-w-0 items-center gap-3 text-base font-semibold text-neutral-800">
+        {checked ? <CheckCircle2 aria-hidden="true" className="shrink-0" size={19} /> : <Circle aria-hidden="true" className="shrink-0" size={17} />}
+        <span className="truncate">{label}</span>
+      </p>
+      {!checked ? (
+        <button className="secondary-button !min-h-10 !px-4 !py-2 !text-sm" onClick={onFix} type="button">
+          Corriger
+        </button>
+      ) : null}
+    </div>
+  );
+}
+
 export function ShipmentSectionCards({
   actions,
   businesses,
@@ -199,6 +215,8 @@ export function ShipmentSectionCards({
 
   const openStep = steps[stepIndex];
   const completedCount = steps.filter((step) => step.complete).length;
+  const firstIncompleteStepIndex = steps.findIndex((step) => step.key !== "validation" && !step.complete);
+  const preferredStartStepIndex = firstIncompleteStepIndex >= 0 ? firstIncompleteStepIndex : Math.min(1, steps.length - 1);
 
   function openWizard(index: number) {
     setStepIndex(index);
@@ -220,8 +238,8 @@ export function ShipmentSectionCards({
               {completedCount}/{steps.length} étapes complétées · {shipment.status.toUpperCase()} · {shipment.destinationCountry}
             </p>
           </div>
-          <button className="primary-button min-w-56" onClick={() => openWizard(0)} type="button">
-            Commencer / modifier
+          <button className="primary-button min-w-56" onClick={() => openWizard(preferredStartStepIndex)} type="button">
+            Modifier l&apos;expédition
           </button>
         </div>
 
@@ -282,14 +300,16 @@ export function ShipmentSectionCards({
             <div className="mt-6">
               {openStep.key === "validation" ? (
                 <div className="grid gap-3">
-                  <StatusLine checked={Boolean(shipment.destinationBusinessId)} label="Destination choisie" />
-                  <StatusLine checked={Boolean(shipment.destinationSiteId)} label="Site choisi" />
-                  <StatusLine checked={Boolean(shipment.destinationContactId)} label="Contact choisi" />
-                  <StatusLine checked={Boolean(shipmentItem)} label="Produit ajouté" />
-                  <StatusLine checked={Boolean(shipmentItem?.quantity_confirmed)} label="Quantité confirmée" />
-                  <StatusLine checked={Boolean(shipmentItem?.weight_confirmed)} label="Poids confirmé" />
-                  <StatusLine checked={Boolean(shipment.carrierId)} label="Transporteur choisi" />
-                  <StatusLine checked={Boolean(shipmentPackage)} label="Colis prêt" />
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    <ValidationLine checked={Boolean(shipment.destinationBusinessId)} label="Destination choisie" onFix={() => setStepIndex(1)} />
+                    <ValidationLine checked={Boolean(shipment.destinationSiteId)} label="Site choisi" onFix={() => setStepIndex(1)} />
+                    <ValidationLine checked={Boolean(shipment.destinationContactId)} label="Contact choisi" onFix={() => setStepIndex(1)} />
+                    <ValidationLine checked={Boolean(shipmentItem)} label="Produit ajouté" onFix={() => setStepIndex(2)} />
+                    <ValidationLine checked={Boolean(shipmentItem?.quantity_confirmed)} label="Quantité confirmée" onFix={() => setStepIndex(2)} />
+                    <ValidationLine checked={Boolean(shipmentItem?.weight_confirmed)} label="Poids confirmé" onFix={() => setStepIndex(2)} />
+                    <ValidationLine checked={Boolean(shipment.carrierId)} label="Transporteur choisi" onFix={() => setStepIndex(3)} />
+                    <ValidationLine checked={Boolean(shipmentPackage)} label="Colis prêt" onFix={() => setStepIndex(2)} />
+                  </div>
                   <form action={actions.updateStatus} className="mt-3 grid gap-3 sm:grid-cols-3">
                     <input name="shipmentId" type="hidden" value={shipment.id} />
                     <button className="secondary-button" name="status" type="submit" value="validation">
