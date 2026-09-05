@@ -47,6 +47,7 @@ type ShipmentWorkflowProps = {
   actions: {
     duplicateShipment: Action;
     generatePackingSlip: Action;
+    uploadSourceDocument: Action;
     updateDestination: Action;
     updateGoodsAndPackage: Action;
     updateStatus: Action;
@@ -57,6 +58,12 @@ type ShipmentWorkflowProps = {
   documents: GeneratedDocument[];
   locale: Locale;
   products: ProductOption[];
+  sourceDocuments: Array<{
+    id: string;
+    mime_type: string;
+    original_filename: string;
+    validation_status: string;
+  }>;
   shipment: {
     carrierId: string | null;
     destinationBusinessId: string | null;
@@ -194,6 +201,7 @@ export function ShipmentSectionCards({
   shipment,
   shipmentItem,
   shipmentPackage,
+  sourceDocuments,
   state,
   summaries,
   transport,
@@ -530,12 +538,29 @@ export function ShipmentSectionCards({
               {openStep.key === "documents" ? (
                 <div className="grid gap-4">
                   <p className="rounded-2xl bg-neutral-50 px-4 py-3 text-base text-neutral-700">
-                    Le PDF brouillon reste privé. Caméra/scan intelligent arrive en V2; pour le MVP, on importe un fichier source.
+                    Le PDF brouillon reste privé. Ajoute ici les fichiers source liés à cette expédition; le scan intelligent restera soumis à une révision humaine.
                   </p>
+                  <form action={actions.uploadSourceDocument} className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4">
+                    <input name="shipmentId" type="hidden" value={shipment.id} />
+                    <label className="block text-base font-semibold">
+                      Fichier source
+                      <input
+                        accept="application/pdf,image/png,image/jpeg,image/webp"
+                        className="field file:mr-4 file:rounded-full file:border-0 file:bg-black file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white"
+                        name="sourceDocument"
+                        required
+                        type="file"
+                      />
+                    </label>
+                    <button className="primary-button mt-4" type="submit">
+                      <FileUp aria-hidden="true" size={18} />
+                      Ajouter le fichier
+                    </button>
+                  </form>
                   <div className="flex flex-wrap gap-3">
                     <Link className="secondary-button inline-flex items-center gap-2" href={`/${locale}/documents`}>
                       <FileUp aria-hidden="true" size={18} />
-                      Importer fichier
+                      Voir tous les documents
                     </Link>
                     {state.canGenerateDocuments ? (
                       <form action={actions.generatePackingSlip}>
@@ -558,6 +583,21 @@ export function ShipmentSectionCards({
                     )}
                   </div>
                   <div className="grid gap-3">
+                    <h3 className="text-lg font-semibold tracking-tight">Fichiers source</h3>
+                    {sourceDocuments.length ? (
+                      sourceDocuments.map((document) => (
+                        <div className="rounded-2xl bg-neutral-50 p-4" key={document.id}>
+                          <p className="break-words text-base font-semibold">{document.original_filename}</p>
+                          <p className="mt-1 text-sm font-semibold uppercase tracking-wide text-[var(--muted)]">{document.validation_status}</p>
+                          <p className="mt-1 text-sm text-[var(--muted)]">{document.mime_type}</p>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="rounded-2xl bg-neutral-50 px-4 py-3 text-base text-[var(--muted)]">Aucun fichier source lié.</p>
+                    )}
+                  </div>
+                  <div className="grid gap-3">
+                    <h3 className="text-lg font-semibold tracking-tight">PDF générés</h3>
                     {documents.length ? (
                       documents.map((document) => (
                         <div className="flex flex-col gap-3 rounded-2xl bg-neutral-50 p-4 sm:flex-row sm:items-center sm:justify-between" key={document.id}>

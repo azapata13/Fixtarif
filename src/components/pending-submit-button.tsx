@@ -10,9 +10,10 @@ type PendingSubmitButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 
 export function PendingSubmitButton({ children, className, pendingLabel, ...props }: PendingSubmitButtonProps) {
   const { pending } = useFormStatus();
+  const { disabled, type, ...buttonProps } = props;
 
   return (
-    <button className={className} disabled={pending || props.disabled} type="submit" {...props}>
+    <button {...buttonProps} className={className} disabled={pending || disabled} type={type ?? "submit"}>
       {pending ? (
         <>
           <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />

@@ -1,9 +1,10 @@
 import { Bot, FileText, LockKeyhole, ScanLine, ShieldCheck, Upload } from "lucide-react";
 import Link from "next/link";
 import { PageHeader } from "@/components/page-header";
+import { PendingSubmitButton } from "@/components/pending-submit-button";
 import { type Locale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
-import { uploadSourceDocument } from "@/lib/documents/actions";
+import { prepareSourceDocumentExtraction, updateDocumentExtractionStatus, uploadSourceDocument } from "@/lib/documents/actions";
 import { getDocumentOverviewForWorkspace } from "@/lib/documents/queries";
 import { getCurrentWorkspace } from "@/lib/workspaces/queries";
 
@@ -21,6 +22,32 @@ const modules = [
   "CUSMA",
 ];
 
+function statusLabel(status: string) {
+  const labels: Record<string, string> = {
+    confirmed: "Confirmé",
+    draft: "Brouillon",
+    extracted: "Extrait",
+    needs_review: "À vérifier",
+    pending: "En attente",
+    rejected: "Rejeté",
+    validated: "Validé",
+  };
+
+  return labels[status] ?? status;
+}
+
+function normalizedValue(value: unknown) {
+  if (typeof value === "string" && value.trim()) {
+    return value;
+  }
+
+  if (typeof value === "number") {
+    return String(value);
+  }
+
+  return "Non détecté";
+}
+
 export default async function DocumentsPage({ params, searchParams }: DocumentsPageProps) {
   const { locale } = await params;
   const { message } = await searchParams;
@@ -28,9 +55,12 @@ export default async function DocumentsPage({ params, searchParams }: DocumentsP
   const { workspace } = await getCurrentWorkspace();
   const overview = workspace
     ? await getDocumentOverviewForWorkspace(workspace.id)
-    : { generatedDocuments: [], schemaReady: false, sourceDocuments: [] };
+    : { documentExtractions: [], generatedDocuments: [], schemaReady: false, sourceDocuments: [] };
   const page = dictionary.pages.documents;
   const uploadSourceDocumentAction = uploadSourceDocument.bind(null, locale);
+  const prepareExtractionAction = prepareSourceDocumentExtraction.bind(null, locale);
+  const updateExtractionStatusAction = updateDocumentExtractionStatus.bind(null, locale);
+  const extractionsBySourceId = new Map(overview.documentExtractions.map((extraction) => [extraction.source_document_id, extraction]));
 
   return (
     <>
@@ -93,9 +123,64 @@ export default async function DocumentsPage({ params, searchParams }: DocumentsP
           <div className="mt-5 grid gap-3 md:grid-cols-2">
             {overview.sourceDocuments.map((document) => (
               <div key={document.id} className="rounded-2xl bg-neutral-50 p-4">
+                {(() => {
+                  const extraction = extractionsBySourceId.get(document.id);
+                  const normalized = (extraction?.normalized_result_json ?? {}) as Record<string, unknown>;
+
+                  return (
+                    <>
                 <p className="break-words text-base font-semibold">{document.original_filename}</p>
-                <p className="mt-2 text-sm font-semibold uppercase tracking-wide text-[var(--muted)]">{document.validation_status}</p>
+                <p className="mt-2 text-sm font-semibold uppercase tracking-wide text-[var(--muted)]">{statusLabel(document.validation_status)}</p>
                 <p className="mt-2 text-sm text-[var(--muted)]">{document.mime_type}</p>
+
+                {extraction ? (
+                  <div className="mt-4 rounded-2xl border border-neutral-200 bg-white p-4">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <p className="text-sm font-semibold uppercase tracking-wide text-[var(--muted)]">Pré-analyse</p>
+                      <span className="rounded-full bg-neutral-100 px-3 py-1 text-sm font-semibold">{statusLabel(extraction.validation_status)}</span>
+                    </div>
+                    <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
+                      <div>
+                        <dt className="font-semibold text-neutral-500">Référence</dt>
+                        <dd className="mt-1 font-semibold text-neutral-950">{normalizedValue(normalized.shipmentReference)}</dd>
+                      </div>
+                      <div>
+                        <dt className="font-semibold text-neutral-500">Produit possible</dt>
+                        <dd className="mt-1 font-semibold text-neutral-950">{normalizedValue(normalized.productName)}</dd>
+                      </div>
+                      <div>
+                        <dt className="font-semibold text-neutral-500">Destination</dt>
+                        <dd className="mt-1 font-semibold text-neutral-950">{normalizedValue(normalized.destinationName)}</dd>
+                      </div>
+                      <div>
+                        <dt className="font-semibold text-neutral-500">Confiance</dt>
+                        <dd className="mt-1 font-semibold text-neutral-950">Révision requise</dd>
+                      </div>
+                    </dl>
+                    <form action={updateExtractionStatusAction} className="mt-4 grid gap-2 sm:grid-cols-3">
+                      <input name="extractionId" type="hidden" value={extraction.id} />
+                      <PendingSubmitButton className="secondary-button !min-h-11 !px-4 !py-2 !text-sm" name="status" pendingLabel="Mise à jour..." value="needs_review">
+                        À vérifier
+                      </PendingSubmitButton>
+                      <PendingSubmitButton className="primary-button !min-h-11 !px-4 !py-2 !text-sm" name="status" pendingLabel="Confirmation..." value="confirmed">
+                        Confirmer
+                      </PendingSubmitButton>
+                      <PendingSubmitButton className="secondary-button !min-h-11 !px-4 !py-2 !text-sm" name="status" pendingLabel="Rejet..." value="rejected">
+                        Rejeter
+                      </PendingSubmitButton>
+                    </form>
+                  </div>
+                ) : (
+                  <form action={prepareExtractionAction} className="mt-4">
+                    <input name="sourceDocumentId" type="hidden" value={document.id} />
+                    <PendingSubmitButton className="primary-button !min-h-11 !px-4 !py-2 !text-sm" pendingLabel="Pré-analyse...">
+                      Préparer la pré-analyse
+                    </PendingSubmitButton>
+                  </form>
+                )}
+                    </>
+                  );
+                })()}
               </div>
             ))}
           </div>

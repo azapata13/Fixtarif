@@ -7,12 +7,21 @@ import { genericActionError, logServerError } from "@/lib/security/public-errors
 import { createPackingSlipPdf } from "@/lib/documents/pdf";
 import { getShipmentForWorkspace } from "@/lib/shipments/queries";
 import { createClient } from "@/lib/supabase/server";
+import type { ExtractionStatus, ValidationStatus } from "@/lib/supabase/types";
 import { getCurrentWorkspace } from "@/lib/workspaces/queries";
 
 const SOURCE_BUCKET = "source-documents";
 const GENERATED_BUCKET = "generated-documents";
 const MAX_SOURCE_FILE_SIZE = 10 * 1024 * 1024;
 const ALLOWED_SOURCE_MIME_TYPES = new Set(["application/pdf", "image/png", "image/jpeg", "image/webp"]);
+
+const extractionStatusToDocumentStatus: Record<ExtractionStatus, ValidationStatus> = {
+  confirmed: "validated",
+  extracted: "needs_review",
+  needs_review: "needs_review",
+  pending: "draft",
+  rejected: "rejected",
+};
 
 function safeStorageFilename(filename: string) {
   return filename
@@ -23,6 +32,43 @@ function safeStorageFilename(filename: string) {
     .slice(0, 120);
 }
 
+function buildManualReviewExtraction(filename: string, mimeType: string) {
+  const basename = filename.replace(/\.[^.]+$/, "");
+  const tokens = basename
+    .replace(/[_-]+/g, " ")
+    .split(/\s+/)
+    .map((token) => token.trim())
+    .filter(Boolean);
+  const possibleReference = tokens.find((token) => /\d{3,}/.test(token)) ?? null;
+
+  return {
+    raw: {
+      source: "manual_review_placeholder",
+      originalFilename: filename,
+      mimeType,
+      extractedAt: new Date().toISOString(),
+    },
+    normalized: {
+      confidence: "manual_review_required",
+      destinationName: null,
+      productName: tokens.length ? tokens.slice(0, 5).join(" ") : null,
+      quantity: null,
+      shipmentReference: possibleReference,
+      weight: null,
+      missingFields: ["destination", "site", "contact", "product", "quantity", "weight", "carrier"],
+      nextAction: "review_before_creating_or_updating_shipment",
+    },
+  };
+}
+
+function getExtractionStatus(value: FormDataEntryValue | null): ExtractionStatus | null {
+  if (value === "confirmed" || value === "needs_review" || value === "rejected") {
+    return value;
+  }
+
+  return null;
+}
+
 export async function uploadSourceDocument(locale: Locale, formData: FormData) {
   const { workspace, membership, user } = await getCurrentWorkspace();
 
@@ -31,18 +77,29 @@ export async function uploadSourceDocument(locale: Locale, formData: FormData) {
   }
 
   const file = formData.get("sourceDocument");
+  const shipmentId = formData.get("shipmentId");
+  const linkedShipmentId = typeof shipmentId === "string" && shipmentId ? shipmentId : null;
 
   if (!(file instanceof File) || file.size === 0) {
-    redirect(`/${locale}/documents?message=${encodeURIComponent("Choisis un PDF ou une image avant d'importer.")}`);
+    redirect(`${linkedShipmentId ? `/${locale}/shipments/${linkedShipmentId}` : `/${locale}/documents`}?message=${encodeURIComponent("Choisis un PDF ou une image avant d'importer.")}`);
   }
 
   if (file.size > MAX_SOURCE_FILE_SIZE || !ALLOWED_SOURCE_MIME_TYPES.has(file.type)) {
-    redirect(`/${locale}/documents?message=${encodeURIComponent("Format non accepté. Utilise PDF, PNG, JPG ou WebP, maximum 10 Mo.")}`);
+    redirect(`${linkedShipmentId ? `/${locale}/shipments/${linkedShipmentId}` : `/${locale}/documents`}?message=${encodeURIComponent("Format non accepté. Utilise PDF, PNG, JPG ou WebP, maximum 10 Mo.")}`);
   }
 
   const supabase = await createClient();
+
+  if (linkedShipmentId) {
+    const shipment = await getShipmentForWorkspace(workspace.id, linkedShipmentId);
+
+    if (!shipment) {
+      redirect(`/${locale}/documents?message=${encodeURIComponent("Expédition introuvable.")}`);
+    }
+  }
+
   const filename = safeStorageFilename(file.name) || "document-source";
-  const storagePath = `${workspace.id}/${crypto.randomUUID()}-${filename}`;
+  const storagePath = `${workspace.id}/${linkedShipmentId ? `${linkedShipmentId}/` : ""}${crypto.randomUUID()}-${filename}`;
 
   const { error: uploadError } = await supabase.storage.from(SOURCE_BUCKET).upload(storagePath, file, {
     cacheControl: "3600",
@@ -61,6 +118,7 @@ export async function uploadSourceDocument(locale: Locale, formData: FormData) {
     storage_path: storagePath,
     mime_type: file.type,
     original_filename: file.name,
+    shipment_id: linkedShipmentId,
     uploaded_by: user.id,
     validation_status: "draft",
   });
@@ -73,13 +131,135 @@ export async function uploadSourceDocument(locale: Locale, formData: FormData) {
 
   await supabase.from("shipment_audit_log").insert({
     workspace_id: workspace.id,
+    shipment_id: linkedShipmentId,
     actor_user_id: user.id,
     action: "source_document_uploaded",
-    metadata_json: { mime_type: file.type, storage_bucket: SOURCE_BUCKET },
+    metadata_json: { mime_type: file.type, storage_bucket: SOURCE_BUCKET, linkedShipmentId },
   });
 
   revalidatePath(`/${locale}/documents`);
+  if (linkedShipmentId) {
+    revalidatePath(`/${locale}/shipments/${linkedShipmentId}`);
+    redirect(`/${locale}/shipments/${linkedShipmentId}?message=${encodeURIComponent("Document source ajouté à l'expédition.")}`);
+  }
+
   redirect(`/${locale}/documents?message=${encodeURIComponent("Document source importé de façon privée.")}`);
+}
+
+export async function prepareSourceDocumentExtraction(locale: Locale, formData: FormData) {
+  const { workspace, membership, user } = await getCurrentWorkspace();
+
+  if (!workspace || !membership || !user) {
+    redirect(`/${locale}/onboarding`);
+  }
+
+  const sourceDocumentId = formData.get("sourceDocumentId");
+
+  if (typeof sourceDocumentId !== "string" || !sourceDocumentId) {
+    redirect(`/${locale}/documents?message=${encodeURIComponent("Document source introuvable.")}`);
+  }
+
+  const supabase = await createClient();
+  const { data: document, error: documentError } = await supabase
+    .from("source_documents")
+    .select("id,workspace_id,mime_type,original_filename")
+    .eq("workspace_id", workspace.id)
+    .eq("id", sourceDocumentId)
+    .single();
+
+  if (documentError || !document) {
+    logServerError({ action: "prepare_document_extraction_lookup", error: documentError ?? new Error("Missing source document") });
+    redirect(`/${locale}/documents?message=${encodeURIComponent(genericActionError(locale))}`);
+  }
+
+  const extraction = buildManualReviewExtraction(document.original_filename, document.mime_type);
+  const { error: extractionError } = await supabase.from("document_extractions").upsert(
+    {
+      workspace_id: workspace.id,
+      source_document_id: document.id,
+      raw_result_json: extraction.raw,
+      normalized_result_json: extraction.normalized,
+      validation_status: "needs_review",
+      confirmed_by: null,
+      confirmed_at: null,
+    },
+    { onConflict: "source_document_id" },
+  );
+
+  if (extractionError) {
+    logServerError({ action: "prepare_document_extraction_upsert", error: extractionError });
+    redirect(`/${locale}/documents?message=${encodeURIComponent(genericActionError(locale))}`);
+  }
+
+  await supabase.from("source_documents").update({ validation_status: "needs_review" }).eq("workspace_id", workspace.id).eq("id", document.id);
+  await supabase.from("shipment_audit_log").insert({
+    workspace_id: workspace.id,
+    actor_user_id: user.id,
+    action: "source_document_extraction_prepared",
+    metadata_json: { sourceDocumentId: document.id, mode: "manual_review_placeholder" },
+  });
+
+  revalidatePath(`/${locale}/documents`);
+  redirect(`/${locale}/documents?message=${encodeURIComponent("Pré-analyse créée. Révision humaine requise.")}`);
+}
+
+export async function updateDocumentExtractionStatus(locale: Locale, formData: FormData) {
+  const { workspace, membership, user } = await getCurrentWorkspace();
+
+  if (!workspace || !membership || !user) {
+    redirect(`/${locale}/onboarding`);
+  }
+
+  const extractionId = formData.get("extractionId");
+  const status = getExtractionStatus(formData.get("status"));
+
+  if (typeof extractionId !== "string" || !extractionId || !status) {
+    redirect(`/${locale}/documents?message=${encodeURIComponent("Statut d'extraction invalide.")}`);
+  }
+
+  const supabase = await createClient();
+  const { data: extraction, error: lookupError } = await supabase
+    .from("document_extractions")
+    .select("id,source_document_id")
+    .eq("workspace_id", workspace.id)
+    .eq("id", extractionId)
+    .single();
+
+  if (lookupError || !extraction) {
+    logServerError({ action: "update_document_extraction_lookup", error: lookupError ?? new Error("Missing extraction") });
+    redirect(`/${locale}/documents?message=${encodeURIComponent(genericActionError(locale))}`);
+  }
+
+  const { error: updateError } = await supabase
+    .from("document_extractions")
+    .update({
+      validation_status: status,
+      confirmed_by: status === "confirmed" ? user.id : null,
+      confirmed_at: status === "confirmed" ? new Date().toISOString() : null,
+    })
+    .eq("workspace_id", workspace.id)
+    .eq("id", extraction.id);
+
+  if (updateError) {
+    logServerError({ action: "update_document_extraction_status", error: updateError });
+    redirect(`/${locale}/documents?message=${encodeURIComponent(genericActionError(locale))}`);
+  }
+
+  await supabase
+    .from("source_documents")
+    .update({ validation_status: extractionStatusToDocumentStatus[status] })
+    .eq("workspace_id", workspace.id)
+    .eq("id", extraction.source_document_id);
+
+  await supabase.from("shipment_audit_log").insert({
+    workspace_id: workspace.id,
+    actor_user_id: user.id,
+    action: "source_document_extraction_status_updated",
+    metadata_json: { extractionId: extraction.id, status },
+  });
+
+  revalidatePath(`/${locale}/documents`);
+  redirect(`/${locale}/documents?message=${encodeURIComponent(status === "confirmed" ? "Extraction confirmée." : status === "rejected" ? "Extraction rejetée." : "Extraction remise à vérifier.")}`);
 }
 
 export async function generatePackingSlipDraft(locale: Locale, formData: FormData) {

@@ -261,3 +261,109 @@ export async function refreshProductHtsRate(locale: Locale, formData: FormData) 
     )}`,
   );
 }
+
+export async function refreshWorkspaceHtsRates(locale: Locale) {
+  const { workspace, membership, user } = await getCurrentWorkspace();
+
+  if (!workspace || !membership || !user) {
+    redirect(`/${locale}/onboarding`);
+  }
+
+  if (!["owner", "admin"].includes(membership.role)) {
+    redirect(`/${locale}/products?message=${encodeURIComponent("Permission refusée.")}`);
+  }
+
+  const supabase = await createClient();
+  const { data: customsRows, error: lookupError } = await supabase
+    .from("product_customs")
+    .select("id,product_id,hts_code,official_description,general_rate,special_rate,other_rate,units,validation_status")
+    .eq("workspace_id", workspace.id)
+    .eq("destination_country", "US")
+    .not("hts_code", "is", null)
+    .limit(25);
+
+  if (lookupError) {
+    logServerError({ action: "refresh_workspace_hts_lookup", error: lookupError });
+    redirect(`/${locale}/products?message=${encodeURIComponent(genericActionError(locale))}`);
+  }
+
+  let checked = 0;
+  let changed = 0;
+  let missing = 0;
+
+  for (const customsRow of customsRows ?? []) {
+    if (!customsRow.hts_code) {
+      continue;
+    }
+
+    const currentEntry = await findHtsEntryByCode(customsRow.hts_code);
+    checked += 1;
+
+    if (!currentEntry) {
+      missing += 1;
+      await supabase
+        .from("product_customs")
+        .update({
+          last_checked_at: new Date().toISOString(),
+          validation_status: "needs_review",
+          validated_by: null,
+          validated_at: null,
+        })
+        .eq("workspace_id", workspace.id)
+        .eq("id", customsRow.id);
+      continue;
+    }
+
+    const rowChanged =
+      customsRow.official_description !== currentEntry.description ||
+      customsRow.general_rate !== currentEntry.generalRate ||
+      customsRow.special_rate !== currentEntry.specialRate ||
+      customsRow.other_rate !== currentEntry.otherRate ||
+      !sameUnits(customsRow.units, currentEntry.units);
+
+    if (rowChanged) {
+      changed += 1;
+    }
+
+    await supabase
+      .from("product_customs")
+      .update({
+        official_description: currentEntry.description,
+        general_rate: currentEntry.generalRate,
+        special_rate: currentEntry.specialRate,
+        other_rate: currentEntry.otherRate,
+        units: currentEntry.units,
+        last_checked_at: new Date().toISOString(),
+        hts_result_json: {
+          htsno: currentEntry.htsno,
+          description: currentEntry.description,
+          general: currentEntry.generalRate,
+          special: currentEntry.specialRate,
+          other: currentEntry.otherRate,
+          units: currentEntry.units,
+          changed: rowChanged,
+        },
+        validation_status: rowChanged ? "needs_review" : customsRow.validation_status,
+        validated_by: rowChanged ? null : undefined,
+        validated_at: rowChanged ? null : undefined,
+      })
+      .eq("workspace_id", workspace.id)
+      .eq("id", customsRow.id);
+  }
+
+  await supabase.from("shipment_audit_log").insert({
+    workspace_id: workspace.id,
+    actor_user_id: user.id,
+    action: "workspace_hts_rates_refreshed",
+    metadata_json: { checked, changed, missing, source: "USITC HTS" },
+  });
+
+  revalidatePath(`/${locale}/products`);
+  revalidatePath(`/${locale}/shipments`);
+
+  redirect(
+    `/${locale}/products?message=${encodeURIComponent(
+      `Revérification USITC terminée: ${checked} code(s), ${changed} changement(s), ${missing} introuvable(s).`,
+    )}`,
+  );
+}

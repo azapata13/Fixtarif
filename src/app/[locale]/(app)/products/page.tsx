@@ -4,7 +4,7 @@ import { type LocaleParams } from "@/app/[locale]/layout";
 import { PageHeader } from "@/components/page-header";
 import { type Locale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
-import { refreshProductHtsRate, saveProductHtsSuggestion, updateProductHtsValidation } from "@/lib/customs/actions";
+import { refreshProductHtsRate, refreshWorkspaceHtsRates, saveProductHtsSuggestion, updateProductHtsValidation } from "@/lib/customs/actions";
 import { searchHtsEntries } from "@/lib/customs/hts";
 import { getProductCustomsForWorkspace } from "@/lib/customs/queries";
 import { createProduct, seedDemoProducts } from "@/lib/products/actions";
@@ -71,6 +71,7 @@ export default async function ProductsPage({ params, searchParams }: ProductsPag
   const saveProductHtsSuggestionAction = saveProductHtsSuggestion.bind(null, locale);
   const updateProductHtsValidationAction = updateProductHtsValidation.bind(null, locale);
   const refreshProductHtsRateAction = refreshProductHtsRate.bind(null, locale);
+  const refreshWorkspaceHtsRatesAction = refreshWorkspaceHtsRates.bind(null, locale);
   const selectedHtsProductId = products.some((product) => product.id === queryParams.htsProductId) ? queryParams.htsProductId : products[0]?.id;
   const selectedHtsProduct = products.find((product) => product.id === selectedHtsProductId);
   const htsQuery = queryParams.htsQuery?.trim() ?? "";
@@ -169,6 +170,11 @@ export default async function ProductsPage({ params, searchParams }: ProductsPag
           <p className="mt-3 text-base leading-7 text-[var(--muted)]">
             Recherche officielle USITC. Une sélection est enregistrée comme suggestion à vérifier, jamais comme classification validée automatiquement.
           </p>
+          <form action={refreshWorkspaceHtsRatesAction} className="mt-5">
+            <button className="secondary-button !min-h-11 !px-5 !py-2 !text-sm" disabled={!customsRows.length} type="submit">
+              Revérifier tous les HTS enregistrés
+            </button>
+          </form>
           {selectedSearchTerms.length ? (
             <div className="mt-5 flex flex-wrap gap-2">
               {selectedSearchTerms.map((term) => (

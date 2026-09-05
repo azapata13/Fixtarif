@@ -10,8 +10,11 @@
 - Expedition Canada/USA manuelle: creation de brouillon, validation, transport, statut, duplication.
 - Detail d'expedition simplifie par ligne d'etapes horizontale et assistant modal sequentiel pour faciliter la demo.
 - Page Documents preparee: import prive de documents sources actif; packing slip PDF brouillon prive actif; HTS live USITC en suggestion produit avec validation humaine owner/admin; CUSMA et automatisation douaniere visibles mais verrouilles.
+- V2 documents amorcee: chaque document source peut maintenant creer une pre-analyse brouillon auditee, puis etre marque `a verifier`, `confirme` ou `rejete` par un humain.
+- Les fichiers source peuvent etre importes depuis une expedition et rester lies au brouillon concerne.
+- V2 HTS amorcee: un admin peut reverifier en lot les codes HTS enregistres contre USITC; tout changement remet le code a verifier.
 - Nouvelle migration Supabase preparee pour documents, extractions, PDF generes et tables douanieres USA.
-- Extraction scan, PDF avance, classification HTS automatique et CUSMA restent volontairement non automatises dans la demo actuelle.
+- Extraction IA avancee, PDF avance, classification HTS automatique et CUSMA restent volontairement non automatises dans la demo actuelle.
 - Les prochains modules garderont une validation humaine obligatoire avant toute generation ou classification.
 - Roadmap lancement/pricing resumee dans `LAUNCH_ROADMAP.md` et visible dans l'admin.
 - Checklist de deploy MVP ajoutee dans `MVP_DEPLOY_CHECKLIST.md`.
@@ -38,13 +41,15 @@ npm run build
 - Ajouter PRO/BOL si disponible.
 - Passer en validation, puis en pret seulement lorsque la checklist est complete.
 - Generer un packing slip PDF brouillon seulement apres le statut `ready`, puis l'ouvrir via le lien signe.
-- Depuis le detail d'expedition, verifier que la carte Documents propose l'import de fichier; camera/scan reste V2.
+- Depuis le detail d'expedition, verifier que l'etape Documents permet d'importer un fichier source directement lie au brouillon.
 - Dupliquer une expedition et confirmer que quantite/poids/lot doivent etre revalides.
 - Verifier `/fr/admin` pour confirmer que les evenements sensibles apparaissent.
 - Verifier dans `/fr/admin` que la strategie lancement/pricing apparait seulement pour un admin interne Fixtarif.
 - Verifier `/fr/documents` pour confirmer que l'import prive fonctionne avec PDF/PNG/JPG/WebP.
+- Depuis `/fr/documents`, cliquer `Preparer la pre-analyse`, confirmer que le statut passe a `A verifier`, puis tester `Confirmer` et `Rejeter`.
 - Verifier `/fr/products?htsQuery=bracket` pour confirmer la recherche HTS officielle USITC.
 - Dans `/fr/products`, cliquer `Reverifier USITC` sur un code HTS sauvegarde et confirmer le message aucun changement ou remise a verifier.
+- Dans `/fr/products`, cliquer `Reverifier tous les HTS enregistres` et confirmer l'audit global.
 - Creer une expedition USA avec un produit enregistre et confirmer que le statut HTS apparait dans la creation, la liste et le detail.
 
 ## A faire par Felipe avant production reelle
@@ -89,17 +94,18 @@ Objectif: montrer une fondation fiable, simple et claire.
 - Corriger toute erreur restante lors de creation d'expedition.
 - Montrer la page Documents comme roadmap produit integree, avec import source actif et packing slip brouillon.
 - Faire un seul deploy Netlify groupe quand la demo locale est approuvee.
+- Production Netlify actuellement bloquee par credit gratuit epuise; les commits GitHub continuent, mais `app.fixtarif.ca` ne recevra pas les nouveaux deploys avant upgrade/reset.
 - Rotater les cles sensibles partagees pendant la configuration initiale avant une exposition plus large.
 
 ### V2 produit
 
 Objectif: passer de "fondation de preparation" a assistant de documents.
 
-- Scan/import: televersement prive actif; prochaine etape extraction brouillon, matching avec clients/sites/produits, aucune valeur inventee.
+- Scan/import: televersement prive actif; pre-analyse brouillon auditee active; prochaine etape extraction IA/document parser, matching avec clients/sites/produits, aucune valeur inventee.
 - PDF Canada: packing slip brouillon actif; prochaine etape bordereau avance, etiquettes, connaissement simple si requis.
 - Documents: stockage prive Supabase, URLs signees courtes, historique de generations.
 - Verification intelligente: statut `confirme`, `a verifier`, `manquant` par champ.
-- Surveillance des donnees officielles: ajouter une tache planifiee quotidienne/hebdomadaire qui reverifie les HTS valides, journalise les changements et notifie les admins.
+- Surveillance des donnees officielles: reverification manuelle globale active; prochaine etape tache planifiee quotidienne/hebdomadaire avec notification aux admins.
 - Edition complete: modifier/supprimer clients, sites, contacts, produits, transporteurs, courtiers.
 - Invitations par courriel reelles.
 - Landing page `fixtarif.ca` separee de `app.fixtarif.ca`.

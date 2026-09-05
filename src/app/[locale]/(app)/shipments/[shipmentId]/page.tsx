@@ -7,8 +7,8 @@ import { type Locale } from "@/i18n/config";
 import { getBusinessesForWorkspace } from "@/lib/businesses/queries";
 import { getCarriersForWorkspace } from "@/lib/carriers/queries";
 import { getProductCustomsForProduct } from "@/lib/customs/queries";
-import { generatePackingSlipDraft } from "@/lib/documents/actions";
-import { getGeneratedDocumentsForShipment } from "@/lib/documents/queries";
+import { generatePackingSlipDraft, uploadSourceDocument } from "@/lib/documents/actions";
+import { getGeneratedDocumentsForShipment, getSourceDocumentsForShipment } from "@/lib/documents/queries";
 import { getProductsForWorkspace } from "@/lib/products/queries";
 import {
   duplicateShipmentDraft,
@@ -48,9 +48,10 @@ export default async function ShipmentDetailPage({ params, searchParams }: Shipm
     notFound();
   }
 
-  const [shipment, generatedDocuments, businesses, products, carriers] = await Promise.all([
+  const [shipment, generatedDocuments, sourceDocuments, businesses, products, carriers] = await Promise.all([
     getShipmentForWorkspace(workspace.id, shipmentId),
     getGeneratedDocumentsForShipment(workspace.id, shipmentId),
+    getSourceDocumentsForShipment(workspace.id, shipmentId),
     getBusinessesForWorkspace(workspace.id),
     getProductsForWorkspace(workspace.id),
     getCarriersForWorkspace(workspace.id),
@@ -75,6 +76,7 @@ export default async function ShipmentDetailPage({ params, searchParams }: Shipm
   const updateStatusAction = updateShipmentStatus.bind(null, locale);
   const duplicateShipmentAction = duplicateShipmentDraft.bind(null, locale);
   const generatePackingSlipAction = generatePackingSlipDraft.bind(null, locale);
+  const uploadSourceDocumentAction = uploadSourceDocument.bind(null, locale);
   const canMarkReady = Boolean(destination && site && contact && item?.quantity_confirmed && item.weight_confirmed && carrier && packageRow);
   const canGenerateDocuments = shipment.status === "ready";
   const hasValidatedHts = productCustoms?.validation_status === "validated";
@@ -97,6 +99,7 @@ export default async function ShipmentDetailPage({ params, searchParams }: Shipm
         actions={{
           duplicateShipment: duplicateShipmentAction,
           generatePackingSlip: generatePackingSlipAction,
+          uploadSourceDocument: uploadSourceDocumentAction,
           updateDestination: updateDestinationAction,
           updateGoodsAndPackage: updateGoodsAndPackageAction,
           updateStatus: updateStatusAction,
@@ -107,6 +110,7 @@ export default async function ShipmentDetailPage({ params, searchParams }: Shipm
         documents={generatedDocuments}
         locale={locale}
         products={products}
+        sourceDocuments={sourceDocuments}
         shipment={{
           carrierId: shipment.carrier_id,
           destinationBusinessId: shipment.destination_business_id,
