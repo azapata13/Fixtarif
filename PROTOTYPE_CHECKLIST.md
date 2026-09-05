@@ -10,6 +10,7 @@
 - Expedition Canada/USA manuelle: creation de brouillon, validation, transport, statut, duplication.
 - Detail d'expedition simplifie par ligne d'etapes horizontale et assistant modal sequentiel pour faciliter la demo.
 - Page Documents preparee: import prive de documents sources actif; packing slip PDF brouillon prive actif; HTS live USITC en suggestion produit avec validation humaine owner/admin; CUSMA et automatisation douaniere visibles mais verrouilles.
+- PDF avance amorce: packing slip et BOL brouillons peuvent etre generes apres validation de l'expedition, sans pretendre remplacer les documents legaux finaux.
 - V2 documents amorcee: chaque document source peut maintenant creer une pre-analyse brouillon auditee, puis etre marque `a verifier`, `confirme` ou `rejete` par un humain.
 - Les fichiers source peuvent etre importes depuis une expedition et rester lies au brouillon concerne.
 - V2 HTS amorcee: un admin peut reverifier en lot les codes HTS enregistres contre USITC; tout changement remet le code a verifier.
@@ -41,6 +42,7 @@ npm run build
 - Ajouter PRO/BOL si disponible.
 - Passer en validation, puis en pret seulement lorsque la checklist est complete.
 - Generer un packing slip PDF brouillon seulement apres le statut `ready`, puis l'ouvrir via le lien signe.
+- Generer un BOL brouillon apres le statut `ready`, puis l'ouvrir via le lien signe.
 - Depuis le detail d'expedition, verifier que l'etape Documents permet d'importer un fichier source directement lie au brouillon.
 - Dupliquer une expedition et confirmer que quantite/poids/lot doivent etre revalides.
 - Verifier `/fr/admin` pour confirmer que les evenements sensibles apparaissent.
@@ -102,7 +104,7 @@ Objectif: montrer une fondation fiable, simple et claire.
 Objectif: passer de "fondation de preparation" a assistant de documents.
 
 - Scan/import: televersement prive actif; pre-analyse brouillon auditee active; prochaine etape extraction IA/document parser, matching avec clients/sites/produits, aucune valeur inventee.
-- PDF Canada: packing slip brouillon actif; prochaine etape bordereau avance, etiquettes, connaissement simple si requis.
+- PDF Canada: packing slip brouillon actif; BOL brouillon actif; prochaine etape etiquettes, clauses legales validees et mise en page finale.
 - Documents: stockage prive Supabase, URLs signees courtes, historique de generations.
 - Verification intelligente: statut `confirme`, `a verifier`, `manquant` par champ.
 - Surveillance des donnees officielles: reverification manuelle globale active; prochaine etape tache planifiee quotidienne/hebdomadaire avec notification aux admins.

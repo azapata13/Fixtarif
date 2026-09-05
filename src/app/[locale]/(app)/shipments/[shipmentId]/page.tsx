@@ -7,7 +7,7 @@ import { type Locale } from "@/i18n/config";
 import { getBusinessesForWorkspace } from "@/lib/businesses/queries";
 import { getCarriersForWorkspace } from "@/lib/carriers/queries";
 import { getProductCustomsForProduct } from "@/lib/customs/queries";
-import { generatePackingSlipDraft, uploadSourceDocument } from "@/lib/documents/actions";
+import { generateBillOfLadingDraft, generatePackingSlipDraft, uploadSourceDocument } from "@/lib/documents/actions";
 import { getGeneratedDocumentsForShipment, getSourceDocumentsForShipment } from "@/lib/documents/queries";
 import { getProductsForWorkspace } from "@/lib/products/queries";
 import {
@@ -75,6 +75,7 @@ export default async function ShipmentDetailPage({ params, searchParams }: Shipm
   const updateTransportReferencesAction = updateShipmentTransportReferences.bind(null, locale);
   const updateStatusAction = updateShipmentStatus.bind(null, locale);
   const duplicateShipmentAction = duplicateShipmentDraft.bind(null, locale);
+  const generateBillOfLadingAction = generateBillOfLadingDraft.bind(null, locale);
   const generatePackingSlipAction = generatePackingSlipDraft.bind(null, locale);
   const uploadSourceDocumentAction = uploadSourceDocument.bind(null, locale);
   const canMarkReady = Boolean(destination && site && contact && item?.quantity_confirmed && item.weight_confirmed && carrier && packageRow);
@@ -98,6 +99,7 @@ export default async function ShipmentDetailPage({ params, searchParams }: Shipm
       <ShipmentSectionCards
         actions={{
           duplicateShipment: duplicateShipmentAction,
+          generateBillOfLading: generateBillOfLadingAction,
           generatePackingSlip: generatePackingSlipAction,
           uploadSourceDocument: uploadSourceDocumentAction,
           updateDestination: updateDestinationAction,

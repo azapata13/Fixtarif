@@ -46,6 +46,7 @@ type GeneratedDocument = {
 type ShipmentWorkflowProps = {
   actions: {
     duplicateShipment: Action;
+    generateBillOfLading: Action;
     generatePackingSlip: Action;
     uploadSourceDocument: Action;
     updateDestination: Action;
@@ -579,6 +580,18 @@ export function ShipmentSectionCards({
                     ) : (
                       <button className="primary-button" disabled type="button">
                         Générer packing slip
+                      </button>
+                    )}
+                    {state.canGenerateDocuments ? (
+                      <form action={actions.generateBillOfLading}>
+                        <input name="shipmentId" type="hidden" value={shipment.id} />
+                        <button className="secondary-button" type="submit">
+                          Générer BOL
+                        </button>
+                      </form>
+                    ) : (
+                      <button className="secondary-button" disabled type="button">
+                        Générer BOL
                       </button>
                     )}
                   </div>
