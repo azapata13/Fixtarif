@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { genericOAuthError, logServerError } from "@/lib/security/public-errors";
+import { getAuthRedirectOrigin } from "@/lib/auth/origin";
 import { createClient } from "@/lib/supabase/server";
 import { syncCurrentUserProfile } from "@/lib/users/profile";
 
@@ -13,11 +14,12 @@ function safeNextPath(value: string | null) {
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
+  const redirectOrigin = getAuthRedirectOrigin(request);
   const code = requestUrl.searchParams.get("code");
   const next = safeNextPath(requestUrl.searchParams.get("next"));
 
   if (!code) {
-    return NextResponse.redirect(new URL("/fr/login?message=Connexion%20Google%20annul%C3%A9e.", requestUrl.origin));
+    return NextResponse.redirect(new URL("/fr/login?message=Connexion%20Google%20annul%C3%A9e.", redirectOrigin));
   }
 
   const supabase = await createClient();
@@ -25,7 +27,7 @@ export async function GET(request: NextRequest) {
 
   if (error) {
     logServerError({ action: "google_oauth_callback", error });
-    return NextResponse.redirect(new URL(`/fr/login?message=${encodeURIComponent(genericOAuthError("fr"))}`, requestUrl.origin));
+    return NextResponse.redirect(new URL(`/fr/login?message=${encodeURIComponent(genericOAuthError("fr"))}`, redirectOrigin));
   }
 
   const {
@@ -36,5 +38,5 @@ export async function GET(request: NextRequest) {
     await syncCurrentUserProfile(user);
   }
 
-  return NextResponse.redirect(new URL(next, requestUrl.origin));
+  return NextResponse.redirect(new URL(next, redirectOrigin));
 }
