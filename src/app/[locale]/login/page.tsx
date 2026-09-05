@@ -6,6 +6,7 @@ import { type Locale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 import { signIn, signInWithGoogle, signUp } from "@/lib/auth/actions";
 import { createClient } from "@/lib/supabase/server";
+import { PendingSubmitButton } from "@/components/pending-submit-button";
 
 type LoginPageProps = {
   params: LocaleParams;
@@ -68,19 +69,19 @@ export default async function LoginPage({ params, searchParams }: LoginPageProps
             />
           </label>
           <div className="grid gap-3 pt-2 sm:grid-cols-2">
-            <button className="primary-button" formAction={signInAction}>
+            <PendingSubmitButton className="primary-button gap-2" formAction={signInAction} pendingLabel="Connexion...">
               {dictionary.auth.signIn}
-            </button>
-            <button className="secondary-button" formAction={signUpAction}>
+            </PendingSubmitButton>
+            <PendingSubmitButton className="secondary-button gap-2" formAction={signUpAction} pendingLabel="Création...">
               {dictionary.auth.signUp}
-            </button>
+            </PendingSubmitButton>
           </div>
         </form>
         <form action={signInWithGoogleAction} className="mt-3">
-          <button className="secondary-button inline-flex w-full items-center justify-center gap-3" type="submit">
+          <PendingSubmitButton className="secondary-button inline-flex w-full items-center justify-center gap-3" pendingLabel="Ouverture Google...">
             <GoogleIcon />
             {dictionary.auth.signInWithGoogle}
-          </button>
+          </PendingSubmitButton>
         </form>
       </section>
     </main>
