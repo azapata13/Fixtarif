@@ -4,8 +4,9 @@ import { type LocaleParams } from "@/app/[locale]/layout";
 import { isSupabaseConfigured } from "@/lib/env";
 import { type Locale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
-import { signIn, signInWithGoogle, signUp } from "@/lib/auth/actions";
+import { signIn, signUp } from "@/lib/auth/actions";
 import { createClient } from "@/lib/supabase/server";
+import { GoogleSignInLink } from "@/components/google-sign-in-link";
 import { PendingSubmitButton } from "@/components/pending-submit-button";
 
 type LoginPageProps = {
@@ -39,7 +40,6 @@ export default async function LoginPage({ params, searchParams }: LoginPageProps
   const dictionary = getDictionary(locale);
   const signInAction = signIn.bind(null, locale);
   const signUpAction = signUp.bind(null, locale);
-  const signInWithGoogleAction = signInWithGoogle.bind(null, locale);
 
   return (
     <main className="grid min-h-screen place-items-center px-5 py-10">
@@ -77,12 +77,12 @@ export default async function LoginPage({ params, searchParams }: LoginPageProps
             </PendingSubmitButton>
           </div>
         </form>
-        <form action={signInWithGoogleAction} className="mt-3">
-          <PendingSubmitButton className="secondary-button inline-flex w-full items-center justify-center gap-3" pendingLabel="Ouverture Google...">
+        <div className="mt-3">
+          <GoogleSignInLink href={`/${locale}/auth/google`} pendingLabel="Ouverture Google...">
             <GoogleIcon />
             {dictionary.auth.signInWithGoogle}
-          </PendingSubmitButton>
-        </form>
+          </GoogleSignInLink>
+        </div>
       </section>
     </main>
   );
