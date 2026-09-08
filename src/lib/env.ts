@@ -12,7 +12,3 @@ export function getSupabasePublicEnv() {
 
   return { supabaseUrl, anonKey };
 }
-
-export function isGoogleAppsScriptWebhookConfigured() {
-  return Boolean(process.env.GOOGLE_APPS_SCRIPT_WEBHOOK_URL);
-}

@@ -55,15 +55,12 @@ NEXT_PUBLIC_MARKETING_URL=https://fixtarif.ca
 NEXT_PUBLIC_APP_NAME=Fixtarif
 DEFAULT_LOCALE=fr
 FIXTARIF_PLATFORM_ADMIN_EMAILS=
-GOOGLE_APPS_SCRIPT_WEBHOOK_ID=
-GOOGLE_APPS_SCRIPT_WEBHOOK_URL=
 ```
 
 Notes:
 
 - La service role key reste serveur seulement.
 - `FIXTARIF_PLATFORM_ADMIN_EMAILS` contient seulement les emails internes Fixtarif autorises, separes par virgule.
-- `GOOGLE_APPS_SCRIPT_WEBHOOK_URL` reste serveur seulement. Ne pas le prefixer par `NEXT_PUBLIC_`.
 - Les secrets partages pendant la configuration initiale devront etre regeneres avant une exposition plus large.
 - Garder le deploy groupe pour economiser le forfait gratuit Netlify.
 - Pour HTS USA, utiliser la recherche officielle USITC uniquement comme aide. Les codes sauvegardes commencent en `A verifier`; seuls les roles `owner/admin` peuvent les marquer `Valide`.
