@@ -45,6 +45,11 @@ for (const token of requiredHeaderTokens) {
   }
 }
 
+const middleware = readFileSync("middleware.ts", "utf8");
+if (!middleware.includes('pathname.startsWith("/auth/")') || !middleware.includes('pathname.startsWith(`/${firstSegment}/auth/`)')) {
+  findings.push("OAuth auth routes must bypass session refresh in middleware, including localized /fr/auth and /en/auth paths.");
+}
+
 if (findings.length > 0) {
   console.error(JSON.stringify({ pass: false, findings }, null, 2));
   process.exit(1);
