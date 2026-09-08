@@ -149,7 +149,7 @@ export default async function ProductsPage({ params, searchParams }: ProductsPag
               <h2 className="text-2xl font-semibold tracking-tight">Données de test</h2>
             </div>
             <p className="mt-4 text-base leading-7 text-[var(--muted)]">
-              Ajoute deux produits logistiques pour tester la bibliothèque. Aucune donnée HS/HTS ou CUSMA n&apos;est ajoutée.
+              Ajoute deux produits logistiques pour tester la bibliothèque. Aucune donnée douanière n&apos;est ajoutée automatiquement.
             </p>
             {hasDemoProducts ? (
               <p className="mt-6 rounded-2xl bg-neutral-100 px-4 py-3 text-base font-semibold text-neutral-700">Produits de démonstration déjà ajoutés.</p>
@@ -165,14 +165,14 @@ export default async function ProductsPage({ params, searchParams }: ProductsPag
         <section className="mb-6 rounded-[24px] border border-[var(--line)] bg-white p-6 shadow-sm">
           <div className="flex items-center gap-3">
             <Landmark aria-hidden="true" size={24} />
-            <h2 className="text-2xl font-semibold tracking-tight">HTS USA live</h2>
+            <h2 className="text-2xl font-semibold tracking-tight">Codes douaniers USA</h2>
           </div>
           <p className="mt-3 text-base leading-7 text-[var(--muted)]">
-            Recherche officielle USITC. Une sélection est enregistrée comme suggestion à vérifier, jamais comme classification validée automatiquement.
+            Recherche officielle USITC. Une sélection est enregistrée pour révision humaine, jamais validée automatiquement.
           </p>
           <form action={refreshWorkspaceHtsRatesAction} className="mt-5">
             <button className="secondary-button !min-h-11 !px-5 !py-2 !text-sm" disabled={!customsRows.length} type="submit">
-              Revérifier tous les HTS enregistrés
+              Revérifier tous les codes enregistrés
             </button>
           </form>
           {selectedSearchTerms.length ? (
@@ -287,7 +287,7 @@ export default async function ProductsPage({ params, searchParams }: ProductsPag
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <p className="inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-[var(--muted)]">
                   {getStatusIcon(customsStatus)}
-                  HTS USA - {customsStatusLabel}
+                  Code douanier USA - {customsStatusLabel}
                 </p>
                 <Link
                   className="inline-flex min-h-10 items-center justify-center rounded-full border border-neutral-300 bg-white px-4 py-2 text-sm font-semibold text-neutral-900 transition hover:bg-neutral-100"
@@ -325,7 +325,7 @@ export default async function ProductsPage({ params, searchParams }: ProductsPag
                           <input name="productCustomsId" type="hidden" value={customs.id} />
                           <input name="status" type="hidden" value="validated" />
                           <button className="primary-button !min-h-11 !px-4 !py-2 !text-sm" type="submit">
-                            Valider HTS
+                            Valider le code
                           </button>
                         </form>
                       ) : (
@@ -351,7 +351,7 @@ export default async function ProductsPage({ params, searchParams }: ProductsPag
                 </>
               ) : (
                 <p className="mt-3 text-base leading-7 text-[var(--muted)]">
-                  Aucun code HTS USA enregistré. Lance une recherche avec le nom, le numéro de pièce ou une description courte.
+                  Aucun code douanier USA enregistré. Lance une recherche avec le nom, le numéro de pièce ou une description courte.
                 </p>
               )}
             </div>

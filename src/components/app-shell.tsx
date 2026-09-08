@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { BriefcaseBusiness, Building2, FileText, Home, LockKeyhole, Package, Settings, ShieldCheck, Truck, Users } from "lucide-react";
+import { FileText, Home, LockKeyhole, Settings, Truck, Users } from "lucide-react";
 import { signOut } from "@/lib/auth/actions";
 import type { Dictionary } from "@/i18n/dictionaries";
 import type { Locale } from "@/i18n/config";
@@ -9,13 +9,9 @@ import type { WorkspaceRole } from "@/lib/supabase/types";
 const navItems = [
   { key: "dashboard", href: "dashboard", icon: Home, managerOnly: false },
   { key: "shipments", href: "shipments", icon: Truck, managerOnly: false },
-  { key: "products", href: "products", icon: Package, managerOnly: false },
-  { key: "companies", href: "companies", icon: Building2, managerOnly: false },
-  { key: "carriers", href: "carriers", icon: BriefcaseBusiness, managerOnly: false },
-  { key: "brokers", href: "brokers", icon: ShieldCheck, managerOnly: false },
   { key: "documents", href: "documents", icon: FileText, managerOnly: false },
-  { key: "team", href: "team", icon: Users, managerOnly: false },
   { key: "settings", href: "settings", icon: Settings, managerOnly: false },
+  { key: "team", href: "team", icon: Users, managerOnly: true },
   { key: "admin", href: "admin", icon: LockKeyhole, managerOnly: true },
 ] as const;
 

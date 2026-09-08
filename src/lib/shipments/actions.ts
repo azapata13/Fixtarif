@@ -168,7 +168,7 @@ export async function createShipmentDraft(locale: Locale, formData: FormData) {
   const weight = readPositiveNumber(formData, "weight");
 
   if (!reference || !quantity || !weight) {
-    redirect(`/${locale}/shipments/new?message=${encodeURIComponent("Référence, produit, quantité et poids sont requis.")}`);
+    redirect(`/${locale}/shipments/new?message=${encodeURIComponent("Ajoute une référence, une quantité et un poids approximatif pour créer le brouillon. Tu pourras les vérifier ensuite.")}`);
   }
 
   const supabase = await createClient();
@@ -575,7 +575,7 @@ export async function updateShipmentGoodsAndPackage(locale: Locale, formData: Fo
   const productNameFromForm = readField(formData, "productName");
 
   if (!shipmentId || !itemId || !quantity || !weight) {
-    redirect(`/${locale}/shipments/${shipmentId || ""}?message=${encodeURIComponent("Produit, quantité et poids sont requis.")}`);
+    redirect(`/${locale}/shipments/${shipmentId || ""}?message=${encodeURIComponent("Ajoute une description, une quantité et un poids approximatif. Tu pourras les vérifier ensuite.")}`);
   }
 
   const relationValidation = await validateShipmentDraftRelations({
@@ -775,7 +775,7 @@ export async function updateShipmentStatus(locale: Locale, formData: FormData) {
   }
 
   if (status === "ready" && !validation.complete) {
-    redirect(`/${locale}/shipments/${shipmentId}?message=${encodeURIComponent("Validation incomplète. Confirmez destination, produit, poids, quantité, transporteur et colis.")}`);
+    redirect(`/${locale}/shipments/${shipmentId}?message=${encodeURIComponent("Validation incomplète. Vérifie la destination, la marchandise, le poids, la quantité, le transporteur et les colis.")}`);
   }
 
   const supabase = await createClient();

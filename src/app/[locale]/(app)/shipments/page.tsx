@@ -14,15 +14,15 @@ type ShipmentsPageProps = {
 
 function getHtsLabel(status?: string | null) {
   if (status === "validated") {
-    return "HTS validé";
+    return "Code douanier USA validé";
   }
   if (status === "needs_review") {
-    return "HTS à vérifier";
+    return "Code douanier USA à vérifier";
   }
   if (status === "rejected") {
-    return "HTS rejeté";
+    return "Code douanier USA rejeté";
   }
-  return "HTS manquant";
+  return "Code douanier USA manquant";
 }
 
 export default async function ShipmentsPage({ params, searchParams }: ShipmentsPageProps) {

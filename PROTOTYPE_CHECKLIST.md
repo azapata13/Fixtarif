@@ -9,6 +9,8 @@
 - Bibliotheques: entreprises, sites, contacts, produits, transporteurs, courtiers.
 - Expedition Canada/USA manuelle: creation de brouillon, validation, transport, statut, duplication.
 - Detail d'expedition simplifie par ligne d'etapes horizontale et assistant modal sequentiel pour faciliter la demo.
+- Passe UX Sandra appliquee: navigation quotidienne reduite aux modules essentiels, dashboard avec deux actions principales, vocabulaire moins technique et donnees avancees accessibles sans encombrer le menu.
+- Creation de brouillon assouplie cote experience: quantite et poids restent obligatoires pour l'integrite, mais sont presentes comme estimations a verifier avant documents.
 - Page Documents preparee: import prive de documents sources actif; packing slip PDF brouillon prive actif; HTS live USITC en suggestion produit avec validation humaine owner/admin; CUSMA et automatisation douaniere visibles mais verrouilles.
 - PDF avance amorce: packing slip et BOL brouillons peuvent etre generes apres validation de l'expedition, sans pretendre remplacer les documents legaux finaux.
 - V2 documents amorcee: chaque document source peut maintenant creer une pre-analyse brouillon auditee, puis etre marque `a verifier`, `confirme` ou `rejete` par un humain.
@@ -97,6 +99,7 @@ Objectif: montrer une fondation fiable, simple et claire.
 - Montrer la page Documents comme roadmap produit integree, avec import source actif et packing slip brouillon.
 - Faire un seul deploy Netlify groupe quand la demo locale est approuvee.
 - Production Netlify actuellement bloquee par credit gratuit epuise; les commits GitHub continuent, mais `app.fixtarif.ca` ne recevra pas les nouveaux deploys avant upgrade/reset.
+- Quand Netlify est debloque, faire un seul deploy avec la version simple validee localement pour economiser les credits.
 - Rotater les cles sensibles partagees pendant la configuration initiale avant une exposition plus large.
 
 ### V2 produit

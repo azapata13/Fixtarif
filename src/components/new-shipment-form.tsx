@@ -26,15 +26,15 @@ type NewShipmentFormProps = {
 
 function getHtsStatusLabel(status?: string | null) {
   if (status === "validated") {
-    return "HTS USA validé";
+    return "Code douanier USA validé";
   }
   if (status === "rejected") {
-    return "HTS USA rejeté";
+    return "Code douanier USA rejeté";
   }
   if (status === "needs_review") {
-    return "HTS USA à vérifier";
+    return "Code douanier USA à vérifier";
   }
-  return "HTS USA manquant";
+  return "Code douanier USA manquant";
 }
 
 function getHtsStatusIcon(status?: string | null) {
@@ -164,7 +164,7 @@ export function NewShipmentForm({ action, businesses, carriers, locale, nextRefe
         </label>
         <label className="block text-base font-semibold">
           <span className="flex items-center justify-between gap-3">
-            Produit enregistré
+            Produit déjà enregistré
             <AddLink href={`/${locale}/products`} />
           </span>
           <select className="field" name="productId" value={selectedProductId} onChange={(event) => setSelectedProductId(event.target.value)}>
@@ -186,8 +186,8 @@ export function NewShipmentForm({ action, businesses, carriers, locale, nextRefe
           </div>
         ) : null}
         <label className="block text-base font-semibold">
-          Nom produit
-          <input className="field" defaultValue={selectedProduct?.name ?? ""} key={`name-${selectedProduct?.id ?? "manual"}`} name="productName" required />
+          Description de la marchandise
+          <input className="field" defaultValue={selectedProduct?.name ?? ""} key={`name-${selectedProduct?.id ?? "manual"}`} name="productName" placeholder="ex: palette de supports machinés" required />
         </label>
         <label className="block text-base font-semibold">
           Numéro pièce
@@ -198,11 +198,11 @@ export function NewShipmentForm({ action, businesses, carriers, locale, nextRefe
           <input className="field" name="lotNumber" />
         </label>
         <label className="block text-base font-semibold">
-          Quantité
+          Quantité estimée
           <input className="field" min="0.001" name="quantity" step="0.001" type="number" required />
         </label>
         <label className="block text-base font-semibold">
-          Poids total {weightUnit}
+          Poids total estimé ({weightUnit})
           <input className="field" defaultValue={selectedProduct?.weight ?? ""} key={`weight-${selectedProduct?.id ?? "manual"}`} min="0.001" name="weight" step="0.001" type="number" required />
         </label>
         {selectedProduct ? (
@@ -221,13 +221,16 @@ export function NewShipmentForm({ action, businesses, carriers, locale, nextRefe
         <input name="height" type="hidden" value={selectedProduct?.height ?? ""} />
         <input name="dimensionUnit" type="hidden" value={selectedProduct?.dimension_unit ?? "in"} />
         <input name="packageType" type="hidden" value={selectedProduct?.default_package_type ?? "pallet"} />
+        <p className="rounded-2xl bg-neutral-50 px-4 py-3 text-base text-[var(--muted)] md:col-span-2">
+          Une estimation suffit pour sauver le brouillon. Coche seulement lorsque la donnée est vérifiée.
+        </p>
         <label className="flex min-h-12 items-center gap-3 rounded-2xl border border-[var(--line)] bg-white px-4 py-3 text-base font-semibold shadow-sm">
           <input className="h-5 w-5 accent-black" name="quantityConfirmed" type="checkbox" />
-          Quantité confirmée
+          Quantité vérifiée
         </label>
         <label className="flex min-h-12 items-center gap-3 rounded-2xl border border-[var(--line)] bg-white px-4 py-3 text-base font-semibold shadow-sm">
           <input className="h-5 w-5 accent-black" name="weightConfirmed" type="checkbox" />
-          Poids confirmé
+          Poids vérifié
         </label>
         <label className="block text-base font-semibold">
           Nombre de colis/palettes
@@ -251,7 +254,7 @@ export function NewShipmentForm({ action, businesses, carriers, locale, nextRefe
         </label>
         <label className="flex min-h-12 items-center gap-3 rounded-2xl border border-[var(--line)] bg-white px-4 py-3 text-base font-semibold shadow-sm">
           <input className="h-5 w-5 accent-black" name="needsBol" type="checkbox" disabled={selectedCarrier?.default_provides_bol ?? false} />
-          Besoin d&apos;un connaissement plus tard
+          Besoin d&apos;un connaissement
         </label>
         {selectedCarrier?.default_provides_bol ? (
           <p className="rounded-2xl bg-neutral-50 px-4 py-3 text-base text-[var(--muted)] md:col-span-2">

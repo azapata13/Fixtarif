@@ -66,23 +66,23 @@ const dictionaries: Record<Locale, Dictionary> = {
       },
       shipments: {
         title: "Expéditions",
-        description: "Brouillons Canada/USA, validation, duplication et préparation documentaire.",
+        description: "Créer, vérifier et préparer les documents d'expédition.",
       },
       products: {
         title: "Produits",
-        description: "Bibliothèque produit avec dimensions, valeurs et validation HTS USA.",
+        description: "Pièces, poids, dimensions, valeurs et codes douaniers USA.",
       },
       companies: {
-        title: "Entreprises",
+        title: "Clients et adresses",
         description: "Clients, fournisseurs, sites de livraison et contacts de réception.",
       },
       carriers: {
         title: "Transporteurs",
-        description: "Transporteurs, préférences BOL et coordonnées de dispatch.",
+        description: "Transporteurs, connaissements et coordonnées de dispatch.",
       },
       brokers: {
-        title: "Courtiers",
-        description: "Courtiers USA préparés pour les flux douaniers à validation humaine.",
+        title: "Courtiers USA",
+        description: "Courtiers préparés pour les envois aux États-Unis.",
       },
       documents: {
         title: "Documents",
@@ -90,7 +90,7 @@ const dictionaries: Record<Locale, Dictionary> = {
       },
       team: {
         title: "Équipe",
-        description: "Gestion des rôles owner, admin et member.",
+        description: "Inviter les collègues et gérer leurs accès.",
       },
       settings: {
         title: "Réglages",
@@ -142,23 +142,23 @@ const dictionaries: Record<Locale, Dictionary> = {
       },
       shipments: {
         title: "Shipments",
-        description: "Canada/USA drafts, validation, duplication and document preparation.",
+        description: "Create, review and prepare shipping documents.",
       },
       products: {
         title: "Products",
-        description: "Product library with dimensions, values and US HTS validation.",
+        description: "Parts, weights, dimensions, values and US customs codes.",
       },
       companies: {
-        title: "Companies",
+        title: "Customers and addresses",
         description: "Customers, suppliers, delivery sites and receiving contacts.",
       },
       carriers: {
         title: "Carriers",
-        description: "Carrier records, BOL preferences and dispatch details.",
+        description: "Carrier records, bills of lading and dispatch details.",
       },
       brokers: {
-        title: "Brokers",
-        description: "US brokers prepared for customs workflows with human validation.",
+        title: "US brokers",
+        description: "Brokers prepared for United States shipments.",
       },
       documents: {
         title: "Documents",
@@ -166,7 +166,7 @@ const dictionaries: Record<Locale, Dictionary> = {
       },
       team: {
         title: "Team",
-        description: "Role management for owner, admin and member.",
+        description: "Invite coworkers and manage their access.",
       },
       settings: {
         title: "Settings",

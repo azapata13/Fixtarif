@@ -183,9 +183,9 @@ function statusLabel(status: string) {
 
 function documentTypeLabel(type: string) {
   const labels: Record<string, string> = {
-    bol: "BOL brouillon",
+    bol: "Connaissement brouillon",
     commercial_invoice: "Facture commerciale brouillon",
-    cusma_certificate: "CUSMA brouillon",
+    cusma_certificate: "Document Canada-USA-Mexique brouillon",
     label: "Étiquette",
     packing_slip: "Packing slip brouillon",
     source_upload: "Source importée",
@@ -257,7 +257,7 @@ export function ShipmentSectionCards({
       { complete: Boolean(shipment.carrierId && transport), key: "transport" as const, label: "Transport", summary: summaries.transport },
       { complete: state.hasGeneratedDocuments, key: "documents" as const, label: "Documents", summary: state.hasGeneratedDocuments ? "PDF brouillon disponible." : "Documents à générer." },
       ...(shipment.destinationCountry === "US"
-        ? [{ complete: state.htsValidated, key: "customs" as const, label: "Douane USA", summary: state.htsValidated ? "HTS validé." : "HTS à valider." }]
+        ? [{ complete: state.htsValidated, key: "customs" as const, label: "Douane USA", summary: state.htsValidated ? "Code douanier USA validé." : "Code douanier USA à valider." }]
         : []),
     ],
     [shipment, shipmentItem, state, summaries, transport],
@@ -452,7 +452,7 @@ export function ShipmentSectionCards({
                       ))}
                     </select>
                   </Field>
-                  <Field label="Nom du produit">
+                  <Field label="Description de la marchandise">
                     <input className="field mt-2" defaultValue={selectedProduct?.name ?? shipmentItem.name} name="productName" />
                   </Field>
                   <div className="grid gap-4 sm:grid-cols-2">
@@ -465,7 +465,7 @@ export function ShipmentSectionCards({
                     <Field label="Quantité">
                       <input className="field mt-2" defaultValue={shipmentItem.quantity} min="0.001" name="quantity" step="0.001" type="number" />
                     </Field>
-                    <Field label="Poids">
+                    <Field label="Poids total">
                       <div className="mt-2 grid grid-cols-[1fr_110px] gap-3">
                         <input className="field" defaultValue={selectedProduct?.weight ?? shipmentItem.weight} min="0.001" name="weight" step="0.001" type="number" />
                         <select className="field" defaultValue={selectedProduct?.weight_unit ?? shipmentItem.weight_unit} name="weightUnit">
@@ -508,13 +508,16 @@ export function ShipmentSectionCards({
                     <input className="field mt-2" defaultValue={shipmentPackage?.destination_label ?? ""} name="destinationLabel" />
                   </Field>
                   <div className="grid gap-3 sm:grid-cols-3">
+                    <p className="rounded-2xl bg-neutral-50 px-4 py-3 text-base text-[var(--muted)] sm:col-span-3">
+                      Corrige les estimations ici. Coche seulement lorsque la quantité et le poids sont vérifiés.
+                    </p>
                     <label className="flex min-h-12 items-center gap-3 rounded-2xl border border-[var(--line)] bg-white px-4 py-3 text-base font-semibold shadow-sm">
                       <input className="h-5 w-5 accent-black" defaultChecked={shipmentItem.quantity_confirmed} name="quantityConfirmed" type="checkbox" />
-                      Quantité confirmée
+                      Quantité vérifiée
                     </label>
                     <label className="flex min-h-12 items-center gap-3 rounded-2xl border border-[var(--line)] bg-white px-4 py-3 text-base font-semibold shadow-sm">
                       <input className="h-5 w-5 accent-black" defaultChecked={shipmentItem.weight_confirmed} name="weightConfirmed" type="checkbox" />
-                      Poids confirmé
+                      Poids vérifié
                     </label>
                     <label className="flex min-h-12 items-center gap-3 rounded-2xl border border-[var(--line)] bg-white px-4 py-3 text-base font-semibold shadow-sm">
                       <input className="h-5 w-5 accent-black" defaultChecked={Boolean(shipmentPackage?.stackable)} name="stackable" type="checkbox" />
@@ -545,7 +548,7 @@ export function ShipmentSectionCards({
                     <Field label="Numéro PRO">
                       <input className="field mt-2" defaultValue={transport.pro_number ?? ""} name="proNumber" />
                     </Field>
-                    <Field label="Numéro BOL">
+                    <Field label="Numéro de connaissement">
                       <input className="field mt-2" defaultValue={transport.bol_number ?? ""} name="bolNumber" />
                     </Field>
                   </div>
@@ -574,7 +577,7 @@ export function ShipmentSectionCards({
               {openStep.key === "documents" ? (
                 <div className="grid gap-4">
                   <p className="rounded-2xl bg-neutral-50 px-4 py-3 text-base text-neutral-700">
-                    Le PDF brouillon reste privé. Ajoute ici les fichiers source liés à cette expédition; le scan intelligent restera soumis à une révision humaine.
+                    Ajoute les fichiers liés à cette expédition. Les documents restent privés et pourront être vérifiés avant l&apos;envoi.
                   </p>
                   <form action={actions.uploadSourceDocument} className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4">
                     <input name="shipmentId" type="hidden" value={shipment.id} />
@@ -621,12 +624,12 @@ export function ShipmentSectionCards({
                       <form action={actions.generateBillOfLading}>
                         <input name="shipmentId" type="hidden" value={shipment.id} />
                         <button className="secondary-button" type="submit">
-                          Générer BOL
+                          Générer connaissement
                         </button>
                       </form>
                     ) : (
                       <button className="secondary-button" disabled type="button">
-                        Générer BOL
+                        Générer connaissement
                       </button>
                     )}
                   </div>
@@ -669,14 +672,14 @@ export function ShipmentSectionCards({
                 <div className="grid gap-3">
                   <StatusLine checked={state.htsValidated} label={state.htsCode ? `${state.htsLabel}: ${state.htsCode}` : state.htsLabel} />
                   <p className="rounded-2xl bg-neutral-50 px-4 py-3 text-base text-neutral-700">
-                    Origine, CUSMA et facture commerciale restent verrouillés pour le MVP afin d’éviter une déclaration douanière non validée.
+                    Pour un envoi aux États-Unis, Fixtarif garde les documents douaniers bloqués tant que les informations sensibles ne sont pas validées.
                   </p>
                   <Link className="secondary-button" href={`/${locale}/products`}>
-                    Valider les codes produits
+                    Vérifier les codes douaniers
                   </Link>
                   <p className="inline-flex min-h-12 items-center gap-2 rounded-full bg-neutral-100 px-5 py-3 text-base font-semibold text-neutral-700">
                     <LockKeyhole aria-hidden="true" size={18} />
-                    Facture USA verrouillée
+                    Facture USA à venir
                   </p>
                 </div>
               ) : null}

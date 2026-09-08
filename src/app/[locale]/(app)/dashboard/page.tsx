@@ -8,12 +8,22 @@ import { prepareDemoWorkspace } from "@/lib/demo/actions";
 import { getShipmentsForWorkspace } from "@/lib/shipments/queries";
 import { getCurrentWorkspace } from "@/lib/workspaces/queries";
 
-const quickLinks = [
-  { key: "shipments", icon: Truck },
-  { key: "products", icon: Package },
-  { key: "companies", icon: Building2 },
-  { key: "documents", icon: FileText },
+const libraryLinks = [
+  { description: "Clients, adresses de livraison et contacts.", href: "companies", icon: Building2, title: "Clients et adresses" },
+  { description: "Pièces, poids, dimensions et valeurs.", href: "products", icon: Package, title: "Produits" },
+  { description: "Transporteurs et préférences de connaissement.", href: "carriers", icon: Truck, title: "Transporteurs" },
 ] as const;
+
+function shipmentStatusLabel(status: string) {
+  const labels: Record<string, string> = {
+    archived: "archivé",
+    draft: "brouillon",
+    ready: "prêt",
+    validation: "en validation",
+  };
+
+  return labels[status] ?? status;
+}
 
 export default async function DashboardPage({ params, searchParams }: { params: LocaleParams; searchParams: Promise<{ message?: string }> }) {
   const { locale: localeParam } = await params;
@@ -67,24 +77,56 @@ export default async function DashboardPage({ params, searchParams }: { params: 
           </form>
         </div>
       </section>
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {quickLinks.map((item) => {
+      <section className="mb-6 grid gap-4 sm:grid-cols-2">
+        <Link
+          className="focus-ring rounded-[24px] border border-[var(--line)] bg-white p-6 shadow-sm transition hover:border-neutral-300 hover:shadow-md"
+          href={`/${locale}/shipments`}
+        >
+          <div className="flex items-center justify-between gap-4">
+            <Truck aria-hidden="true" className="text-neutral-950" size={28} />
+            <ArrowRight aria-hidden="true" className="text-neutral-400" size={22} />
+          </div>
+          <h2 className="mt-6 text-xl font-semibold tracking-tight">Voir les expéditions</h2>
+          <p className="mt-3 text-base leading-6 text-[var(--muted)]">Retrouver les brouillons, corriger ce qui manque et générer les documents.</p>
+        </Link>
+        <Link
+          className="focus-ring rounded-[24px] border border-[var(--line)] bg-white p-6 shadow-sm transition hover:border-neutral-300 hover:shadow-md"
+          href={`/${locale}/documents`}
+        >
+          <div className="flex items-center justify-between gap-4">
+            <FileText aria-hidden="true" className="text-neutral-950" size={28} />
+            <ArrowRight aria-hidden="true" className="text-neutral-400" size={22} />
+          </div>
+          <h2 className="mt-6 text-xl font-semibold tracking-tight">Documents importés</h2>
+          <p className="mt-3 text-base leading-6 text-[var(--muted)]">Déposer une feuille, vérifier les informations et garder les fichiers privés.</p>
+        </Link>
+      </section>
+      <section className="rounded-[24px] border border-[var(--line)] bg-white p-6 shadow-sm">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h2 className="text-2xl font-semibold tracking-tight">Données enregistrées</h2>
+            <p className="mt-2 text-base leading-7 text-[var(--muted)]">À préparer une fois, puis Fixtarif les réutilise dans les expéditions.</p>
+          </div>
+        </div>
+        <div className="mt-5 grid gap-3 md:grid-cols-3">
+          {libraryLinks.map((item) => {
           const Icon = item.icon;
           return (
             <Link
-              className="focus-ring rounded-[24px] border border-[var(--line)] bg-white p-6 shadow-sm transition hover:border-neutral-300 hover:shadow-md"
-              href={`/${locale}/${item.key}`}
-              key={item.key}
+              className="focus-ring rounded-2xl bg-neutral-50 p-4 transition hover:bg-neutral-100"
+              href={`/${locale}/${item.href}`}
+              key={item.href}
             >
               <div className="flex items-center justify-between gap-4">
-                <Icon aria-hidden="true" className="text-neutral-950" size={28} />
-                <ArrowRight aria-hidden="true" className="text-neutral-400" size={22} />
+                <Icon aria-hidden="true" className="text-neutral-950" size={23} />
+                <ArrowRight aria-hidden="true" className="text-neutral-400" size={18} />
               </div>
-              <h2 className="mt-6 text-xl font-semibold tracking-tight">{dictionary.nav[item.key]}</h2>
-              <p className="mt-3 text-base leading-6 text-[var(--muted)]">{dictionary.pages[item.key].description}</p>
+              <h3 className="mt-4 text-lg font-semibold tracking-tight">{item.title}</h3>
+              <p className="mt-2 text-sm leading-6 text-[var(--muted)]">{item.description}</p>
             </Link>
           );
         })}
+        </div>
       </section>
       <section className="mt-6 rounded-[24px] border border-[var(--line)] bg-white p-6 shadow-sm">
         <div className="flex items-center justify-between gap-4">
@@ -103,7 +145,7 @@ export default async function DashboardPage({ params, searchParams }: { params: 
                   <span className="block text-base font-semibold text-neutral-950">{shipment.reference}</span>
                   <span className="mt-1 block text-sm text-[var(--muted)]">{item?.name ?? "Produit à compléter"}</span>
                 </span>
-                <span className="text-sm font-semibold uppercase text-[var(--muted)]">{shipment.status}</span>
+                <span className="text-sm font-semibold uppercase text-[var(--muted)]">{shipmentStatusLabel(shipment.status)}</span>
               </Link>
             );
           })}

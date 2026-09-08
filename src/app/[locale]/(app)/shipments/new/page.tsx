@@ -39,7 +39,7 @@ export default async function NewShipmentPage({ params, searchParams }: NewShipm
         <ArrowLeft aria-hidden="true" size={20} />
         Retour
       </Link>
-      <PageHeader title="Nouvelle expédition" description="Créer un brouillon manuel avec validation humaine de la quantité, du poids et du pays." />
+      <PageHeader title="Nouvelle expédition" description="Commence avec ce que tu sais. Tu pourras corriger et vérifier les données avant les documents." />
       {message ? <p className="mb-4 rounded-2xl bg-neutral-100 px-4 py-3 text-base text-neutral-700">{message}</p> : null}
       <NewShipmentForm
         action={createShipmentDraftAction}

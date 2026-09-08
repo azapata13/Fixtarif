@@ -121,7 +121,7 @@ export default async function CarriersPage({ params, searchParams }: CarriersPag
               ) : null}
               <p className="flex items-center gap-3">
                 <Truck aria-hidden="true" size={20} />
-                {carrier.default_provides_bol ? "Fournit son BOL" : "BOL Fixtarif possible plus tard"}
+                {carrier.default_provides_bol ? "Fournit son connaissement" : "Connaissement Fixtarif possible plus tard"}
               </p>
             </div>
             {carrier.notes ? <p className="mt-6 rounded-2xl bg-neutral-50 p-4 text-base leading-7 text-[var(--muted)]">{carrier.notes}</p> : null}

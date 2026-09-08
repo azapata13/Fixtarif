@@ -16,10 +16,10 @@ type DocumentsPageProps = {
 const modules = [
   "Scan/import",
   "Packing slip",
-  "BOL",
+  "Connaissement",
   "Facture commerciale USA",
-  "HTS",
-  "CUSMA",
+  "Code douanier USA",
+  "Accord Canada-USA-Mexique",
 ];
 
 function statusLabel(status: string) {
@@ -38,9 +38,9 @@ function statusLabel(status: string) {
 
 function documentTypeLabel(type: string) {
   const labels: Record<string, string> = {
-    bol: "BOL brouillon",
+    bol: "Connaissement brouillon",
     commercial_invoice: "Facture commerciale brouillon",
-    cusma_certificate: "CUSMA brouillon",
+    cusma_certificate: "Document Canada-USA-Mexique brouillon",
     label: "Étiquette",
     packing_slip: "Packing slip brouillon",
     source_upload: "Source importée",
@@ -77,7 +77,7 @@ export default async function DocumentsPage({ params, searchParams }: DocumentsP
 
   return (
     <>
-      <PageHeader title={page.title} description="Scan/import, PDF et douane USA préparés avec validation humaine avant automatisation." />
+      <PageHeader title={page.title} description="Importer une feuille, vérifier les informations et générer des brouillons privés." />
       {message ? <p className="mb-5 rounded-2xl bg-neutral-100 px-4 py-3 text-base font-semibold text-neutral-700">{message}</p> : null}
 
       {!overview.schemaReady ? (
@@ -90,10 +90,10 @@ export default async function DocumentsPage({ params, searchParams }: DocumentsP
         <article className="rounded-[24px] border border-[var(--line)] bg-white p-6 shadow-sm">
           <div className="flex items-center gap-3">
             <ScanLine aria-hidden="true" size={26} />
-            <h2 className="text-2xl font-semibold tracking-tight">Scan/import</h2>
+            <h2 className="text-2xl font-semibold tracking-tight">Importer une feuille</h2>
           </div>
           <p className="mt-3 text-base leading-7 text-[var(--muted)]">
-            Zone prête pour recevoir les fichiers source. Les buckets Supabase sont privés et chaque chemin sera isolé par workspace.
+            Dépose un PDF ou une image. Fixtarif garde le fichier privé et prépare une lecture à vérifier.
           </p>
           <form action={uploadSourceDocumentAction} className="mt-6 grid gap-4">
             <label className="block text-base font-semibold">
@@ -120,8 +120,8 @@ export default async function DocumentsPage({ params, searchParams }: DocumentsP
             <h2 className="text-2xl font-semibold tracking-tight">Sécurité documents</h2>
           </div>
           <ul className="mt-5 grid gap-3 text-base font-semibold text-neutral-800">
-            <li className="rounded-2xl bg-neutral-50 px-4 py-3">Buckets privés source-documents et generated-documents</li>
-            <li className="rounded-2xl bg-neutral-50 px-4 py-3">RLS par workspace sur les métadonnées</li>
+            <li className="rounded-2xl bg-neutral-50 px-4 py-3">Fichiers privés par entreprise</li>
+            <li className="rounded-2xl bg-neutral-50 px-4 py-3">Accès limité aux membres autorisés</li>
             <li className="rounded-2xl bg-neutral-50 px-4 py-3">Validation humaine pour éviter les documents incomplets</li>
           </ul>
         </article>
@@ -149,7 +149,7 @@ export default async function DocumentsPage({ params, searchParams }: DocumentsP
                 {extraction ? (
                   <div className="mt-4 rounded-2xl border border-neutral-200 bg-white p-4">
                     <div className="flex flex-wrap items-center justify-between gap-3">
-                      <p className="text-sm font-semibold uppercase tracking-wide text-[var(--muted)]">Pré-analyse</p>
+                      <p className="text-sm font-semibold uppercase tracking-wide text-[var(--muted)]">Lecture du document</p>
                       <span className="rounded-full bg-neutral-100 px-3 py-1 text-sm font-semibold">{statusLabel(extraction.validation_status)}</span>
                     </div>
                     <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
@@ -166,7 +166,7 @@ export default async function DocumentsPage({ params, searchParams }: DocumentsP
                         <dd className="mt-1 font-semibold text-neutral-950">{normalizedValue(normalized.destinationName)}</dd>
                       </div>
                       <div>
-                        <dt className="font-semibold text-neutral-500">Confiance</dt>
+                        <dt className="font-semibold text-neutral-500">État</dt>
                         <dd className="mt-1 font-semibold text-neutral-950">Révision requise</dd>
                       </div>
                     </dl>
@@ -186,8 +186,8 @@ export default async function DocumentsPage({ params, searchParams }: DocumentsP
                 ) : (
                   <form action={prepareExtractionAction} className="mt-4">
                     <input name="sourceDocumentId" type="hidden" value={document.id} />
-                    <PendingSubmitButton className="primary-button !min-h-11 !px-4 !py-2 !text-sm" pendingLabel="Pré-analyse...">
-                      Préparer la pré-analyse
+                    <PendingSubmitButton className="primary-button !min-h-11 !px-4 !py-2 !text-sm" pendingLabel="Lecture...">
+                      Lire le document
                     </PendingSubmitButton>
                   </form>
                 )}
@@ -235,7 +235,7 @@ export default async function DocumentsPage({ params, searchParams }: DocumentsP
               <h3 className="text-xl font-semibold tracking-tight">{module}</h3>
               <LockKeyhole aria-hidden="true" size={22} />
             </div>
-            <p className="mt-3 text-base leading-7 text-[var(--muted)]">Préparé pour V2, bloqué jusqu&apos;à validation métier.</p>
+            <p className="mt-3 text-base leading-7 text-[var(--muted)]">Préparé, mais activé seulement quand les règles seront validées.</p>
           </article>
         ))}
       </section>
@@ -246,7 +246,7 @@ export default async function DocumentsPage({ params, searchParams }: DocumentsP
           <h2 className="text-2xl font-semibold tracking-tight">Automatisation douanière USA</h2>
         </div>
         <p className="mt-3 text-base leading-7 text-[var(--muted)]">
-          Prochaine étape: relier les produits aux codes HS/HTS, ajouter les champs de facture commerciale, puis générer des PDF après révision.
+          Prochaine étape: relier les produits aux codes douaniers USA, ajouter les champs de facture commerciale, puis générer les brouillons après révision.
         </p>
       </section>
     </>
