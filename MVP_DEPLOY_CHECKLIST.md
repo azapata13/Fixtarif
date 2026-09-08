@@ -46,6 +46,8 @@ NEXT_PUBLIC_MARKETING_URL=https://fixtarif.ca
 NEXT_PUBLIC_APP_NAME=Fixtarif
 DEFAULT_LOCALE=fr
 FIXTARIF_PLATFORM_ADMIN_EMAILS=z.felipealberto@gmail.com,zapatasx@gmail.com
+GOOGLE_APPS_SCRIPT_WEBHOOK_ID=
+GOOGLE_APPS_SCRIPT_WEBHOOK_URL=
 ```
 
 Ne jamais exposer `SUPABASE_SERVICE_ROLE_KEY` cote client.
@@ -66,6 +68,7 @@ Ne jamais exposer `SUPABASE_SERVICE_ROLE_KEY` cote client.
 12. Marquer une expedition `ready`, generer le packing slip, ouvrir le PDF.
 13. Depuis l'expedition ou `Documents`, importer un petit fichier non sensible.
 14. Aller sur `Admin` et verifier les logs.
+15. Dans `Admin`, confirmer que l'integration Google Apps Script apparait comme configuree si les variables sont presentes dans Netlify.
 
 ## Go / no-go demo
 

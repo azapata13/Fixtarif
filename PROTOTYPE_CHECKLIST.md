@@ -86,6 +86,7 @@ npm run build
 - Les produits affichent l'etat HTS USA en langage simple: `Manquant`, `A verifier`, `Valide`, `Rejete`.
 - Les expeditions USA affichent l'etat HTS du produit et gardent la facture commerciale bloquee tant que les donnees douanieres ne sont pas validees.
 - La reverification HTS USITC est disponible manuellement. Si taux, description ou unites changent, le statut revient a `A verifier`.
+- Webhook Google Apps Script ajoute comme integration serveur configuree, sans transmission automatique de donnees client dans le MVP.
 
 ## Roadmap restante
 

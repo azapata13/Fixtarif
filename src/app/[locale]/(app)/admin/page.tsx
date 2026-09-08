@@ -6,6 +6,7 @@ import { type Locale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 import { isPlatformAdminEmail } from "@/lib/admin/platform";
 import { getAdminOverviewForWorkspace } from "@/lib/admin/queries";
+import { isGoogleAppsScriptWebhookConfigured } from "@/lib/env";
 import { getCurrentWorkspace } from "@/lib/workspaces/queries";
 
 const countCards = [
@@ -47,6 +48,7 @@ export default async function AdminPage({ params }: { params: LocaleParams }) {
 
   const overview = await getAdminOverviewForWorkspace(workspace.id);
   const isPlatformAdmin = isPlatformAdminEmail(user?.email);
+  const googleAppsScriptReady = isGoogleAppsScriptWebhookConfigured();
 
   return (
     <>
@@ -165,6 +167,12 @@ export default async function AdminPage({ params }: { params: LocaleParams }) {
             <p className="mt-5 rounded-2xl bg-neutral-50 p-4 text-base font-semibold text-neutral-800">
               Offre de lancement: 45 jours gratuits sur Pro pour les 30 premières entreprises.
             </p>
+            <div className="mt-5 rounded-2xl bg-neutral-50 p-4">
+              <p className="text-base font-semibold text-neutral-950">Intégration Google Apps Script</p>
+              <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
+                Webhook {googleAppsScriptReady ? "configuré côté serveur" : "non configuré"}. Aucun document client n&apos;est transmis automatiquement pour l&apos;instant.
+              </p>
+            </div>
           </section>
           <section className="mt-6 rounded-[24px] border border-[var(--line)] bg-white p-6 shadow-sm">
             <div className="flex items-center gap-3">
