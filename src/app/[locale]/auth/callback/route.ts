@@ -20,6 +20,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const redirectOrigin = getAuthRedirectOrigin(request);
   const code = requestUrl.searchParams.get("code");
   const next = safeNextPath(requestUrl.searchParams.get("next"), locale);
+  const alreadyRetried = requestUrl.searchParams.get("oauth_retry") === "1";
 
   if (!code) {
     return NextResponse.redirect(new URL(`/${locale}/login?message=Connexion%20Google%20annul%C3%A9e.`, redirectOrigin));
@@ -30,6 +31,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
   if (error) {
     logServerError({ action: "google_oauth_callback_localized", error });
+    if (!alreadyRetried) {
+      return NextResponse.redirect(new URL(`/${locale}/auth/google?next=${encodeURIComponent(next)}&oauth_retry=1`, redirectOrigin));
+    }
     return NextResponse.redirect(new URL(`/${locale}/login?message=${encodeURIComponent(genericOAuthError(locale))}`, redirectOrigin));
   }
 

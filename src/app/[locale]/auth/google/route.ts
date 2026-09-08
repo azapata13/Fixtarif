@@ -5,6 +5,14 @@ import { isSupabaseConfigured } from "@/lib/env";
 import { genericOAuthError, logServerError } from "@/lib/security/public-errors";
 import { createClient } from "@/lib/supabase/server";
 
+function safeNextPath(value: string | null, locale: Locale) {
+  if (!value || !value.startsWith("/") || value.startsWith("//")) {
+    return `/${locale}/dashboard`;
+  }
+
+  return value;
+}
+
 function loginRedirect(locale: Locale, request: NextRequest, message: string) {
   const origin = getAuthRedirectOrigin(request);
   return NextResponse.redirect(new URL(`/${locale}/login?message=${encodeURIComponent(message)}`, origin));
@@ -19,11 +27,14 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   }
 
   const origin = getAuthRedirectOrigin(request);
+  const requestUrl = new URL(request.url);
+  const next = safeNextPath(requestUrl.searchParams.get("next"), locale);
+  const retry = requestUrl.searchParams.get("oauth_retry") === "1" ? "&oauth_retry=1" : "";
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
-      redirectTo: `${origin}/${locale}/auth/callback?next=/${locale}/dashboard`,
+      redirectTo: `${origin}/${locale}/auth/callback?next=${encodeURIComponent(next)}${retry}`,
     },
   });
 

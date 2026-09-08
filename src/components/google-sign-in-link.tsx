@@ -13,7 +13,7 @@ export function GoogleSignInLink({ children, href, pendingLabel }: GoogleSignInL
   const [pending, setPending] = useState(false);
 
   return (
-    <a className="secondary-button inline-flex w-full items-center justify-center gap-3" href={href} onClick={() => setPending(true)}>
+    <a className="secondary-button inline-flex w-full items-center justify-center gap-3" href={href} onClick={() => setPending(true)} rel="nofollow">
       {pending ? (
         <>
           <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
