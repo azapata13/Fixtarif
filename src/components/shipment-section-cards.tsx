@@ -170,6 +170,41 @@ function StatusLine({ checked, label }: { checked: boolean; label: string }) {
   );
 }
 
+function statusLabel(status: string) {
+  const labels: Record<string, string> = {
+    draft: "Brouillon",
+    needs_review: "À vérifier",
+    rejected: "Rejeté",
+    validated: "Validé",
+  };
+
+  return labels[status] ?? status;
+}
+
+function documentTypeLabel(type: string) {
+  const labels: Record<string, string> = {
+    bol: "BOL brouillon",
+    commercial_invoice: "Facture commerciale brouillon",
+    cusma_certificate: "CUSMA brouillon",
+    label: "Étiquette",
+    packing_slip: "Packing slip brouillon",
+    source_upload: "Source importée",
+  };
+
+  return labels[type] ?? type;
+}
+
+function shipmentStatusLabel(status: string) {
+  const labels: Record<string, string> = {
+    archived: "archivé",
+    draft: "brouillon",
+    ready: "prêt",
+    validation: "en validation",
+  };
+
+  return labels[status] ?? status;
+}
+
 function ValidationLine({ checked, label, onFix }: { checked: boolean; label: string; onFix: () => void }) {
   return (
     <div className="flex items-center justify-between gap-3 rounded-2xl bg-neutral-50 px-4 py-3">
@@ -250,7 +285,7 @@ export function ShipmentSectionCards({
             <p className="text-sm font-semibold uppercase tracking-wide text-[var(--muted)]">Progression</p>
             <h2 className="mt-1 text-2xl font-semibold tracking-tight">{shipment.reference}</h2>
             <p className="mt-2 text-base leading-7 text-[var(--muted)]">
-              {completedCount}/{steps.length} étapes complétées · {shipment.status.toUpperCase()} · {shipment.destinationCountry}
+              {completedCount}/{steps.length} étapes complétées · {shipmentStatusLabel(shipment.status)} · {shipment.destinationCountry}
             </p>
           </div>
           <button className="primary-button min-w-56" onClick={() => openWizard(preferredStartStepIndex)} type="button">
@@ -601,7 +636,7 @@ export function ShipmentSectionCards({
                       sourceDocuments.map((document) => (
                         <div className="rounded-2xl bg-neutral-50 p-4" key={document.id}>
                           <p className="break-words text-base font-semibold">{document.original_filename}</p>
-                          <p className="mt-1 text-sm font-semibold uppercase tracking-wide text-[var(--muted)]">{document.validation_status}</p>
+                          <p className="mt-1 text-sm font-semibold uppercase tracking-wide text-[var(--muted)]">{statusLabel(document.validation_status)}</p>
                           <p className="mt-1 text-sm text-[var(--muted)]">{document.mime_type}</p>
                         </div>
                       ))
@@ -615,8 +650,8 @@ export function ShipmentSectionCards({
                       documents.map((document) => (
                         <div className="flex flex-col gap-3 rounded-2xl bg-neutral-50 p-4 sm:flex-row sm:items-center sm:justify-between" key={document.id}>
                           <div>
-                            <p className="text-base font-semibold">{document.document_type}</p>
-                            <p className="mt-1 text-sm font-semibold uppercase tracking-wide text-[var(--muted)]">{document.validation_status}</p>
+                            <p className="text-base font-semibold">{documentTypeLabel(document.document_type)}</p>
+                            <p className="mt-1 text-sm font-semibold uppercase tracking-wide text-[var(--muted)]">{statusLabel(document.validation_status)}</p>
                           </div>
                           <Link className="secondary-button !min-h-11 !px-4 !py-2 !text-sm" href={`/${locale}/documents/${document.id}/download`} target="_blank">
                             Ouvrir PDF

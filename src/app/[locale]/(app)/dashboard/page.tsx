@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Building2, FileText, Package, Plus, Sparkles, Truck } from "lucide-react";
+import { ArrowRight, Building2, FileText, Package, Plus, Sparkles, Truck, Upload } from "lucide-react";
 import { type LocaleParams } from "@/app/[locale]/layout";
 import { PageHeader } from "@/components/page-header";
 import { type Locale } from "@/i18n/config";
@@ -34,13 +34,19 @@ export default async function DashboardPage({ params, searchParams }: { params: 
           <div>
             <h2 className="text-3xl font-semibold tracking-tight">Préparer une expédition</h2>
             <p className="mt-3 max-w-2xl text-lg leading-7 text-[var(--muted)]">
-              Crée un brouillon Canada, choisis un client, un produit et confirme les valeurs importantes avant les documents.
+              Commence manuellement ou importe une feuille. Fixtarif te demande ensuite seulement ce qui manque avant les documents.
             </p>
           </div>
-          <Link className="primary-button inline-flex min-w-64 items-center justify-center gap-2" href={`/${locale}/shipments/new`}>
-            <Plus aria-hidden="true" size={22} />
-            Nouvelle expédition
-          </Link>
+          <div className="grid gap-3 sm:grid-cols-2 lg:min-w-[480px]">
+            <Link className="primary-button inline-flex items-center justify-center gap-2" href={`/${locale}/shipments/new`}>
+              <Plus aria-hidden="true" size={22} />
+              Nouvelle expédition
+            </Link>
+            <Link className="secondary-button inline-flex items-center justify-center gap-2" href={`/${locale}/documents`}>
+              <Upload aria-hidden="true" size={21} />
+              Importer un document
+            </Link>
+          </div>
         </div>
       </section>
       <section className="mb-6 rounded-[24px] border border-[var(--line)] bg-white p-6 shadow-sm">

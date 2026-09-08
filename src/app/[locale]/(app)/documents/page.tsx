@@ -36,6 +36,19 @@ function statusLabel(status: string) {
   return labels[status] ?? status;
 }
 
+function documentTypeLabel(type: string) {
+  const labels: Record<string, string> = {
+    bol: "BOL brouillon",
+    commercial_invoice: "Facture commerciale brouillon",
+    cusma_certificate: "CUSMA brouillon",
+    label: "Étiquette",
+    packing_slip: "Packing slip brouillon",
+    source_upload: "Source importée",
+  };
+
+  return labels[type] ?? type;
+}
+
 function normalizedValue(value: unknown) {
   if (typeof value === "string" && value.trim()) {
     return value;
@@ -109,7 +122,7 @@ export default async function DocumentsPage({ params, searchParams }: DocumentsP
           <ul className="mt-5 grid gap-3 text-base font-semibold text-neutral-800">
             <li className="rounded-2xl bg-neutral-50 px-4 py-3">Buckets privés source-documents et generated-documents</li>
             <li className="rounded-2xl bg-neutral-50 px-4 py-3">RLS par workspace sur les métadonnées</li>
-            <li className="rounded-2xl bg-neutral-50 px-4 py-3">Validation humaine requise avant PDF/HTS/CUSMA</li>
+            <li className="rounded-2xl bg-neutral-50 px-4 py-3">Validation humaine pour éviter les documents incomplets</li>
           </ul>
         </article>
       </section>
@@ -200,8 +213,8 @@ export default async function DocumentsPage({ params, searchParams }: DocumentsP
           <div className="mt-5 grid gap-3 md:grid-cols-2">
             {overview.generatedDocuments.map((document) => (
               <div key={document.id} className="rounded-2xl bg-neutral-50 p-4">
-                <p className="text-base font-semibold">{document.document_type}</p>
-                <p className="mt-2 text-sm font-semibold uppercase tracking-wide text-[var(--muted)]">{document.validation_status}</p>
+                <p className="text-base font-semibold">{documentTypeLabel(document.document_type)}</p>
+                <p className="mt-2 text-sm font-semibold uppercase tracking-wide text-[var(--muted)]">{statusLabel(document.validation_status)}</p>
                 <Link className="secondary-button mt-4 !min-h-11 !px-4 !py-2 !text-sm" href={`/${locale}/documents/${document.id}/download`} target="_blank">
                   Ouvrir PDF
                 </Link>
