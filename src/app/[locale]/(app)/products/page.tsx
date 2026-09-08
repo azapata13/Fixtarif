@@ -53,6 +53,8 @@ function buildSearchTerms(product: { name: string; part_number: string | null; d
   return [product.name, product.part_number, descriptionWords].filter((term): term is string => Boolean(term));
 }
 
+const commonHtsSearches = ["bolt", "bracket", "screw", "washer", "aluminum", "7318", "8302"];
+
 export default async function ProductsPage({ params, searchParams }: ProductsPageProps) {
   const { locale: localeParam } = await params;
   const queryParams = await searchParams;
@@ -168,7 +170,7 @@ export default async function ProductsPage({ params, searchParams }: ProductsPag
             <h2 className="text-2xl font-semibold tracking-tight">Codes douaniers USA</h2>
           </div>
           <p className="mt-3 text-base leading-7 text-[var(--muted)]">
-            Recherche officielle USITC. Une sélection est enregistrée pour révision humaine, jamais validée automatiquement.
+            Recherche officielle USITC. Tape un mot simple, un numéro de pièce, une description ou un début de code. Une sélection est enregistrée pour révision humaine.
           </p>
           <form action={refreshWorkspaceHtsRatesAction} className="mt-5">
             <button className="secondary-button !min-h-11 !px-5 !py-2 !text-sm" disabled={!customsRows.length} type="submit">
@@ -189,7 +191,19 @@ export default async function ProductsPage({ params, searchParams }: ProductsPag
               ))}
             </div>
           ) : null}
-          <form className="mt-5 grid gap-4 md:grid-cols-[1fr_1fr_auto]" method="get">
+          <div className="mt-5 flex flex-wrap gap-2">
+            {commonHtsSearches.map((term) => (
+              <Link
+                className="inline-flex min-h-10 items-center gap-2 rounded-full bg-neutral-100 px-4 py-2 text-sm font-semibold text-neutral-900 transition hover:bg-neutral-200"
+                href={`/${locale}/products?htsProductId=${selectedHtsProductId}&htsQuery=${encodeURIComponent(term)}`}
+                key={term}
+              >
+                <Search aria-hidden="true" size={15} />
+                {term}
+              </Link>
+            ))}
+          </div>
+          <form className="mt-5 grid gap-4 lg:grid-cols-[minmax(220px,0.7fr)_minmax(460px,1.5fr)_auto]" method="get">
             <label className="block text-base font-semibold">
               Produit
               <select className="field" defaultValue={selectedHtsProductId} name="htsProductId">
@@ -202,7 +216,7 @@ export default async function ProductsPage({ params, searchParams }: ProductsPag
             </label>
             <label className="block text-base font-semibold">
               Code ou mot-clé
-              <input className="field" defaultValue={htsQuery} name="htsQuery" placeholder="ex: bracket, 8302" />
+              <input className="field" defaultValue={htsQuery} name="htsQuery" placeholder="ex: bolt, bracket, screw, 7318, 8302" />
             </label>
             <button className="primary-button self-end" disabled={!products.length} type="submit">
               Rechercher
@@ -210,7 +224,11 @@ export default async function ProductsPage({ params, searchParams }: ProductsPag
           </form>
           {htsQuery ? (
             <div className="mt-5 grid gap-3">
-              {htsResults.length === 0 ? <p className="rounded-2xl bg-neutral-50 p-4 text-base text-[var(--muted)]">Aucun résultat USITC trouvé.</p> : null}
+              {htsResults.length === 0 ? (
+                <p className="rounded-2xl bg-neutral-50 p-4 text-base text-[var(--muted)]">
+                  Aucun résultat USITC trouvé. Essaie un terme plus général comme screw, bracket, metal, ou un début de code comme 7318.
+                </p>
+              ) : null}
               {htsResults.map((result) => (
                 <form action={saveProductHtsSuggestionAction} className="rounded-2xl bg-neutral-50 p-4" key={`${result.htsno}-${result.description}`}>
                   <input name="productId" type="hidden" value={selectedHtsProductId ?? ""} />

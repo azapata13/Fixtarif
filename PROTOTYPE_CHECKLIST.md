@@ -12,6 +12,7 @@
 - Passe UX Sandra appliquee: navigation quotidienne reduite aux modules essentiels, dashboard avec deux actions principales, vocabulaire moins technique et donnees avancees accessibles sans encombrer le menu.
 - Creation de brouillon assouplie cote experience: quantite et poids restent obligatoires pour l'integrite, mais sont presentes comme estimations a verifier avant documents.
 - Nouvelle expedition amelioree: recherche rapide en modal pour client, site, contact, transporteur et produit, incluant recherche par numero de piece et code douanier USA.
+- Recherche de codes douaniers USA amelioree: termes rapides visibles et expansion serveur pour les mots courants comme bolt, screw, washer, bracket et aluminum.
 - Page Documents preparee: import prive de documents sources actif; packing slip PDF brouillon prive actif; HTS live USITC en suggestion produit avec validation humaine owner/admin; CUSMA et automatisation douaniere visibles mais verrouilles.
 - PDF avance amorce: packing slip et BOL brouillons peuvent etre generes apres validation de l'expedition, sans pretendre remplacer les documents legaux finaux.
 - V2 documents amorcee: chaque document source peut maintenant creer une pre-analyse brouillon auditee, puis etre marque `a verifier`, `confirme` ou `rejete` par un humain.
