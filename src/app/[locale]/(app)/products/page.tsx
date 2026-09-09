@@ -53,7 +53,20 @@ function buildSearchTerms(product: { name: string; part_number: string | null; d
   return [product.name, product.part_number, descriptionWords].filter((term): term is string => Boolean(term));
 }
 
-const commonHtsSearches = ["bolt", "bracket", "screw", "washer", "aluminum", "7318", "8302"];
+const guidedHtsSearches = [
+  { label: "Fixations", query: "bolt" },
+  { label: "Supports", query: "bracket" },
+  { label: "Roulements", query: "bearing" },
+  { label: "Arbres / gears", query: "shaft" },
+  { label: "Pompes", query: "pump" },
+  { label: "Valves", query: "valve" },
+  { label: "Capteurs", query: "sensor" },
+  { label: "Câbles", query: "cable" },
+  { label: "Palettes", query: "pallet" },
+  { label: "Acier", query: "steel" },
+  { label: "Aluminium", query: "aluminum" },
+  { label: "Plastique", query: "plastic" },
+];
 
 export default async function ProductsPage({ params, searchParams }: ProductsPageProps) {
   const { locale: localeParam } = await params;
@@ -170,7 +183,7 @@ export default async function ProductsPage({ params, searchParams }: ProductsPag
             <h2 className="text-2xl font-semibold tracking-tight">Codes douaniers USA</h2>
           </div>
           <p className="mt-3 text-base leading-7 text-[var(--muted)]">
-            Recherche officielle USITC. Tape un mot simple, un numéro de pièce, une description ou un début de code. Une sélection est enregistrée pour révision humaine.
+            Recherche officielle USITC. Tape un mot simple, un numéro de pièce, une description, une matière ou un début de code. Fixtarif élargit les mots courants en anglais douanier, puis garde la sélection pour révision humaine.
           </p>
           <form action={refreshWorkspaceHtsRatesAction} className="mt-5">
             <button className="secondary-button !min-h-11 !px-5 !py-2 !text-sm" disabled={!customsRows.length} type="submit">
@@ -191,17 +204,20 @@ export default async function ProductsPage({ params, searchParams }: ProductsPag
               ))}
             </div>
           ) : null}
-          <div className="mt-5 flex flex-wrap gap-2">
-            {commonHtsSearches.map((term) => (
+          <div className="mt-5">
+            <p className="text-sm font-semibold uppercase tracking-wide text-[var(--muted)]">Options proches</p>
+            <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {guidedHtsSearches.map((item) => (
               <Link
-                className="inline-flex min-h-10 items-center gap-2 rounded-full bg-neutral-100 px-4 py-2 text-sm font-semibold text-neutral-900 transition hover:bg-neutral-200"
-                href={`/${locale}/products?htsProductId=${selectedHtsProductId}&htsQuery=${encodeURIComponent(term)}`}
-                key={term}
+                className="inline-flex min-h-12 items-center gap-2 rounded-2xl bg-neutral-100 px-4 py-3 text-base font-semibold text-neutral-950 transition hover:bg-neutral-200"
+                href={`/${locale}/products?htsProductId=${selectedHtsProductId}&htsQuery=${encodeURIComponent(item.query)}`}
+                key={item.query}
               >
                 <Search aria-hidden="true" size={15} />
-                {term}
+                {item.label}
               </Link>
             ))}
+            </div>
           </div>
           <form className="mt-5 grid gap-4 lg:grid-cols-[minmax(220px,0.7fr)_minmax(460px,1.5fr)_auto]" method="get">
             <label className="block text-base font-semibold">
@@ -216,7 +232,7 @@ export default async function ProductsPage({ params, searchParams }: ProductsPag
             </label>
             <label className="block text-base font-semibold">
               Code ou mot-clé
-              <input className="field" defaultValue={htsQuery} name="htsQuery" placeholder="ex: bolt, bracket, screw, 7318, 8302" />
+              <input className="field" defaultValue={htsQuery} name="htsQuery" placeholder="ex: bearing, shaft, steel bracket, sensor, 8483" />
             </label>
             <button className="primary-button self-end" disabled={!products.length} type="submit">
               Rechercher
@@ -226,7 +242,7 @@ export default async function ProductsPage({ params, searchParams }: ProductsPag
             <div className="mt-5 grid gap-3">
               {htsResults.length === 0 ? (
                 <p className="rounded-2xl bg-neutral-50 p-4 text-base text-[var(--muted)]">
-                  Aucun résultat USITC trouvé. Essaie un terme plus général comme screw, bracket, metal, ou un début de code comme 7318.
+                  Aucun résultat USITC trouvé. Essaie un terme plus général comme machinery parts, steel, plastic, bearing, valve, ou un début de code comme 8483.
                 </p>
               ) : null}
               {htsResults.map((result) => (
