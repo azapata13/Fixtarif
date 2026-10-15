@@ -12,6 +12,10 @@ type PackingSlipData = {
   partNumber: string | null;
   quantity: number | null;
   reference: string;
+  senderAddress: string | null;
+  senderEmail: string | null;
+  senderName: string | null;
+  senderPhone: string | null;
   shipmentDate: string;
   siteLabel: string | null;
   weightLabel: string | null;
@@ -44,20 +48,25 @@ export function createPackingSlipPdf(data: PackingSlipData) {
     textLine("Validation humaine requise avant utilisation officielle.", 54, 732, 10),
     textLine(`Reference: ${data.reference}`, 54, 690, 13),
     textLine(`Date: ${data.shipmentDate}`, 54, 670, 11),
-    textLine(`Destination: ${data.destinationName ?? "A completer"}`, 54, 635, 12),
-    textLine(`Pays: ${data.destinationCountry}`, 54, 615, 11),
-    textLine(`Site: ${data.siteLabel ?? "A completer"}`, 54, 595, 11),
-    textLine(`Contact: ${data.contactName ?? "A completer"}`, 54, 575, 11),
-    textLine(`Courriel: ${data.contactEmail ?? "A completer"}`, 54, 555, 11),
-    textLine(`Telephone: ${data.contactPhone ?? "A completer"}`, 54, 535, 11),
-    textLine("Produit", 54, 490, 14),
-    textLine(`Nom: ${data.itemName ?? "A completer"}`, 54, 466, 11),
-    textLine(`Piece: ${data.partNumber ?? "Sans numero"}`, 54, 446, 11),
-    textLine(`Quantite: ${data.quantity ?? 0}`, 54, 426, 11),
-    textLine(`Poids: ${data.weightLabel ?? "A completer"}`, 54, 406, 11),
-    textLine(`Colis: ${data.packageCount ?? 0} ${data.packageType ?? ""}`, 54, 386, 11),
-    textLine("Transport", 54, 342, 14),
-    textLine(`Transporteur: ${data.carrierName ?? "A completer"}`, 54, 318, 11),
+    textLine("Expediteur", 54, 635, 14),
+    textLine(`Nom: ${data.senderName ?? "A completer dans Reglages"}`, 54, 611, 11),
+    textLine(`Adresse: ${data.senderAddress ?? "A completer"}`, 54, 591, 11),
+    textLine(`Contact: ${[data.senderPhone, data.senderEmail].filter(Boolean).join(" | ") || "A completer"}`, 54, 571, 11),
+    textLine("Destinataire", 54, 531, 14),
+    textLine(`Nom: ${data.destinationName ?? "A completer"}`, 54, 507, 12),
+    textLine(`Pays: ${data.destinationCountry}`, 54, 487, 11),
+    textLine(`Site: ${data.siteLabel ?? "A completer"}`, 54, 467, 11),
+    textLine(`Contact: ${data.contactName ?? "A completer"}`, 54, 447, 11),
+    textLine(`Courriel: ${data.contactEmail ?? "A completer"}`, 54, 427, 11),
+    textLine(`Telephone: ${data.contactPhone ?? "A completer"}`, 54, 407, 11),
+    textLine("Produit", 54, 363, 14),
+    textLine(`Nom: ${data.itemName ?? "A completer"}`, 54, 339, 11),
+    textLine(`Piece: ${data.partNumber ?? "Sans numero"}`, 54, 319, 11),
+    textLine(`Quantite: ${data.quantity ?? 0}`, 54, 299, 11),
+    textLine(`Poids: ${data.weightLabel ?? "A completer"}`, 54, 279, 11),
+    textLine(`Colis: ${data.packageCount ?? 0} ${data.packageType ?? ""}`, 54, 259, 11),
+    textLine("Transport", 54, 215, 14),
+    textLine(`Transporteur: ${data.carrierName ?? "A completer"}`, 54, 191, 11),
     textLine("Document genere pour revision interne seulement.", 54, 84, 9),
   ];
 
@@ -97,19 +106,21 @@ export function createBillOfLadingPdf(data: PackingSlipData) {
     textLine(`BOL: ${data.bolNumber ?? "A attribuer"}`, 54, 670, 12),
     textLine(`Date: ${data.shipmentDate}`, 54, 650, 11),
     textLine("Expediteur", 54, 610, 14),
-    textLine("Nom: A completer depuis le profil entreprise", 54, 586, 11),
-    textLine("Destinataire", 54, 546, 14),
-    textLine(`Nom: ${data.destinationName ?? "A completer"}`, 54, 522, 11),
-    textLine(`Site: ${data.siteLabel ?? "A completer"}`, 54, 502, 11),
-    textLine(`Contact: ${data.contactName ?? "A completer"}`, 54, 482, 11),
-    textLine("Transport", 54, 442, 14),
-    textLine(`Transporteur: ${data.carrierName ?? "A completer"}`, 54, 418, 11),
-    textLine("Marchandise", 54, 378, 14),
-    textLine(`Produit: ${data.itemName ?? "A completer"}`, 54, 354, 11),
-    textLine(`Piece: ${data.partNumber ?? "Sans numero"}`, 54, 334, 11),
-    textLine(`Quantite: ${data.quantity ?? 0}`, 54, 314, 11),
-    textLine(`Poids: ${data.weightLabel ?? "A completer"}`, 54, 294, 11),
-    textLine(`Colis: ${data.packageCount ?? 0} ${data.packageType ?? ""}`, 54, 274, 11),
+    textLine(`Nom: ${data.senderName ?? "A completer dans Reglages"}`, 54, 586, 11),
+    textLine(`Adresse: ${data.senderAddress ?? "A completer"}`, 54, 566, 11),
+    textLine(`Contact: ${[data.senderPhone, data.senderEmail].filter(Boolean).join(" | ") || "A completer"}`, 54, 546, 11),
+    textLine("Destinataire", 54, 506, 14),
+    textLine(`Nom: ${data.destinationName ?? "A completer"}`, 54, 482, 11),
+    textLine(`Site: ${data.siteLabel ?? "A completer"}`, 54, 462, 11),
+    textLine(`Contact: ${data.contactName ?? "A completer"}`, 54, 442, 11),
+    textLine("Transport", 54, 402, 14),
+    textLine(`Transporteur: ${data.carrierName ?? "A completer"}`, 54, 378, 11),
+    textLine("Marchandise", 54, 338, 14),
+    textLine(`Produit: ${data.itemName ?? "A completer"}`, 54, 314, 11),
+    textLine(`Piece: ${data.partNumber ?? "Sans numero"}`, 54, 294, 11),
+    textLine(`Quantite: ${data.quantity ?? 0}`, 54, 274, 11),
+    textLine(`Poids: ${data.weightLabel ?? "A completer"}`, 54, 254, 11),
+    textLine(`Colis: ${data.packageCount ?? 0} ${data.packageType ?? ""}`, 54, 234, 11),
     textLine("Signatures et clauses transporteur a valider avant utilisation.", 54, 84, 9),
   ];
 

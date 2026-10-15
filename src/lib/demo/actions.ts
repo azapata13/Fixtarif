@@ -298,6 +298,7 @@ async function createDemoShipment({
   carrierId,
   country,
   product,
+  readyForReview = false,
   reference,
   supabase,
   userId,
@@ -307,6 +308,7 @@ async function createDemoShipment({
   carrierId: string;
   country: "CA" | "US";
   product: (typeof demoProducts)[number] & { id: string };
+  readyForReview?: boolean;
   reference: string;
   supabase: Awaited<ReturnType<typeof createClient>>;
   userId: string;
@@ -324,6 +326,45 @@ async function createDemoShipment({
   }
 
   if (existing) {
+    if (readyForReview) {
+      const { error: shipmentUpdateError } = await supabase
+        .from("shipments")
+        .update({
+          notes: "Dossier de démonstration Canada prêt pour révision. Toutes les données sont fictives.",
+          status: "ready",
+        })
+        .eq("workspace_id", workspaceId)
+        .eq("id", existing.id);
+
+      if (shipmentUpdateError) {
+        throw shipmentUpdateError;
+      }
+
+      const { error: itemUpdateError } = await supabase
+        .from("shipment_items")
+        .update({
+          lot_number: "DEMO-2026-001",
+          quantity_confirmed: true,
+          weight_confirmed: true,
+        })
+        .eq("workspace_id", workspaceId)
+        .eq("shipment_id", existing.id);
+
+      if (itemUpdateError) {
+        throw itemUpdateError;
+      }
+
+      const { error: transportUpdateError } = await supabase
+        .from("shipment_transport")
+        .update({ bol_number: "BOL-DEMO-2026-001", pro_number: "PRO-DEMO-2026-001" })
+        .eq("workspace_id", workspaceId)
+        .eq("shipment_id", existing.id);
+
+      if (transportUpdateError) {
+        throw transportUpdateError;
+      }
+    }
+
     return false;
   }
 
@@ -335,13 +376,15 @@ async function createDemoShipment({
       destination_country: country,
       reason: "sale",
       language: "fr",
-      status: "draft",
+      status: readyForReview ? "ready" : "draft",
       created_by: userId,
       destination_business_id: business.id,
       destination_site_id: business.siteId,
       destination_contact_id: business.contactId,
       carrier_id: carrierId,
-      notes: "Brouillon de démonstration généré pour tester le parcours MVP.",
+      notes: readyForReview
+        ? "Dossier de démonstration Canada prêt pour révision. Toutes les données sont fictives."
+        : "Brouillon de démonstration généré pour tester le parcours MVP.",
     })
     .select("id")
     .single();
@@ -358,16 +401,17 @@ async function createDemoShipment({
     name: product.name,
     part_number: product.partNumber,
     quantity: 1,
-    quantity_confirmed: false,
+    quantity_confirmed: readyForReview,
     weight: product.weight,
     weight_unit: product.weightUnit,
-    weight_confirmed: false,
+    weight_confirmed: readyForReview,
     length: product.length,
     width: product.width,
     height: product.height,
     dimension_unit: product.dimensionUnit,
     package_type: product.packageType,
-    notes: "Confirmer quantité, poids et lot avant génération.",
+    lot_number: readyForReview ? "DEMO-2026-001" : null,
+    notes: readyForReview ? "Données fictives prêtes pour révision." : "Confirmer quantité, poids et lot avant génération.",
   });
 
   if (itemError) {
@@ -397,8 +441,10 @@ async function createDemoShipment({
     workspace_id: workspaceId,
     shipment_id: shipment.id,
     carrier_id: carrierId,
+    bol_number: readyForReview ? "BOL-DEMO-2026-001" : null,
     payment_term: "prepaid",
     needs_bol: country === "CA",
+    pro_number: readyForReview ? "PRO-DEMO-2026-001" : null,
   });
 
   if (transportError) {
@@ -426,6 +472,7 @@ export async function prepareDemoWorkspace(locale: Locale) {
       carrierId: carriers.get("Nordik Transport")!.id,
       country: "CA",
       product: products.get("ID-43567")!,
+      readyForReview: true,
       reference: "ST-DEMO-CA",
       supabase,
       userId: user.id,
@@ -467,5 +514,5 @@ export async function prepareDemoWorkspace(locale: Locale) {
     redirect(`/${locale}/dashboard?message=${encodeURIComponent(genericActionError(locale))}`);
   }
 
-  redirect(`/${locale}/dashboard?message=${encodeURIComponent("Démo MVP préparée: clients, produits, transporteurs, courtiers et brouillons ajoutés.")}`);
+  redirect(`/${locale}/dashboard?message=${encodeURIComponent("Démo MVP préparée: ST-DEMO-CA est prête pour générer les brouillons de documents; le scénario USA reste à valider.")}`);
 }

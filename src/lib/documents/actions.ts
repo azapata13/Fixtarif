@@ -8,7 +8,7 @@ import { createBillOfLadingPdf, createPackingSlipPdf } from "@/lib/documents/pdf
 import { getShipmentForWorkspace } from "@/lib/shipments/queries";
 import { createClient } from "@/lib/supabase/server";
 import type { DocumentType, ExtractionStatus, ValidationStatus } from "@/lib/supabase/types";
-import { getCurrentWorkspace } from "@/lib/workspaces/queries";
+import { getCompanyProfileForWorkspace, getCurrentWorkspace } from "@/lib/workspaces/queries";
 
 const SOURCE_BUCKET = "source-documents";
 const GENERATED_BUCKET = "generated-documents";
@@ -67,6 +67,14 @@ function getExtractionStatus(value: FormDataEntryValue | null): ExtractionStatus
   }
 
   return null;
+}
+
+function senderAddress(profile: Awaited<ReturnType<typeof getCompanyProfileForWorkspace>>) {
+  if (!profile) {
+    return null;
+  }
+
+  return [profile.address, profile.city, profile.region, profile.postal_code, profile.country].filter(Boolean).join(", ") || null;
 }
 
 export async function uploadSourceDocument(locale: Locale, formData: FormData) {
@@ -291,6 +299,7 @@ export async function generatePackingSlipDraft(locale: Locale, formData: FormDat
   const site = Array.isArray(shipment.business_sites) ? shipment.business_sites[0] : shipment.business_sites;
   const contact = Array.isArray(shipment.contacts) ? shipment.contacts[0] : shipment.contacts;
   const carrier = Array.isArray(shipment.carriers) ? shipment.carriers[0] : shipment.carriers;
+  const profile = await getCompanyProfileForWorkspace(workspace.id);
   const pdf = createPackingSlipPdf({
     carrierName: carrier?.name ?? null,
     contactEmail: contact?.email ?? null,
@@ -304,6 +313,10 @@ export async function generatePackingSlipDraft(locale: Locale, formData: FormDat
     partNumber: item?.part_number ?? null,
     quantity: item?.quantity ?? null,
     reference: shipment.reference,
+    senderAddress: senderAddress(profile),
+    senderEmail: profile?.email ?? null,
+    senderName: profile?.trade_name || profile?.legal_name || null,
+    senderPhone: profile?.phone ?? null,
     shipmentDate: shipment.shipment_date,
     siteLabel: site ? [site.name, site.city, site.region, site.country].filter(Boolean).join(" - ") : null,
     weightLabel: item ? `${item.weight} ${item.weight_unit}` : null,
@@ -384,6 +397,7 @@ export async function generateBillOfLadingDraft(locale: Locale, formData: FormDa
   const carrier = Array.isArray(shipment.carriers) ? shipment.carriers[0] : shipment.carriers;
   const transport = Array.isArray(shipment.shipment_transport) ? shipment.shipment_transport[0] : shipment.shipment_transport;
   const documentType: DocumentType = "bol";
+  const profile = await getCompanyProfileForWorkspace(workspace.id);
   const pdf = createBillOfLadingPdf({
     bolNumber: transport?.bol_number ?? null,
     carrierName: carrier?.name ?? null,
@@ -398,6 +412,10 @@ export async function generateBillOfLadingDraft(locale: Locale, formData: FormDa
     partNumber: item?.part_number ?? null,
     quantity: item?.quantity ?? null,
     reference: shipment.reference,
+    senderAddress: senderAddress(profile),
+    senderEmail: profile?.email ?? null,
+    senderName: profile?.trade_name || profile?.legal_name || null,
+    senderPhone: profile?.phone ?? null,
     shipmentDate: shipment.shipment_date,
     siteLabel: site ? [site.name, site.city, site.region, site.country].filter(Boolean).join(" - ") : null,
     weightLabel: item ? `${item.weight} ${item.weight_unit}` : null,

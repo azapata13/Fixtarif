@@ -75,6 +75,17 @@ npm run test:security
 
 Ce test vérifie les secrets accidentels dans les fichiers versionnés, les headers de sécurité, l'absence d'erreurs serveur brutes exposées, `npm audit`, puis le test RLS.
 
+## Etat des dependances et CI
+
+- `npm run audit:production` analyse seulement les dependances installees en production et doit etre vert avant un deploy.
+- La CI GitHub execute typecheck, lint, scan statique, audit de production et build a chaque pull request et push sur `main`.
+- Les cinq avis `npm audit` restants sont dans la chaine ESLint de developpement uniquement. La correction automatique non cassante n'est pas publiee; la commande `--force` propose de retrograder la configuration ESLint de Next et n'est donc pas utilisee.
+- `npm run test:rls` reste le controle fonctionnel de l'isolation des workspaces. Il requiert un projet Supabase joignable et ne doit pas etre contourne avant une mise en production.
+
+## Etat operationnel a verifier avant test externe
+
+Le projet Supabase configure doit resoudre dans DNS. Sans ce prealable, Auth, RLS, stockage prive et les tests de connexion ne peuvent pas fonctionner, meme si le build Next.js est valide.
+
 ## Documents privés
 
 - Les sources importées sont stockées dans `source-documents`.

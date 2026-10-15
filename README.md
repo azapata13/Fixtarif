@@ -29,6 +29,7 @@ Le principe produit est : **Valider au lieu de créer**.
 - `LAUNCH_ROADMAP.md` : stratégie pricing/lancement
 - `PRODUCTION_RUNBOOK.md` : checklist deploy production
 - `CODEX_START_PROMPT.md` : premier prompt à coller dans Codex
+- `demo/sandra-review/` : scénario de démonstration, questionnaire HS/HTS et courriel de suivi prêt à envoyer
 
 ## Règle absolue
 Aucune règle douanière, légale, CUSMA, matière dangereuse, anti-dumping, acier/aluminium ou clause de connaissement ne doit être inventée par l'IA ou le code.

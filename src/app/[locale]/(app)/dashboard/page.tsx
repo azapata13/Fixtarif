@@ -67,7 +67,7 @@ export default async function DashboardPage({ params, searchParams }: { params: 
               <h2 className="text-2xl font-semibold tracking-tight">Mode démo MVP</h2>
             </div>
             <p className="mt-3 max-w-3xl text-base leading-7 text-[var(--muted)]">
-              Prépare les clients, produits, transporteurs, courtiers et deux brouillons Canada/USA pour tester vite sans données sensibles.
+              Prépare les clients, produits, transporteurs, courtiers et deux scénarios fictifs. Le dossier Canada est prêt pour générer les brouillons de documents; USA sert à tester la validation HTS.
             </p>
           </div>
           <form action={prepareDemoWorkspaceAction}>
